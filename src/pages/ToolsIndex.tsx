@@ -123,7 +123,7 @@ export const ToolsIndex = () => {
             return tool.available ? (
               <Link
                 key={tool.id}
-                to={`/${tool.id}`}
+                to="/converter"
                 className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-300 block"
               >
                 {content}
