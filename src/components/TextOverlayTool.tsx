@@ -20,11 +20,21 @@ export const TextOverlayTool = () => {
   const [overlays, setOverlays] = useState<TextOverlayConfig[]>([]);
   const [selectedOverlay, setSelectedOverlay] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [lastLoadedSrc, setLastLoadedSrc] = useState<string>('');
+  const [lastCropState, setLastCropState] = useState<string>('');
 
   // Load image with crop applied (the "current" state for text overlay)
   // Text overlay works on whatever image state exists (after crop)
   useEffect(() => {
     if (state.files.length === 0 || !state.files[0].preview) return;
+
+    // Check if we need to reload by comparing src and crop state
+    const currentSrc = state.files[0].preview;
+    const currentCropState = JSON.stringify(state.options.transform?.crop || null);
+    
+    if (lastLoadedSrc === currentSrc && lastCropState === currentCropState) {
+      return; // No change, skip reload
+    }
 
     const img = new Image();
     img.onload = () => {
@@ -52,18 +62,24 @@ export const TextOverlayTool = () => {
           const croppedImg = new Image();
           croppedImg.onload = () => {
             setCurrentImage(croppedImg);
+            setLastLoadedSrc(currentSrc);
+            setLastCropState(currentCropState);
           };
           croppedImg.src = canvas.toDataURL();
         } else {
           setCurrentImage(img);
+          setLastLoadedSrc(currentSrc);
+          setLastCropState(currentCropState);
         }
       } else {
         // No crop, use original image
         setCurrentImage(img);
+        setLastLoadedSrc(currentSrc);
+        setLastCropState(currentCropState);
       }
     };
     img.src = state.files[0].preview;
-  }, [state.files, state.options.transform?.crop]);
+  }, [state.files, state.options.transform?.crop, lastLoadedSrc, lastCropState]);
 
   // Restore existing text overlay from state
   useEffect(() => {

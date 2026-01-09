@@ -23,15 +23,20 @@ export const CropTool = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
+  const [originalImageSrc, setOriginalImageSrc] = useState<string>('');
 
   // Load the base image (no transformations)
   // CropTool works on the original image only
   useEffect(() => {
     if (state.files.length === 0 || !state.files[0].preview) return;
 
+    // Only reload if the image source actually changed
+    if (originalImageSrc === state.files[0].preview) return;
+
     const img = new Image();
     img.onload = () => {
       setCurrentImage(img);
+      setOriginalImageSrc(state.files[0].preview);
       
       // Initialize crop area to full image
       setCropArea({
@@ -42,7 +47,7 @@ export const CropTool = () => {
       });
     };
     img.src = state.files[0].preview;
-  }, [state.files]);
+  }, [state.files, originalImageSrc]);
 
   // Draw canvas preview
   useEffect(() => {
