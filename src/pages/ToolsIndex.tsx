@@ -1,9 +1,25 @@
 import { Link } from 'react-router-dom';
-import { Image, Github } from 'lucide-react';
+import { Image, Github, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export const ToolsIndex = () => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col">
+      {/* Theme Toggle Button - Fixed Position */}
+      <button
+        onClick={toggleTheme}
+        className="fixed top-6 right-6 p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all shadow-lg z-50"
+        aria-label="Toggle theme"
+      >
+        {theme === 'dark' ? (
+          <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+        ) : (
+          <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+        )}
+      </button>
+
       <div className="max-w-3xl mx-auto px-6 py-16 flex-1">
         {/* Header */}
         <header className="text-center mb-16">
