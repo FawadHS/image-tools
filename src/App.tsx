@@ -4,10 +4,10 @@ import { ImageToolsPage } from './pages/ImageToolsPage';
 
 function App() {
   return (
-    <Router basename="/image-tools">
+    <Router>
       <Routes>
         <Route path="/" element={<ToolsIndex />} />
-        <Route path="/converter" element={<ImageToolsPage />} />
+        <Route path="/image-tools" element={<ImageToolsPage />} />
       </Routes>
     </Router>
   );

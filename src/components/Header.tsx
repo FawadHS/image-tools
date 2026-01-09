@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link 
               to="/"
-              aria-label="Image Tools - Go to tools home"
+              aria-label="Back to Tools"
               className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
             >
               <Image className="w-6 h-6 text-primary-600 dark:text-primary-400" />
@@ -48,7 +48,7 @@ export const Header: React.FC = () => {
               aria-label="Back to Tools"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back to Tools</span>
+              <span className="hidden sm:inline">Tools</span>
             </Link>
             <a
               href="https://github.com/FawadHS/image-tools"

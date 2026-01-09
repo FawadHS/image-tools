@@ -1,181 +1,112 @@
 import { Link } from 'react-router-dom';
-import { Image, FileText, Palette, Type, ArrowRight, Shield, Github } from 'lucide-react';
+import { Image, FileText, Palette } from 'lucide-react';
 
 export const ToolsIndex = () => {
   const tools = [
     {
       id: 'image-tools',
-      icon: Image,
+      icon: '🖼️',
       title: 'Image Tools',
-      description: 'Convert images between formats with quality control, resize, and batch processing. Supports HEIC, JPEG, PNG, WebP, and AVIF.',
-      badge: 'BETA',
-      badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+      description: 'Convert images between formats. HEIC, JPEG, PNG, WebP, AVIF. Quality control, resize, batch processing.',
+      badge: 'Live',
       available: true,
-      features: [
-        'Client-side conversion (no uploads)',
-        'Batch processing up to 50 images',
-        'Quality control & resize options',
-        'E-commerce presets included',
-        'Before/after comparison slider',
-        'Conversion history tracking'
-      ]
     },
     {
       id: 'pdf-tools',
-      icon: FileText,
+      icon: '📄',
       title: 'PDF Tools',
-      description: 'Merge, split, compress, and convert PDF files. All processing happens locally in your browser.',
-      badge: 'Coming Soon',
-      badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+      description: 'Merge, split, compress PDFs. Client-side processing.',
+      badge: 'Soon',
       available: false,
-      features: [
-        'Merge multiple PDFs',
-        'Split PDFs by page range',
-        'Compress large files',
-        'Convert to/from images'
-      ]
     },
     {
       id: 'color-tools',
-      icon: Palette,
-      title: 'Color Palette Generator',
-      description: 'Generate beautiful color palettes from images or create custom schemes for your design projects.',
-      badge: 'Coming Soon',
-      badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+      icon: '🎨',
+      title: 'Color Tools',
+      description: 'Extract palettes, check contrast, generate schemes.',
+      badge: 'Soon',
       available: false,
-      features: [
-        'Extract colors from images',
-        'Generate harmonious palettes',
-        'Export as CSS, JSON, or SVG',
-        'Accessibility contrast checker'
-      ]
     },
-    {
-      id: 'text-tools',
-      icon: Type,
-      title: 'Text Tools',
-      description: 'Encode, decode, format, and transform text. Includes Base64, URL encoding, Markdown preview, and more.',
-      badge: 'Coming Soon',
-      badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
-      available: false,
-      features: [
-        'Base64 encode/decode',
-        'URL encode/decode',
-        'JSON formatter & validator',
-        'Markdown live preview'
-      ]
-    }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <div className="max-w-3xl mx-auto px-6 py-12">
         {/* Header */}
         <header className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
-            🛠️ Tools
-          </h1>
-          <p className="text-xl text-white/90 mb-6">
-            Free, privacy-first web tools. No uploads, no tracking.
-          </p>
-          <a
-            href="https://fawadhs.dev"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-white/20 transition-all"
-          >
-            ← Back to Portfolio
-          </a>
+          <div className="text-4xl mb-3">🛠️</div>
+          <h1 className="text-3xl font-semibold mb-2 tracking-tight">Tools</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Privacy-first utilities</p>
         </header>
 
-        {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {tools.map((tool) => {
-            const Icon = tool.icon;
-            const content = (
-              <>
-                <div className="text-5xl mb-4">{<Icon className="w-12 h-12 text-primary-600 dark:text-primary-400" />}</div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {tool.title}
-                  </h2>
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${tool.badgeColor}`}>
-                    {tool.badge}
-                  </span>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
-                  {tool.description}
-                </p>
-                <ul className="space-y-2 mb-4">
-                  {tool.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="text-green-500 font-bold mt-0.5">✓</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                {tool.available && (
-                  <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-medium">
-                    Open Tool <ArrowRight className="w-4 h-4" />
-                  </div>
-                )}
-              </>
-            );
+        {/* Back Link */}
+        <a
+          href="https://fawadhs.dev"
+          className="inline-block text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-12"
+        >
+          ← fawadhs.dev
+        </a>
 
-            return tool.available ? (
-              <Link
+        {/* Tools List */}
+        <div className="space-y-4 mb-12">
+          {tools.map((tool) => {
+            const Component = tool.available ? Link : 'div';
+            return (
+              <Component
                 key={tool.id}
-                to="/converter"
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-300 block"
+                to={tool.available ? '/image-tools' : undefined}
+                className={`block p-6 border border-gray-200 dark:border-gray-800 rounded-lg transition-all ${
+                  tool.available
+                    ? 'hover:border-blue-600 dark:hover:border-blue-400 hover:-translate-y-0.5 cursor-pointer'
+                    : 'opacity-50 cursor-not-allowed'
+                }`}
               >
-                {content}
-              </Link>
-            ) : (
-              <div
-                key={tool.id}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl opacity-60 cursor-not-allowed"
-              >
-                {content}
-              </div>
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl flex-shrink-0">{tool.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-lg font-semibold">{tool.title}</h2>
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide ${
+                          tool.available
+                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                            : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        {tool.badge}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {tool.description}
+                    </p>
+                  </div>
+                </div>
+              </Component>
             );
           })}
         </div>
 
         {/* Privacy Notice */}
-        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl text-center mb-12">
-          <div className="flex justify-center mb-3">
-            <Shield className="w-12 h-12 text-green-500" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Your Privacy is Protected
-          </h3>
-          <p className="text-gray-600 dark:text-gray-300">
-            All tools process files entirely in your browser. Nothing is uploaded to any server.
-            <br />
-            No tracking, no analytics, no data collection.
+        <div className="p-6 border border-gray-200 dark:border-gray-800 rounded-lg text-center mb-12">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            <strong className="text-gray-900 dark:text-gray-100">Client-side processing</strong>
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            No uploads. No tracking. No data collection.
           </p>
         </div>
 
         {/* Footer */}
-        <footer className="text-center text-white/80">
-          <p className="mb-2">
-            Built with care by{' '}
+        <footer className="text-center text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 pt-8">
+          <p>
+            Built by{' '}
             <a
               href="https://fawadhs.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold hover:underline"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Fawad Hussain
             </a>
           </p>
-          <a
-            href="https://github.com/FawadHS/image-tools"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-          >
-            <Github className="w-4 h-4" />
-            View Source on GitHub
-          </a>
         </footer>
       </div>
     </div>
