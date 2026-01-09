@@ -1,10 +1,14 @@
-import { RotateCw, FlipHorizontal, FlipVertical, Wand2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
 
 export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
-  const transform = state.options.transform || {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Get the actual committed state
+  const committedTransform = state.options.transform || {
     rotation: 0,
     flipHorizontal: false,
     flipVertical: false,
@@ -17,7 +21,15 @@ export const ImageEditor = () => {
     },
   };
 
-  const filters = transform.filters || {
+  // Preview state (local, uncommitted changes)
+  const [previewTransform, setPreviewTransform] = useState<ImageTransform>(committedTransform);
+
+  // Sync preview with committed state when it changes externally
+  useEffect(() => {
+    setPreviewTransform(committedTransform);
+  }, [committedTransform]);
+
+  const filters = previewTransform.filters || {
     brightness: 100,
     contrast: 100,
     saturation: 100,
@@ -25,54 +37,62 @@ export const ImageEditor = () => {
     sepia: false,
   };
 
-  const updateTransform = (updates: Partial<ImageTransform>) => {
-    dispatch({
-      type: 'SET_OPTIONS',
-      payload: {
-        transform: { ...transform, ...updates } as ImageTransform,
-      },
-    });
+  // Check if preview differs from committed state
+  const hasUnappliedChanges = JSON.stringify(previewTransform) !== JSON.stringify(committedTransform);
+
+  const updatePreviewTransform = (updates: Partial<ImageTransform>) => {
+    setPreviewTransform(prev => ({ ...prev, ...updates }));
   };
 
-  const updateFilters = (filterUpdates: Partial<typeof filters>) => {
-    updateTransform({
+  const updatePreviewFilters = (filterUpdates: Partial<typeof filters>) => {
+    updatePreviewTransform({
       filters: { ...filters, ...filterUpdates },
     });
   };
 
   const rotate = () => {
-    const newRotation = ((transform.rotation + 90) % 360) as 0 | 90 | 180 | 270;
-    updateTransform({ rotation: newRotation });
+    const newRotation = ((previewTransform.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+    updatePreviewTransform({ rotation: newRotation });
   };
 
   const toggleFlipHorizontal = () => {
-    updateTransform({ flipHorizontal: !transform.flipHorizontal });
+    updatePreviewTransform({ flipHorizontal: !previewTransform.flipHorizontal });
   };
 
   const toggleFlipVertical = () => {
-    updateTransform({ flipVertical: !transform.flipVertical });
+    updatePreviewTransform({ flipVertical: !previewTransform.flipVertical });
   };
 
-  const resetTransforms = () => {
-    updateTransform({
+  const resetPreview = () => {
+    setPreviewTransform({
       rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
+      filters: {
+        brightness: 100,
+        contrast: 100,
+        saturation: 100,
+        grayscale: false,
+        sepia: false,
+      },
     });
   };
 
-  const resetFilters = () => {
-    updateFilters({
-      brightness: 100,
-      contrast: 100,
-      saturation: 100,
-      grayscale: false,
-      sepia: false,
+  const applyChanges = () => {
+    dispatch({
+      type: 'SET_OPTIONS',
+      payload: {
+        transform: previewTransform,
+      },
     });
+  };
+
+  const discardChanges = () => {
+    setPreviewTransform(committedTransform);
   };
 
   const hasTransforms =
-    transform.rotation !== 0 || transform.flipHorizontal || transform.flipVertical;
+    previewTransform.rotation !== 0 || previewTransform.flipHorizontal || previewTransform.flipVertical;
 
   const hasFilters =
     filters.brightness !== 100 ||
@@ -81,24 +101,115 @@ export const ImageEditor = () => {
     filters.grayscale ||
     filters.sepia;
 
+  const hasAnyEdits = hasTransforms || hasFilters;
+
+  // Draw preview on canvas
+  useEffect(() => {
+    if (!canvasRef.current || state.files.length === 0) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const firstFile = state.files[0];
+    const img = new Image();
+    img.src = firstFile.preview;
+
+    img.onload = () => {
+      // Set canvas size
+      const maxWidth = 300;
+      const scale = Math.min(1, maxWidth / img.width);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      // Apply transforms
+      ctx.save();
+      
+      // Center and rotate
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((previewTransform.rotation * Math.PI) / 180);
+      
+      // Apply flips
+      const scaleX = previewTransform.flipHorizontal ? -1 : 1;
+      const scaleY = previewTransform.flipVertical ? -1 : 1;
+      ctx.scale(scaleX, scaleY);
+
+      // Apply filters
+      const filterStr = [
+        `brightness(${filters.brightness}%)`,
+        `contrast(${filters.contrast}%)`,
+        `saturate(${filters.saturation}%)`,
+        filters.grayscale ? 'grayscale(100%)' : '',
+        filters.sepia ? 'sepia(100%)' : '',
+      ].filter(Boolean).join(' ');
+      
+      ctx.filter = filterStr;
+
+      // Draw image
+      ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+      ctx.restore();
+    };
+  }, [previewTransform, state.files, filters]);
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           Image Editing
         </h2>
-        {(hasTransforms || hasFilters) && (
+        {hasAnyEdits && (
           <button
-            onClick={() => {
-              resetTransforms();
-              resetFilters();
-            }}
-            className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            onClick={resetPreview}
+            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            title="Reset all edits"
           >
             Reset All
           </button>
         )}
       </div>
+
+      {/* Preview Canvas */}
+      {state.files.length > 0 && (
+        <div className="mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-3">
+            <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Preview
+            </h3>
+            {hasUnappliedChanges && (
+              <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
+                Unsaved
+              </span>
+            )}
+          </div>
+          <div className="flex justify-center">
+            <canvas
+              ref={canvasRef}
+              className="max-w-full h-auto rounded-lg shadow-sm max-h-[300px]"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Apply/Discard Buttons */}
+      {hasUnappliedChanges && (
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={applyChanges}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <Check className="w-4 h-4" />
+            Apply Changes
+          </button>
+          <button
+            onClick={discardChanges}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+          >
+            <X className="w-4 h-4" />
+            Discard
+          </button>
+        </div>
+      )}
 
       {/* Rotate & Flip Section */}
       <div className="space-y-4">
@@ -115,9 +226,9 @@ export const ImageEditor = () => {
             >
               <RotateCw className="w-5 h-5 text-gray-700 dark:text-gray-300 mb-1" />
               <span className="text-xs text-gray-600 dark:text-gray-400">Rotate</span>
-              {transform.rotation !== 0 && (
+              {previewTransform.rotation !== 0 && (
                 <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
-                  {transform.rotation}°
+                  {previewTransform.rotation}°
                 </span>
               )}
             </button>
@@ -126,7 +237,7 @@ export const ImageEditor = () => {
             <button
               onClick={toggleFlipHorizontal}
               className={`flex flex-col items-center justify-center p-3 border rounded-lg transition-all ${
-                transform.flipHorizontal
+                previewTransform.flipHorizontal
                   ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
                   : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-500'
               }`}
@@ -140,7 +251,7 @@ export const ImageEditor = () => {
             <button
               onClick={toggleFlipVertical}
               className={`flex flex-col items-center justify-center p-3 border rounded-lg transition-all ${
-                transform.flipVertical
+                previewTransform.flipVertical
                   ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
                   : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-500'
               }`}
@@ -159,14 +270,6 @@ export const ImageEditor = () => {
               <Wand2 className="w-4 h-4" />
               Filters
             </h3>
-            {hasFilters && (
-              <button
-                onClick={resetFilters}
-                className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
-              >
-                Reset
-              </button>
-            )}
           </div>
 
           <div className="space-y-4">
@@ -185,7 +288,8 @@ export const ImageEditor = () => {
                 min="0"
                 max="200"
                 value={filters.brightness}
-                onChange={(e) => updateFilters({ brightness: Number(e.target.value) })}
+                onChange={(e) => updatePreviewFilters({ brightness: Number(e.target.value) })}
+                aria-label="Brightness slider"
                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
               />
             </div>
@@ -205,7 +309,8 @@ export const ImageEditor = () => {
                 min="0"
                 max="200"
                 value={filters.contrast}
-                onChange={(e) => updateFilters({ contrast: Number(e.target.value) })}
+                onChange={(e) => updatePreviewFilters({ contrast: Number(e.target.value) })}
+                aria-label="Contrast slider"
                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
               />
             </div>
@@ -225,7 +330,8 @@ export const ImageEditor = () => {
                 min="0"
                 max="200"
                 value={filters.saturation}
-                onChange={(e) => updateFilters({ saturation: Number(e.target.value) })}
+                onChange={(e) => updatePreviewFilters({ saturation: Number(e.target.value) })}
+                aria-label="Saturation slider"
                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
               />
             </div>
@@ -233,7 +339,7 @@ export const ImageEditor = () => {
             {/* Style Filters */}
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => updateFilters({ grayscale: !filters.grayscale, sepia: false })}
+                onClick={() => updatePreviewFilters({ grayscale: !filters.grayscale, sepia: false })}
                 className={`px-3 py-2 text-xs font-medium border rounded-lg transition-all ${
                   filters.grayscale
                     ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
@@ -243,7 +349,7 @@ export const ImageEditor = () => {
                 Grayscale
               </button>
               <button
-                onClick={() => updateFilters({ sepia: !filters.sepia, grayscale: false })}
+                onClick={() => updatePreviewFilters({ sepia: !filters.sepia, grayscale: false })}
                 className={`px-3 py-2 text-xs font-medium border rounded-lg transition-all ${
                   filters.sepia
                     ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'

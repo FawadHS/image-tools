@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Type, Plus, Trash2, Move } from 'lucide-react';
+import { Type, Plus, Trash2, Move, Check, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 
@@ -22,6 +22,12 @@ export const TextOverlayTool = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [lastLoadedSrc, setLastLoadedSrc] = useState<string>('');
   const [lastCropState, setLastCropState] = useState<string>('');
+
+  // Track committed overlay from global context
+  const committedOverlay = state.options.transform?.textOverlay;
+  
+  // Check if preview differs from committed state
+  const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
 
   // Load image with crop applied (the "current" state for text overlay)
   // Text overlay works on whatever image state exists (after crop)
@@ -233,6 +239,15 @@ export const TextOverlayTool = () => {
   const handleCanvasMouseUp = () => {
     setIsDragging(false);
   };
+  
+  const discardTextOverlay = () => {
+    if (committedOverlay) {
+      setOverlays([committedOverlay]);
+    } else {
+      setOverlays([]);
+    }
+    setSelectedOverlay(null);
+  };
 
   const applyTextOverlay = () => {
     if (overlays.length === 0) {
@@ -319,18 +334,28 @@ export const TextOverlayTool = () => {
         <div className="flex items-center gap-2">
           <Type className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Text Overlay</h2>
+          {hasUnappliedChanges && overlays.length > 0 && (
+            <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
+              Unsaved
+            </span>
+          )}
         </div>
         {overlays.length > 0 && (
           <button
             onClick={resetTextOverlay}
-            className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
           >
             Reset All
           </button>
         )}
       </div>
 
-      <div className="mb-4 flex justify-center items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4 max-h-[350px] overflow-hidden">
+      <div className="mb-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-3">
+          <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
+        </div>
+        <div className="flex justify-center items-center max-h-[300px] overflow-hidden">
         <canvas
           ref={canvasRef}
           onClick={handleCanvasClick}
@@ -339,6 +364,7 @@ export const TextOverlayTool = () => {
           onMouseLeave={handleCanvasMouseUp}
           className="cursor-pointer border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain"
         />
+        </div>
       </div>
 
       <button
@@ -348,6 +374,25 @@ export const TextOverlayTool = () => {
         <Plus className="w-4 h-4" />
         Add Text Overlay
       </button>
+
+      {hasUnappliedChanges && overlays.length > 0 && (
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={applyTextOverlay}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <Check className="w-4 h-4" />
+            Apply Overlay
+          </button>
+          <button
+            onClick={discardTextOverlay}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+          >
+            <X className="w-4 h-4" />
+            Discard
+          </button>
+        </div>
+      )}
 
       {overlays.length > 0 && (
         <div className="space-y-4">
@@ -458,21 +503,6 @@ export const TextOverlayTool = () => {
               </div>
             </div>
           ))}
-
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <button
-              onClick={resetTextOverlay}
-              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm transition-colors"
-            >
-              Reset
-            </button>
-            <button
-              onClick={applyTextOverlay}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
-            >
-              Apply Overlay
-            </button>
-          </div>
         </div>
       )}
     </div>

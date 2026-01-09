@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Crop, Square, Circle, Lock, Unlock } from 'lucide-react';
+import { Crop, Square, Circle, Lock, Unlock, Check, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 
@@ -24,6 +24,13 @@ export const CropTool = () => {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
   const [originalImageSrc, setOriginalImageSrc] = useState<string>('');
+  
+  // Track committed crop state from global context
+  const committedCrop = state.options.transform?.crop;
+  const [previewCrop, setPreviewCrop] = useState<CropArea | null>(committedCrop || null);
+  
+  // Check if preview differs from committed state
+  const hasUnappliedChanges = JSON.stringify(previewCrop) !== JSON.stringify(committedCrop);
 
   // Load the base image (no transformations)
   // CropTool works on the original image only
@@ -38,13 +45,15 @@ export const CropTool = () => {
       setCurrentImage(img);
       setOriginalImageSrc(state.files[0].preview);
       
-      // Initialize crop area to full image
-      setCropArea({
+      // Initialize crop area to full image or committed crop
+      const initialCrop = committedCrop || {
         x: 0,
         y: 0,
         width: img.width,
         height: img.height,
-      });
+      };
+      setCropArea(initialCrop);
+      setPreviewCrop(initialCrop);
     };
     img.src = state.files[0].preview;
   }, [state.files, originalImageSrc]);
@@ -180,23 +189,36 @@ export const CropTool = () => {
     const cropWidth = Math.min(width, currentImage.width - cropX);
     const cropHeight = Math.min(height, currentImage.height - cropY);
 
-    setCropArea({
+    const newCrop = {
       x: cropX,
       y: cropY,
       width: cropWidth,
       height: cropHeight,
-    });
+    };
+    setCropArea(newCrop);
+    setPreviewCrop(newCrop);
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
     setDragStart(null);
   };
+  
+  const discardCrop = () => {
+    const revertCrop = committedCrop || (currentImage ? {
+      x: 0,
+      y: 0,
+      width: currentImage.width,
+      height: currentImage.height,
+    } : null);
+    setCropArea(revertCrop);
+    setPreviewCrop(revertCrop);
+  };
 
   const applyCrop = () => {
-    if (!cropArea || !currentImage) return;
+    if (!previewCrop || !currentImage) return;
 
-    if (cropArea.width <= 0 || cropArea.height <= 0) {
+    if (previewCrop.width <= 0 || previewCrop.height <= 0) {
       toast.error('Invalid crop area');
       return;
     }
@@ -213,40 +235,42 @@ export const CropTool = () => {
       payload: {
         transform: {
           ...currentTransform,
-          crop: cropArea,
+          crop: previewCrop,
         },
       },
     });
 
     // Create a cropped version of the image to show as preview
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = cropArea.width;
-    tempCanvas.height = cropArea.height;
+    tempCanvas.width = previewCrop.width;
+    tempCanvas.height = previewCrop.height;
     const tempCtx = tempCanvas.getContext('2d');
     
     if (tempCtx) {
       tempCtx.drawImage(
         currentImage,
-        cropArea.x,
-        cropArea.y,
-        cropArea.width,
-        cropArea.height,
+        previewCrop.x,
+        previewCrop.y,
+        previewCrop.width,
+        previewCrop.height,
         0,
         0,
-        cropArea.width,
-        cropArea.height
+        previewCrop.width,
+        previewCrop.height
       );
       
       const croppedImg = new Image();
       croppedImg.onload = () => {
         setCurrentImage(croppedImg);
         // Reset crop area to show the full cropped image
-        setCropArea({
+        const fullCrop = {
           x: 0,
           y: 0,
           width: croppedImg.width,
           height: croppedImg.height,
-        });
+        };
+        setCropArea(fullCrop);
+        setPreviewCrop(fullCrop);
       };
       croppedImg.src = tempCanvas.toDataURL();
     }
@@ -276,12 +300,14 @@ export const CropTool = () => {
       const img = new Image();
       img.onload = () => {
         setCurrentImage(img);
-        setCropArea({
+        const fullCrop = {
           x: 0,
           y: 0,
           width: img.width,
           height: img.height,
-        });
+        };
+        setCropArea(fullCrop);
+        setPreviewCrop(fullCrop);
       };
       img.src = state.files[0].preview;
     }
@@ -309,18 +335,28 @@ export const CropTool = () => {
         <div className="flex items-center gap-2">
           <Crop className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Crop Tool</h2>
+          {hasUnappliedChanges && (
+            <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
+              Unsaved
+            </span>
+          )}
         </div>
-        {state.options.transform?.crop && (
+        {(state.options.transform?.crop || hasUnappliedChanges) && (
           <button
             onClick={resetCrop}
-            className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
           >
             Reset Crop
           </button>
         )}
       </div>
 
-      <div className="mb-4 flex justify-center items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4 max-h-[350px] overflow-hidden">
+      <div className="mb-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-3">
+          <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
+        </div>
+        <div className="flex justify-center items-center max-h-[300px] overflow-hidden">
         <canvas
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -329,7 +365,27 @@ export const CropTool = () => {
           onMouseLeave={handleMouseUp}
           className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain"
         />
+        </div>
       </div>
+
+      {hasUnappliedChanges && (
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={applyCrop}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <Check className="w-4 h-4" />
+            Apply Crop
+          </button>
+          <button
+            onClick={discardCrop}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+          >
+            <X className="w-4 h-4" />
+            Discard
+          </button>
+        </div>
+      )}
 
       <div className="mb-4">
         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
@@ -388,7 +444,7 @@ export const CropTool = () => {
       </div>
 
       {cropArea && (
-        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-gray-600 dark:text-gray-400">Position:</span>{' '}
@@ -405,21 +461,6 @@ export const CropTool = () => {
           </div>
         </div>
       )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={resetCrop}
-          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm transition-colors"
-        >
-          Reset
-        </button>
-        <button
-          onClick={applyCrop}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
-        >
-          Apply Crop
-        </button>
-      </div>
     </div>
   );
 };
