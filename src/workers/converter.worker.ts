@@ -114,6 +114,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     const rotation = transform?.rotation || 0;
     const flipH = transform?.flipHorizontal || false;
     const flipV = transform?.flipVertical || false;
+    const filters = transform?.filters;
     
     // For 90 or 270 degree rotation, swap width and height
     const needsDimensionSwap = rotation === 90 || rotation === 270;
@@ -122,7 +123,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 
     // Create canvas using OffscreenCanvas if available
     const canvas = new OffscreenCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: filters !== undefined });
     
     if (!ctx) {
       throw new Error('Could not get canvas context');
@@ -156,6 +157,70 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     
     // Restore context
     ctx.restore();
+    
+    // Apply filters if specified
+    if (filters) {
+      const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+      const data = imageData.data;
+      
+      // Apply grayscale filter
+      if (filters.grayscale) {
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          data[i] = gray;
+          data[i + 1] = gray;
+          data[i + 2] = gray;
+        }
+      }
+      // Apply sepia filter (mutually exclusive with grayscale)
+      else if (filters.sepia) {
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          data[i] = Math.min(255, 0.393 * r + 0.769 * g + 0.189 * b);
+          data[i + 1] = Math.min(255, 0.349 * r + 0.686 * g + 0.168 * b);
+          data[i + 2] = Math.min(255, 0.272 * r + 0.534 * g + 0.131 * b);
+        }
+      }
+      
+      // Apply brightness, contrast, saturation
+      const brightness = filters.brightness / 100;
+      const contrast = filters.contrast / 100;
+      const saturation = filters.saturation / 100;
+      
+      if (brightness !== 1 || contrast !== 1 || saturation !== 1) {
+        for (let i = 0; i < data.length; i += 4) {
+          let r = data[i];
+          let g = data[i + 1];
+          let b = data[i + 2];
+          
+          // Brightness
+          r *= brightness;
+          g *= brightness;
+          b *= brightness;
+          
+          // Contrast
+          r = ((r / 255 - 0.5) * contrast + 0.5) * 255;
+          g = ((g / 255 - 0.5) * contrast + 0.5) * 255;
+          b = ((b / 255 - 0.5) * contrast + 0.5) * 255;
+          
+          // Saturation
+          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          r = gray + (r - gray) * saturation;
+          g = gray + (g - gray) * saturation;
+          b = gray + (b - gray) * saturation;
+          
+          // Clamp values
+          data[i] = Math.max(0, Math.min(255, r));
+          data[i + 1] = Math.max(0, Math.min(255, g));
+          data[i + 2] = Math.max(0, Math.min(255, b));
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+    }
     
     postMessage({ type: 'progress', progress: 70 } as WorkerResponse);
 
