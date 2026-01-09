@@ -15,6 +15,26 @@ export const HistoryPanel: React.FC = () => {
 
   useEffect(() => {
     loadHistory();
+
+    // Listen for storage changes to update history in real-time
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'conversion-history') {
+        loadHistory();
+      }
+    };
+
+    // Custom event for same-window updates (since storage event doesn't fire in same window)
+    const handleHistoryUpdate = () => {
+      loadHistory();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('history-updated', handleHistoryUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('history-updated', handleHistoryUpdate);
+    };
   }, []);
 
   const handleClear = () => {

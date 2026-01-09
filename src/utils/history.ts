@@ -47,6 +47,9 @@ export const addToHistory = (record: Omit<HistoryRecord, 'id' | 'timestamp'>): v
     const limitedHistory = history.slice(0, MAX_HISTORY);
 
     localStorage.setItem(HISTORY_KEY, JSON.stringify(limitedHistory));
+    
+    // Dispatch custom event to notify listeners (for same-window updates)
+    window.dispatchEvent(new CustomEvent('history-updated'));
   } catch (error) {
     console.error('Failed to save history:', error);
   }
@@ -58,6 +61,7 @@ export const addToHistory = (record: Omit<HistoryRecord, 'id' | 'timestamp'>): v
 export const clearHistory = (): void => {
   try {
     localStorage.removeItem(HISTORY_KEY);
+    window.dispatchEvent(new CustomEvent('history-updated'));
   } catch (error) {
     console.error('Failed to clear history:', error);
   }
@@ -71,6 +75,7 @@ export const deleteHistoryRecord = (id: string): void => {
     const history = getHistory();
     const filtered = history.filter(record => record.id !== id);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
+    window.dispatchEvent(new CustomEvent('history-updated'));
   } catch (error) {
     console.error('Failed to delete history record:', error);
   }

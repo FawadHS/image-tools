@@ -1,0 +1,10 @@
+# robots.txt for tools.fawadhs.dev
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://tools.fawadhs.dev/sitemap.xml
+
+# Disallow service worker and manifest
+Disallow: /sw.js
+Disallow: /manifest.json
