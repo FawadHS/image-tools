@@ -2,6 +2,15 @@
  * Test setup file for Vitest
  */
 
+// Mock Worker for heic2any
+if (typeof Worker === 'undefined') {
+  (global as any).Worker = class {
+    onmessage: ((event: any) => void) | null = null;
+    postMessage() {}
+    terminate() {}
+  };
+}
+
 // Mock canvas and image APIs for testing
 if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.getContext = function () {
