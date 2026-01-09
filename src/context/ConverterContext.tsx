@@ -64,7 +64,14 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
     case 'SET_OPTIONS':
       return {
         ...state,
-        options: { ...state.options, ...action.payload },
+        options: { 
+          ...state.options, 
+          ...action.payload,
+          // Deep merge transform object to preserve crop/text/filters
+          transform: action.payload.transform 
+            ? { ...state.options.transform, ...action.payload.transform }
+            : state.options.transform
+        },
       };
 
     case 'SET_PRESET':
