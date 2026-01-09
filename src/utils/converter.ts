@@ -267,14 +267,27 @@ export const convertImage = async (
   // Apply text overlay if specified
   if (options.transform?.textOverlay) {
     const overlay = options.transform.textOverlay;
-    const scale = canvas.width / img.width;
+    
+    // Calculate text position relative to the canvas
+    // Text coordinates are stored relative to the original image
+    let textX = overlay.x;
+    let textY = overlay.y;
+    
+    // If crop is applied, adjust text position by subtracting crop offset
+    if (options.transform?.crop) {
+      textX = overlay.x - options.transform.crop.x;
+      textY = overlay.y - options.transform.crop.y;
+    }
+    
+    // Calculate scale factor based on canvas vs source dimensions
+    const scaleFactor = canvas.width / sourceWidth;
     
     ctx.save();
-    ctx.font = `${overlay.fontSize * scale}px ${overlay.fontFamily}`;
+    ctx.font = `${overlay.fontSize * scaleFactor}px ${overlay.fontFamily}`;
     ctx.fillStyle = overlay.color;
     ctx.globalAlpha = overlay.opacity;
     ctx.textBaseline = 'top';
-    ctx.fillText(overlay.text, overlay.x * scale, overlay.y * scale);
+    ctx.fillText(overlay.text, textX * scaleFactor, textY * scaleFactor);
     ctx.restore();
   }
 

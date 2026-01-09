@@ -222,7 +222,7 @@ export const CropTool = () => {
   };
 
   const applyCrop = () => {
-    if (!cropArea) return;
+    if (!cropArea || !previewImage) return;
 
     const currentTransform = transform || {
       rotation: 0 as const,
@@ -240,8 +240,38 @@ export const CropTool = () => {
       },
     });
 
-    toast.success(`Crop applied: ${Math.round(cropArea.width)} × ${Math.round(cropArea.height)}px`, {
-      icon: '✂️',
+    // Update preview to show cropped image
+    const canvas = document.createElement('canvas');
+    canvas.width = cropArea.width;
+    canvas.height = cropArea.height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(
+        previewImage,
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
+        0,
+        0,
+        cropArea.width,
+        cropArea.height
+      );
+      const croppedImg = new Image();
+      croppedImg.onload = () => {
+        setPreviewImage(croppedImg);
+        setCropArea({
+          x: 0,
+          y: 0,
+          width: croppedImg.width,
+          height: croppedImg.height,
+        });
+      };
+      croppedImg.src = canvas.toDataURL();
+    }
+
+    toast.success('Crop applied', {
+      duration: 2000,
     });
   };
 
@@ -271,7 +301,9 @@ export const CropTool = () => {
       },
     });
 
-    toast.success('Crop reset to full image');
+    toast.success('Crop reset', {
+      duration: 2000,
+    });
   };
 
   const hasCrop = transform?.crop !== undefined;

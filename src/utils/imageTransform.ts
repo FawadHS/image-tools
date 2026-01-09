@@ -98,19 +98,28 @@ export const applyTransformationsToCanvas = (
   // Apply text overlay
   if (!excludeText && transform?.textOverlay) {
     const overlay = transform.textOverlay;
-    const scale = canvas.width / img.width;
-
+    
     ctx.save();
-    ctx.font = `${overlay.fontSize * scale}px ${overlay.fontFamily}`;
+    
+    // Calculate text position based on crop state
+    let textX = overlay.x;
+    let textY = overlay.y;
+    
+    // If crop is applied (not excluded), adjust text position relative to crop area
+    if (!excludeCrop && transform?.crop) {
+      textX = overlay.x - transform.crop.x;
+      textY = overlay.y - transform.crop.y;
+    }
+    
+    // Scale font size based on canvas dimensions
+    const scaleFactor = canvas.width / (excludeCrop ? img.width : sourceWidth);
+    ctx.font = `${overlay.fontSize * scaleFactor}px ${overlay.fontFamily}`;
     ctx.fillStyle = overlay.color;
     ctx.globalAlpha = overlay.opacity;
     ctx.textBaseline = 'top';
     
-    // Adjust text position if crop is applied
-    const textX = excludeCrop ? overlay.x * scale : (overlay.x - sourceX) * scale;
-    const textY = excludeCrop ? overlay.y * scale : (overlay.y - sourceY) * scale;
-    
-    ctx.fillText(overlay.text, textX, textY);
+    // Apply scaled position
+    ctx.fillText(overlay.text, textX * scaleFactor, textY * scaleFactor);
     ctx.restore();
   }
 

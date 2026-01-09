@@ -117,7 +117,9 @@ export const TextOverlayTool = () => {
     };
     setOverlays([...overlays, newOverlay]);
     setSelectedOverlay(overlays.length);
-    toast.success('Text overlay added');
+    toast.success('Text added', {
+      duration: 2000,
+    });
   };
 
   const removeOverlay = (index: number) => {
@@ -125,7 +127,9 @@ export const TextOverlayTool = () => {
     if (selectedOverlay === index) {
       setSelectedOverlay(null);
     }
-    toast.success('Text overlay removed');
+    toast.success('Text removed', {
+      duration: 2000,
+    });
   };
 
   const updateOverlay = (index: number, updates: Partial<TextOverlayConfig>) => {
@@ -204,8 +208,8 @@ export const TextOverlayTool = () => {
       },
     });
 
-    toast.success(`Text overlay applied: "${overlays[0].text.substring(0, 20)}${overlays[0].text.length > 20 ? '...' : ''}"`, {
-      icon: '✏️',
+    toast.success('Text applied', {
+      duration: 2000,
     });
   };
 
@@ -229,7 +233,9 @@ export const TextOverlayTool = () => {
       },
     });
 
-    toast.success('Text overlay removed');
+    toast.success('Text removed', {
+      duration: 2000,
+    });
   };
 
   const hasTextOverlay = overlays.length > 0;
