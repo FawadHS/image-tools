@@ -28,7 +28,7 @@ export const ImageToolsPage = () => {
 
             {/* Right Column - Settings */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 custom-scrollbar">
                 <ImageEditor />
                 <CropTool />
                 <TextOverlayTool />
