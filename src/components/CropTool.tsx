@@ -52,9 +52,9 @@ export const CropTool = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Scale to fit container (max 500x350)
-    const maxWidth = 500;
-    const maxHeight = 350;
+    // Scale to fit container - use smaller max dimensions to ensure it fits
+    const maxWidth = 450;
+    const maxHeight = 300;
     const scale = Math.min(maxWidth / currentImage.width, maxHeight / currentImage.height, 1);
 
     canvas.width = Math.floor(currentImage.width * scale);
@@ -213,19 +213,43 @@ export const CropTool = () => {
       },
     });
 
+    // Create a cropped version of the image to show as preview
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = cropArea.width;
+    tempCanvas.height = cropArea.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (tempCtx) {
+      tempCtx.drawImage(
+        currentImage,
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
+        0,
+        0,
+        cropArea.width,
+        cropArea.height
+      );
+      
+      const croppedImg = new Image();
+      croppedImg.onload = () => {
+        setCurrentImage(croppedImg);
+        // Reset crop area to show the full cropped image
+        setCropArea({
+          x: 0,
+          y: 0,
+          width: croppedImg.width,
+          height: croppedImg.height,
+        });
+      };
+      croppedImg.src = tempCanvas.toDataURL();
+    }
+
     toast.success('Crop applied', { duration: 2000 });
   };
 
   const resetCrop = () => {
-    if (currentImage) {
-      setCropArea({
-        x: 0,
-        y: 0,
-        width: currentImage.width,
-        height: currentImage.height,
-      });
-    }
-
     const currentTransform = state.options.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
@@ -241,6 +265,21 @@ export const CropTool = () => {
         },
       },
     });
+
+    // Reload the original image
+    if (state.files.length > 0 && state.files[0].preview) {
+      const img = new Image();
+      img.onload = () => {
+        setCurrentImage(img);
+        setCropArea({
+          x: 0,
+          y: 0,
+          width: img.width,
+          height: img.height,
+        });
+      };
+      img.src = state.files[0].preview;
+    }
 
     toast.success('Crop reset', { duration: 2000 });
   };
@@ -276,14 +315,14 @@ export const CropTool = () => {
         )}
       </div>
 
-      <div className="mb-4 flex justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+      <div className="mb-4 flex justify-center items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4 max-h-[350px] overflow-hidden">
         <canvas
           ref={canvasRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded"
+          className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain"
         />
       </div>
 

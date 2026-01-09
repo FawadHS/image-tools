@@ -97,9 +97,9 @@ export const TextOverlayTool = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Scale to fit container
-    const maxWidth = 500;
-    const maxHeight = 350;
+    // Scale to fit container - use smaller max dimensions to ensure it fits
+    const maxWidth = 450;
+    const maxHeight = 300;
     const scale = Math.min(maxWidth / currentImage.width, maxHeight / currentImage.height, 1);
 
     canvas.width = Math.floor(currentImage.width * scale);
@@ -314,14 +314,14 @@ export const TextOverlayTool = () => {
         )}
       </div>
 
-      <div className="mb-4 flex justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+      <div className="mb-4 flex justify-center items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4 max-h-[350px] overflow-hidden">
         <canvas
           ref={canvasRef}
           onClick={handleCanvasClick}
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
           onMouseLeave={handleCanvasMouseUp}
-          className="cursor-pointer border border-gray-300 dark:border-gray-600 rounded"
+          className="cursor-pointer border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain"
         />
       </div>
 
