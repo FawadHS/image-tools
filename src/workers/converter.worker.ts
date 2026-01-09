@@ -99,10 +99,26 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     const img = await loadImage(blob);
     postMessage({ type: 'progress', progress: 30 } as WorkerResponse);
 
-    // Calculate dimensions
+    // Get transformation options
+    const transform = options.transform;
+    
+    // Apply crop if specified
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = img.width;
+    let sourceHeight = img.height;
+    
+    if (transform?.crop) {
+      sourceX = transform.crop.x;
+      sourceY = transform.crop.y;
+      sourceWidth = transform.crop.width;
+      sourceHeight = transform.crop.height;
+    }
+
+    // Calculate dimensions based on cropped size
     const dimensions = calculateDimensions(
-      img.width,
-      img.height,
+      sourceWidth,
+      sourceHeight,
       options.maxWidth,
       options.maxHeight,
       options.maintainAspectRatio
@@ -110,7 +126,6 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     postMessage({ type: 'progress', progress: 50 } as WorkerResponse);
 
     // Apply rotation if needed - swap dimensions for 90/270 degree rotations
-    const transform = options.transform;
     const rotation = transform?.rotation || 0;
     const flipH = transform?.flipHorizontal || false;
     const flipV = transform?.flipVertical || false;
@@ -153,7 +168,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     // 4. Draw image centered (accounting for rotation dimension swap)
     const drawWidth = needsDimensionSwap ? dimensions.height : dimensions.width;
     const drawHeight = needsDimensionSwap ? dimensions.width : dimensions.height;
-    ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+    
+    // Draw with crop applied via source parameters
+    ctx.drawImage(
+      img, 
+      sourceX, sourceY, sourceWidth, sourceHeight,
+      -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
+    );
     
     // Restore context
     ctx.restore();
@@ -220,6 +241,33 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       }
       
       ctx.putImageData(imageData, 0, 0);
+    }
+    
+    // Apply text overlay if specified
+    if (transform?.textOverlay) {
+      const overlay = transform.textOverlay;
+      
+      // Calculate text position relative to the canvas
+      // Text coordinates are stored relative to the original image
+      let textX = overlay.x;
+      let textY = overlay.y;
+      
+      // If crop is applied, adjust text position by subtracting crop offset
+      if (transform?.crop) {
+        textX = overlay.x - transform.crop.x;
+        textY = overlay.y - transform.crop.y;
+      }
+      
+      // Calculate scale factor based on canvas vs source dimensions
+      const scaleFactor = canvasWidth / sourceWidth;
+      
+      ctx.save();
+      ctx.font = `${overlay.fontSize * scaleFactor}px ${overlay.fontFamily}`;
+      ctx.fillStyle = overlay.color;
+      ctx.globalAlpha = overlay.opacity;
+      ctx.textBaseline = 'top';
+      ctx.fillText(overlay.text, textX * scaleFactor, textY * scaleFactor);
+      ctx.restore();
     }
     
     postMessage({ type: 'progress', progress: 70 } as WorkerResponse);
