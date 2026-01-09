@@ -162,18 +162,121 @@ export const convertImage = async (
 
   // Create canvas and draw image
   const canvas = document.createElement('canvas');
-  canvas.width = dimensions.width;
-  canvas.height = dimensions.height;
+  
+  // Apply crop if specified
+  let sourceX = 0;
+  let sourceY = 0;
+  let sourceWidth = img.width;
+  let sourceHeight = img.height;
+  
+  if (options.transform?.crop) {
+    sourceX = options.transform.crop.x;
+    sourceY = options.transform.crop.y;
+    sourceWidth = options.transform.crop.width;
+    sourceHeight = options.transform.crop.height;
+    
+    // Recalculate dimensions based on cropped size
+    const croppedDimensions = calculateDimensions(
+      sourceWidth,
+      sourceHeight,
+      options.maxWidth,
+      options.maxHeight,
+      options.maintainAspectRatio
+    );
+    canvas.width = croppedDimensions.width;
+    canvas.height = croppedDimensions.height;
+  } else {
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+  }
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Could not get canvas context');
   }
 
-  // Draw image with high quality
+  // Apply transformations
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
+
+  // Save context for transformations
+  ctx.save();
+
+  // Apply rotation if specified
+  if (options.transform?.rotation) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    ctx.translate(centerX, centerY);
+    ctx.rotate((options.transform.rotation * Math.PI) / 180);
+    ctx.translate(-centerX, -centerY);
+  }
+
+  // Apply flip transformations
+  if (options.transform?.flipHorizontal || options.transform?.flipVertical) {
+    const scaleX = options.transform.flipHorizontal ? -1 : 1;
+    const scaleY = options.transform.flipVertical ? -1 : 1;
+    const translateX = options.transform.flipHorizontal ? canvas.width : 0;
+    const translateY = options.transform.flipVertical ? canvas.height : 0;
+    ctx.translate(translateX, translateY);
+    ctx.scale(scaleX, scaleY);
+  }
+
+  // Draw the image (with crop applied via source parameters)
+  ctx.drawImage(
+    img,
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.restore();
+
+  // Apply filters if specified
+  if (options.transform?.filters) {
+    const filters = options.transform.filters;
+    const filterArray: string[] = [];
+
+    if (filters.brightness !== 100) {
+      filterArray.push(`brightness(${filters.brightness}%)`);
+    }
+    if (filters.contrast !== 100) {
+      filterArray.push(`contrast(${filters.contrast}%)`);
+    }
+    if (filters.saturation !== 100) {
+      filterArray.push(`saturate(${filters.saturation}%)`);
+    }
+    if (filters.grayscale) {
+      filterArray.push('grayscale(100%)');
+    }
+    if (filters.sepia) {
+      filterArray.push('sepia(100%)');
+    }
+
+    if (filterArray.length > 0) {
+      ctx.filter = filterArray.join(' ');
+      ctx.drawImage(canvas, 0, 0);
+      ctx.filter = 'none';
+    }
+  }
+
+  // Apply text overlay if specified
+  if (options.transform?.textOverlay) {
+    const overlay = options.transform.textOverlay;
+    const scale = canvas.width / img.width;
+    
+    ctx.save();
+    ctx.font = `${overlay.fontSize * scale}px ${overlay.fontFamily}`;
+    ctx.fillStyle = overlay.color;
+    ctx.globalAlpha = overlay.opacity;
+    ctx.textBaseline = 'top';
+    ctx.fillText(overlay.text, overlay.x * scale, overlay.y * scale);
+    ctx.restore();
+  }
 
   // Get output format settings
   const outputFormat = options.outputFormat || 'webp';

@@ -3,6 +3,8 @@ import { Header } from '../components/Header';
 import { DropZone } from '../components/DropZone';
 import { SettingsPanel } from '../components/SettingsPanel';
 import { ImageEditor } from '../components/ImageEditor';
+import { CropTool } from '../components/CropTool';
+import { TextOverlayTool } from '../components/TextOverlayTool';
 import { FileList } from '../components/FileList';
 import { ActionBar } from '../components/ActionBar';
 import { HistoryPanel } from '../components/HistoryPanel';
@@ -28,6 +30,8 @@ export const ImageToolsPage = () => {
             <div className="lg:col-span-1">
               <div className="sticky top-8 space-y-6">
                 <ImageEditor />
+                <CropTool />
+                <TextOverlayTool />
                 <SettingsPanel />
               </div>
             </div>
