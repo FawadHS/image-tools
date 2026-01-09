@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Image, FileText, Palette } from 'lucide-react';
 
 export const ToolsIndex = () => {
   const tools = [
@@ -10,6 +9,7 @@ export const ToolsIndex = () => {
       description: 'Convert images between formats. HEIC, JPEG, PNG, WebP, AVIF. Quality control, resize, batch processing.',
       badge: 'Live',
       available: true,
+      link: '/image-tools',
     },
     {
       id: 'pdf-tools',
@@ -18,6 +18,7 @@ export const ToolsIndex = () => {
       description: 'Merge, split, compress PDFs. Client-side processing.',
       badge: 'Soon',
       available: false,
+      link: '',
     },
     {
       id: 'color-tools',
@@ -26,6 +27,7 @@ export const ToolsIndex = () => {
       description: 'Extract palettes, check contrast, generate schemes.',
       badge: 'Soon',
       available: false,
+      link: '',
     },
   ];
 
@@ -50,38 +52,44 @@ export const ToolsIndex = () => {
         {/* Tools List */}
         <div className="space-y-4 mb-12">
           {tools.map((tool) => {
-            const Component = tool.available ? Link : 'div';
-            return (
-              <Component
-                key={tool.id}
-                to={tool.available ? '/image-tools' : undefined}
-                className={`block p-6 border border-gray-200 dark:border-gray-800 rounded-lg transition-all ${
-                  tool.available
-                    ? 'hover:border-blue-600 dark:hover:border-blue-400 hover:-translate-y-0.5 cursor-pointer'
-                    : 'opacity-50 cursor-not-allowed'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl flex-shrink-0">{tool.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-lg font-semibold">{tool.title}</h2>
-                      <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide ${
-                          tool.available
-                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                            : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                        }`}
-                      >
-                        {tool.badge}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {tool.description}
-                    </p>
+            const content = (
+              <div className="flex items-start gap-4">
+                <div className="text-3xl flex-shrink-0">{tool.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-lg font-semibold">{tool.title}</h2>
+                    <span
+                      className={`text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide ${
+                        tool.available
+                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                          : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      {tool.badge}
+                    </span>
                   </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {tool.description}
+                  </p>
                 </div>
-              </Component>
+              </div>
+            );
+
+            return tool.available ? (
+              <Link
+                key={tool.id}
+                to={tool.link}
+                className="block p-6 border border-gray-200 dark:border-gray-800 rounded-lg transition-all hover:border-blue-600 dark:hover:border-blue-400 hover:-translate-y-0.5"
+              >
+                {content}
+              </Link>
+            ) : (
+              <div
+                key={tool.id}
+                className="block p-6 border border-gray-200 dark:border-gray-800 rounded-lg opacity-50 cursor-not-allowed"
+              >
+                {content}
+              </div>
             );
           })}
         </div>
