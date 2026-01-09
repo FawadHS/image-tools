@@ -24,6 +24,7 @@ export const CropTool = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<HTMLImageElement | null>(null);
+  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
 
   const transform = state.options.transform;
 
@@ -32,6 +33,9 @@ export const CropTool = () => {
     if (state.files.length > 0 && state.files[0].preview) {
       const img = new Image();
       img.onload = async () => {
+        // Store original image for reference
+        setOriginalImage(img);
+        
         // Apply all transformations except crop (since we're in the crop tool)
         try {
           const transformedCanvas = applyTransformationsToCanvas(
@@ -44,30 +48,26 @@ export const CropTool = () => {
           setPreviewImage(transformedImg);
           
           // Initialize crop area to full transformed image
-          if (!cropArea) {
-            setCropArea({
-              x: 0,
-              y: 0,
-              width: transformedImg.width,
-              height: transformedImg.height,
-            });
-          }
+          setCropArea({
+            x: 0,
+            y: 0,
+            width: transformedImg.width,
+            height: transformedImg.height,
+          });
         } catch (error) {
           console.error('Failed to apply transformations:', error);
           setPreviewImage(img);
-          if (!cropArea) {
-            setCropArea({
-              x: 0,
-              y: 0,
-              width: img.width,
-              height: img.height,
-            });
-          }
+          setCropArea({
+            x: 0,
+            y: 0,
+            width: img.width,
+            height: img.height,
+          });
         }
       };
       img.src = state.files[0].preview;
     }
-  }, [state.files, transform?.rotation, transform?.flipHorizontal, transform?.flipVertical, transform?.filters, transform?.textOverlay]);
+  }, [state.files, transform?.rotation, transform?.flipHorizontal, transform?.flipVertical, transform?.filters, transform?.textOverlay, transform?.crop]);
 
   // Draw preview on canvas
   useEffect(() => {
@@ -78,16 +78,17 @@ export const CropTool = () => {
     if (!ctx) return;
 
     // Set canvas size to fit container while maintaining aspect ratio
-    const maxWidth = 600;
-    const maxHeight = 400;
+    // Use smaller max dimensions to ensure it fits within the container
+    const maxWidth = 500;
+    const maxHeight = 350;
     const scale = Math.min(
       maxWidth / previewImage.width,
       maxHeight / previewImage.height,
       1
     );
 
-    canvas.width = previewImage.width * scale;
-    canvas.height = previewImage.height * scale;
+    canvas.width = Math.floor(previewImage.width * scale);
+    canvas.height = Math.floor(previewImage.height * scale);
 
     // Draw image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -208,9 +209,19 @@ export const CropTool = () => {
       }
     }
 
+    // Calculate crop area with boundary constraints
+    let cropX = Math.min(dragStart.x, x);
+    let cropY = Math.min(dragStart.y, y);
+    
+    // Ensure crop doesn't exceed image boundaries
+    width = Math.min(width, previewImage.width - cropX);
+    height = Math.min(height, previewImage.height - cropY);
+    cropX = Math.max(0, cropX);
+    cropY = Math.max(0, cropY);
+
     setCropArea({
-      x: Math.min(dragStart.x, x),
-      y: Math.min(dragStart.y, y),
+      x: cropX,
+      y: cropY,
       width,
       height,
     });
@@ -222,7 +233,35 @@ export const CropTool = () => {
   };
 
   const applyCrop = () => {
-    if (!cropArea || !previewImage) return;
+    if (!cropArea || !previewImage || !originalImage) return;
+
+    // Validate crop area
+    if (cropArea.width <= 0 || cropArea.height <= 0) {
+      toast.error('Invalid crop area');
+      return;
+    }
+
+    // Calculate the absolute crop coordinates relative to the original image
+    // We need to account for any existing crop
+    const existingCrop = transform?.crop;
+    
+    // If there's an existing crop, the current cropArea is relative to that cropped region
+    // We need to translate it back to the original image coordinates
+    let absoluteCrop: CropArea;
+    
+    if (existingCrop) {
+      // Current crop is relative to the already-cropped image
+      // Add the existing crop offset to get absolute coordinates
+      absoluteCrop = {
+        x: existingCrop.x + cropArea.x,
+        y: existingCrop.y + cropArea.y,
+        width: cropArea.width,
+        height: cropArea.height,
+      };
+    } else {
+      // No existing crop, use cropArea as-is
+      absoluteCrop = cropArea;
+    }
 
     const currentTransform = transform || {
       rotation: 0 as const,
@@ -230,17 +269,18 @@ export const CropTool = () => {
       flipVertical: false,
     };
 
+    // Save the crop to state
     dispatch({
       type: 'SET_OPTIONS',
       payload: {
         transform: {
           ...currentTransform,
-          crop: cropArea,
+          crop: absoluteCrop,
         },
       },
     });
 
-    // Update preview to show cropped image
+    // Update preview to show only the cropped portion
     const canvas = document.createElement('canvas');
     canvas.width = cropArea.width;
     canvas.height = cropArea.height;
@@ -260,6 +300,7 @@ export const CropTool = () => {
       const croppedImg = new Image();
       croppedImg.onload = () => {
         setPreviewImage(croppedImg);
+        // Reset crop area to show the full cropped image for next potential crop
         setCropArea({
           x: 0,
           y: 0,
@@ -276,21 +317,13 @@ export const CropTool = () => {
   };
 
   const resetCrop = () => {
-    if (previewImage) {
-      setCropArea({
-        x: 0,
-        y: 0,
-        width: previewImage.width,
-        height: previewImage.height,
-      });
-    }
-
     const currentTransform = transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
     };
 
+    // Clear crop from transform
     dispatch({
       type: 'SET_OPTIONS',
       payload: {
@@ -300,6 +333,39 @@ export const CropTool = () => {
         },
       },
     });
+
+    // Reload the original image to reset the preview
+    if (originalImage) {
+      const reloadImage = async () => {
+        try {
+          const transformedCanvas = applyTransformationsToCanvas(
+            originalImage,
+            { ...currentTransform, crop: undefined },
+            true, // exclude crop
+            false // include text overlay
+          );
+          const transformedImg = await canvasToImage(transformedCanvas);
+          setPreviewImage(transformedImg);
+          setCropArea({
+            x: 0,
+            y: 0,
+            width: transformedImg.width,
+            height: transformedImg.height,
+          });
+        } catch (error) {
+          console.error('Failed to reload image:', error);
+          // Fallback to original image
+          setPreviewImage(originalImage);
+          setCropArea({
+            x: 0,
+            y: 0,
+            width: originalImage.width,
+            height: originalImage.height,
+          });
+        }
+      };
+      reloadImage();
+    }
 
     toast.success('Crop reset', {
       duration: 2000,
