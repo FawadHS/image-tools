@@ -1,5 +1,33 @@
 export type OutputFormat = 'webp' | 'jpeg' | 'png' | 'avif';
 
+export interface ImageTransform {
+  rotation: 0 | 90 | 180 | 270;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  crop?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  filters?: {
+    brightness: number; // 0-200, default 100
+    contrast: number; // 0-200, default 100
+    saturation: number; // 0-200, default 100
+    grayscale: boolean;
+    sepia: boolean;
+  };
+  textOverlay?: {
+    text: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    fontFamily: string;
+    color: string;
+    opacity: number;
+  };
+}
+
 export interface ConvertOptions {
   quality: number;
   lossless: boolean;
@@ -12,7 +40,10 @@ export interface ConvertOptions {
   namePrefix?: string;
   nameSuffix?: string;
   addTimestamp?: boolean;
-  addDimensions?: boolean;}
+  addDimensions?: boolean;
+  // Image editing transforms
+  transform?: ImageTransform;
+}
 
 export interface SelectedFile {
   id: string;

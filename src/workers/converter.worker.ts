@@ -109,18 +109,54 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     );
     postMessage({ type: 'progress', progress: 50 } as WorkerResponse);
 
+    // Apply rotation if needed - swap dimensions for 90/270 degree rotations
+    const transform = options.transform;
+    const rotation = transform?.rotation || 0;
+    const flipH = transform?.flipHorizontal || false;
+    const flipV = transform?.flipVertical || false;
+    
+    // For 90 or 270 degree rotation, swap width and height
+    const needsDimensionSwap = rotation === 90 || rotation === 270;
+    const canvasWidth = needsDimensionSwap ? dimensions.height : dimensions.width;
+    const canvasHeight = needsDimensionSwap ? dimensions.width : dimensions.height;
+
     // Create canvas using OffscreenCanvas if available
-    const canvas = new OffscreenCanvas(dimensions.width, dimensions.height);
+    const canvas = new OffscreenCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
     
     if (!ctx) {
       throw new Error('Could not get canvas context');
     }
 
-    // Draw image with high quality
+    // Draw image with high quality and transformations
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
+    
+    // Save context state
+    ctx.save();
+    
+    // Apply transformations in the correct order
+    // 1. Translate to center
+    ctx.translate(canvasWidth / 2, canvasHeight / 2);
+    
+    // 2. Apply rotation
+    if (rotation !== 0) {
+      ctx.rotate((rotation * Math.PI) / 180);
+    }
+    
+    // 3. Apply flips
+    const scaleX = flipH ? -1 : 1;
+    const scaleY = flipV ? -1 : 1;
+    ctx.scale(scaleX, scaleY);
+    
+    // 4. Draw image centered (accounting for rotation dimension swap)
+    const drawWidth = needsDimensionSwap ? dimensions.height : dimensions.width;
+    const drawHeight = needsDimensionSwap ? dimensions.width : dimensions.height;
+    ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+    
+    // Restore context
+    ctx.restore();
+    
     postMessage({ type: 'progress', progress: 70 } as WorkerResponse);
 
     // Get output format settings

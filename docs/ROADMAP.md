@@ -116,17 +116,11 @@ Phase 5: Polish & Optimization        ██████████████
 | **Rotate & Flip** | High | Low | 90°/180°/270° rotation, horizontal/vertical flip |
 | **Filters** | Medium | Medium | B&W, sepia, brightness, contrast, saturation |
 | **Text Overlay** | Medium | Medium | Add watermarks, captions with font selection |
-| **Border & Frame** | Low | Low | Add decorative borders and frames |
-| **Stickers** | Low | Medium | Add emojis, icons, decorative elements |
 
 ### Cloud Integration
 | Feature | Priority | Complexity | Description |
 |---------|----------|------------|-------------|
 | **Google Drive** | High | High | Import from and export to Google Drive |
-| **Dropbox** | Medium | High | Import from and export to Dropbox |
-| **OneDrive** | Medium | High | Microsoft OneDrive integration |
-| **iCloud** | Low | High | Apple iCloud Photos integration |
-| **Direct URL Import** | High | Medium | Import images from URLs |
 
 ### Batch Operations
 | Feature | Priority | Complexity | Description |
