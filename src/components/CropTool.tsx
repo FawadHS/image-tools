@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Crop, Square, Circle, Lasso, Lock, Unlock } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
+import { applyTransformationsToCanvas, canvasToImage } from '../utils/imageTransform';
 
 type CropShape = 'rectangle' | 'circle' | 'freeform';
 type AspectRatioPreset = 'free' | '1:1' | '16:9' | '4:3' | '3:2';
@@ -25,25 +27,47 @@ export const CropTool = () => {
 
   const transform = state.options.transform;
 
-  // Load preview image from first file
+  // Load preview image from first file with transformations applied
   useEffect(() => {
     if (state.files.length > 0 && state.files[0].preview) {
       const img = new Image();
-      img.onload = () => {
-        setPreviewImage(img);
-        // Initialize crop area to full image
-        if (!cropArea) {
-          setCropArea({
-            x: 0,
-            y: 0,
-            width: img.width,
-            height: img.height,
-          });
+      img.onload = async () => {
+        // Apply all transformations except crop (since we're in the crop tool)
+        try {
+          const transformedCanvas = applyTransformationsToCanvas(
+            img,
+            transform,
+            true, // exclude crop
+            false // include text overlay
+          );
+          const transformedImg = await canvasToImage(transformedCanvas);
+          setPreviewImage(transformedImg);
+          
+          // Initialize crop area to full transformed image
+          if (!cropArea) {
+            setCropArea({
+              x: 0,
+              y: 0,
+              width: transformedImg.width,
+              height: transformedImg.height,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to apply transformations:', error);
+          setPreviewImage(img);
+          if (!cropArea) {
+            setCropArea({
+              x: 0,
+              y: 0,
+              width: img.width,
+              height: img.height,
+            });
+          }
         }
       };
       img.src = state.files[0].preview;
     }
-  }, [state.files]);
+  }, [state.files, transform?.rotation, transform?.flipHorizontal, transform?.flipVertical, transform?.filters, transform?.textOverlay]);
 
   // Draw preview on canvas
   useEffect(() => {
@@ -215,6 +239,10 @@ export const CropTool = () => {
         },
       },
     });
+
+    toast.success(`Crop applied: ${Math.round(cropArea.width)} × ${Math.round(cropArea.height)}px`, {
+      icon: '✂️',
+    });
   };
 
   const resetCrop = () => {
@@ -242,6 +270,8 @@ export const CropTool = () => {
         },
       },
     });
+
+    toast.success('Crop reset to full image');
   };
 
   const hasCrop = transform?.crop !== undefined;

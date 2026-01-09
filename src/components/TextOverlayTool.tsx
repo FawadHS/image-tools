@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Type, Plus, Trash2, Move } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
+import { applyTransformationsToCanvas, canvasToImage } from '../utils/imageTransform';
 
 interface TextOverlayConfig {
   text: string;
@@ -22,16 +24,29 @@ export const TextOverlayTool = () => {
 
   const transform = state.options.transform;
 
-  // Load preview image from first file
+  // Load preview image from first file with transformations applied
   useEffect(() => {
     if (state.files.length > 0 && state.files[0].preview) {
       const img = new Image();
-      img.onload = () => {
-        setPreviewImage(img);
+      img.onload = async () => {
+        // Apply all transformations except text overlay (since we're in the text tool)
+        try {
+          const transformedCanvas = applyTransformationsToCanvas(
+            img,
+            transform,
+            false, // include crop
+            true // exclude text overlay
+          );
+          const transformedImg = await canvasToImage(transformedCanvas);
+          setPreviewImage(transformedImg);
+        } catch (error) {
+          console.error('Failed to apply transformations:', error);
+          setPreviewImage(img);
+        }
       };
       img.src = state.files[0].preview;
     }
-  }, [state.files]);
+  }, [state.files, transform?.crop, transform?.rotation, transform?.flipHorizontal, transform?.flipVertical, transform?.filters]);
 
   // Restore existing text overlay from state
   useEffect(() => {
@@ -102,6 +117,7 @@ export const TextOverlayTool = () => {
     };
     setOverlays([...overlays, newOverlay]);
     setSelectedOverlay(overlays.length);
+    toast.success('Text overlay added');
   };
 
   const removeOverlay = (index: number) => {
@@ -109,6 +125,7 @@ export const TextOverlayTool = () => {
     if (selectedOverlay === index) {
       setSelectedOverlay(null);
     }
+    toast.success('Text overlay removed');
   };
 
   const updateOverlay = (index: number, updates: Partial<TextOverlayConfig>) => {
@@ -186,6 +203,10 @@ export const TextOverlayTool = () => {
         },
       },
     });
+
+    toast.success(`Text overlay applied: "${overlays[0].text.substring(0, 20)}${overlays[0].text.length > 20 ? '...' : ''}"`, {
+      icon: '✏️',
+    });
   };
 
   const resetTextOverlay = () => {
@@ -207,6 +228,8 @@ export const TextOverlayTool = () => {
         },
       },
     });
+
+    toast.success('Text overlay removed');
   };
 
   const hasTextOverlay = overlays.length > 0;
