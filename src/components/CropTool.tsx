@@ -29,6 +29,11 @@ export const CropTool = () => {
   const committedCrop = state.options.transform?.crop;
   const [previewCrop, setPreviewCrop] = useState<CropArea | null>(committedCrop || null);
   
+  // Sync preview crop with committed state when it changes externally
+  useEffect(() => {
+    setPreviewCrop(committedCrop || null);
+  }, [JSON.stringify(committedCrop)]);
+  
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(previewCrop) !== JSON.stringify(committedCrop);
 

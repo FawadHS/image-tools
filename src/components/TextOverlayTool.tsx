@@ -26,6 +26,25 @@ export const TextOverlayTool = () => {
   // Track committed overlay from global context
   const committedOverlay = state.options.transform?.textOverlay;
   
+  // Sync overlays with committed state when it changes externally
+  useEffect(() => {
+    if (committedOverlay) {
+      // Adjust coordinates if there's a crop
+      let adjustedOverlay = { ...committedOverlay };
+      if (state.options.transform?.crop) {
+        const crop = state.options.transform.crop;
+        adjustedOverlay = {
+          ...committedOverlay,
+          x: committedOverlay.x - crop.x,
+          y: committedOverlay.y - crop.y,
+        };
+      }
+      setOverlays([adjustedOverlay]);
+    } else {
+      setOverlays([]);
+    }
+  }, [JSON.stringify(committedOverlay), JSON.stringify(state.options.transform?.crop)]);
+  
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
 
@@ -86,30 +105,6 @@ export const TextOverlayTool = () => {
     };
     img.src = state.files[0].preview;
   }, [state.files, state.options.transform?.crop, lastLoadedSrc, lastCropState]);
-
-  // Restore existing text overlay from state
-  useEffect(() => {
-    if (state.options.transform?.textOverlay) {
-      const savedOverlay = state.options.transform.textOverlay;
-      
-      // Text overlay coordinates are stored relative to ORIGINAL image
-      // We need to adjust them to be relative to the CURRENT (possibly cropped) image
-      let adjustedOverlay = { ...savedOverlay };
-      
-      if (state.options.transform?.crop) {
-        const crop = state.options.transform.crop;
-        adjustedOverlay = {
-          ...savedOverlay,
-          x: savedOverlay.x - crop.x,
-          y: savedOverlay.y - crop.y,
-        };
-      }
-      
-      setOverlays([adjustedOverlay]);
-    } else {
-      setOverlays([]);
-    }
-  }, [state.options.transform?.textOverlay, state.options.transform?.crop]);
 
   // Draw canvas preview
   useEffect(() => {

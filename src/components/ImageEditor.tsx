@@ -25,9 +25,10 @@ export const ImageEditor = () => {
   const [previewTransform, setPreviewTransform] = useState<ImageTransform>(committedTransform);
 
   // Sync preview with committed state when it changes externally
+  // Using JSON.stringify to track deep changes in the transform object
   useEffect(() => {
     setPreviewTransform(committedTransform);
-  }, [committedTransform]);
+  }, [JSON.stringify(state.options.transform)]);
 
   const filters = previewTransform.filters || {
     brightness: 100,
