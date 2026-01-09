@@ -2,55 +2,38 @@ import { ImageTransform } from '../types';
 
 /**
  * Apply transformations to an image and return a canvas with the result
+ * 
+ * NEW SIMPLIFIED APPROACH:
+ * - Text overlay coordinates are stored relative to the ORIGINAL image
+ * - When crop is applied, text coordinates are adjusted by subtracting crop offset
+ * - This matches how the tools work: each tool sees the "current" image state
  */
 export const applyTransformationsToCanvas = (
   img: HTMLImageElement,
-  transform: ImageTransform | undefined,
-  excludeCrop: boolean = false,
-  excludeText: boolean = false
+  transform: ImageTransform | undefined
 ): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas context');
 
-  // Determine source dimensions (with or without crop)
+  // Step 1: Apply crop (if exists)
   let sourceX = 0;
   let sourceY = 0;
   let sourceWidth = img.width;
   let sourceHeight = img.height;
 
-  if (!excludeCrop && transform?.crop) {
+  if (transform?.crop) {
     sourceX = transform.crop.x;
     sourceY = transform.crop.y;
     sourceWidth = transform.crop.width;
     sourceHeight = transform.crop.height;
   }
 
-  // Set canvas size
+  // Set canvas size to cropped dimensions
   canvas.width = sourceWidth;
   canvas.height = sourceHeight;
 
-  // Apply rotation transformation
-  ctx.save();
-  if (transform?.rotation) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    ctx.translate(centerX, centerY);
-    ctx.rotate((transform.rotation * Math.PI) / 180);
-    ctx.translate(-centerX, -centerY);
-  }
-
-  // Apply flip transformations
-  if (transform?.flipHorizontal || transform?.flipVertical) {
-    const scaleX = transform.flipHorizontal ? -1 : 1;
-    const scaleY = transform.flipVertical ? -1 : 1;
-    const translateX = transform.flipHorizontal ? canvas.width : 0;
-    const translateY = transform.flipVertical ? canvas.height : 0;
-    ctx.translate(translateX, translateY);
-    ctx.scale(scaleX, scaleY);
-  }
-
-  // Draw the image
+  // Step 2: Draw the image (with crop applied)
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(
@@ -65,9 +48,7 @@ export const applyTransformationsToCanvas = (
     canvas.height
   );
 
-  ctx.restore();
-
-  // Apply filters
+  // Step 3: Apply filters (if exists)
   if (transform?.filters) {
     const filters = transform.filters;
     const filterArray: string[] = [];
@@ -95,31 +76,29 @@ export const applyTransformationsToCanvas = (
     }
   }
 
-  // Apply text overlay
-  if (!excludeText && transform?.textOverlay) {
+  // Step 4: Apply text overlay (if exists)
+  // Text coordinates are in ORIGINAL image space, so subtract crop offset
+  if (transform?.textOverlay) {
     const overlay = transform.textOverlay;
     
     ctx.save();
     
-    // Calculate text position based on crop state
+    // Adjust text position: subtract crop offset to get position on cropped canvas
     let textX = overlay.x;
     let textY = overlay.y;
     
-    // If crop is applied (not excluded), adjust text position relative to crop area
-    if (!excludeCrop && transform?.crop) {
+    if (transform.crop) {
       textX = overlay.x - transform.crop.x;
       textY = overlay.y - transform.crop.y;
     }
     
-    // Scale font size based on canvas dimensions
-    const scaleFactor = canvas.width / (excludeCrop ? img.width : sourceWidth);
-    ctx.font = `${overlay.fontSize * scaleFactor}px ${overlay.fontFamily}`;
+    // Draw text
+    ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
     ctx.fillStyle = overlay.color;
     ctx.globalAlpha = overlay.opacity;
     ctx.textBaseline = 'top';
+    ctx.fillText(overlay.text, textX, textY);
     
-    // Apply scaled position
-    ctx.fillText(overlay.text, textX * scaleFactor, textY * scaleFactor);
     ctx.restore();
   }
 

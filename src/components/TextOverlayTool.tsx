@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Type, Plus, Trash2, Move } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
-import { applyTransformationsToCanvas, canvasToImage } from '../utils/imageTransform';
 
 interface TextOverlayConfig {
   text: string;
@@ -17,77 +16,98 @@ interface TextOverlayConfig {
 export const TextOverlayTool = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [previewImage, setPreviewImage] = useState<HTMLImageElement | null>(null);
-  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
+  const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
   const [overlays, setOverlays] = useState<TextOverlayConfig[]>([]);
   const [selectedOverlay, setSelectedOverlay] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  const transform = state.options.transform;
-
-  // Load preview image from first file with transformations applied
+  // Load image with crop applied (the "current" state for text overlay)
+  // Text overlay works on whatever image state exists (after crop)
   useEffect(() => {
-    if (state.files.length > 0 && state.files[0].preview) {
-      const img = new Image();
-      img.onload = async () => {
-        // Store original image for coordinate reference
-        setOriginalImage(img);
+    if (state.files.length === 0 || !state.files[0].preview) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // If there's a crop, create a cropped version
+      if (state.options.transform?.crop) {
+        const crop = state.options.transform.crop;
+        const canvas = document.createElement('canvas');
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const ctx = canvas.getContext('2d');
         
-        // Apply all transformations except text overlay (since we're in the text tool)
-        try {
-          const transformedCanvas = applyTransformationsToCanvas(
+        if (ctx) {
+          ctx.drawImage(
             img,
-            transform,
-            false, // include crop
-            true // exclude text overlay
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            0,
+            0,
+            crop.width,
+            crop.height
           );
-          const transformedImg = await canvasToImage(transformedCanvas);
-          setPreviewImage(transformedImg);
-        } catch (error) {
-          console.error('Failed to apply transformations:', error);
-          setPreviewImage(img);
+          
+          const croppedImg = new Image();
+          croppedImg.onload = () => {
+            setCurrentImage(croppedImg);
+          };
+          croppedImg.src = canvas.toDataURL();
+        } else {
+          setCurrentImage(img);
         }
-      };
-      img.src = state.files[0].preview;
-    }
-  }, [state.files, transform?.crop, transform?.rotation, transform?.flipHorizontal, transform?.flipVertical, transform?.filters]);
+      } else {
+        // No crop, use original image
+        setCurrentImage(img);
+      }
+    };
+    img.src = state.files[0].preview;
+  }, [state.files, state.options.transform?.crop]);
 
-  // Restore existing text overlay from state (only once on mount or when transform changes)
+  // Restore existing text overlay from state
   useEffect(() => {
-    if (transform?.textOverlay && !isInitialized) {
-      setOverlays([transform.textOverlay]);
-      setIsInitialized(true);
-    } else if (!transform?.textOverlay && isInitialized) {
-      // Reset if transform is cleared externally
+    if (state.options.transform?.textOverlay) {
+      const savedOverlay = state.options.transform.textOverlay;
+      
+      // Text overlay coordinates are stored relative to ORIGINAL image
+      // We need to adjust them to be relative to the CURRENT (possibly cropped) image
+      let adjustedOverlay = { ...savedOverlay };
+      
+      if (state.options.transform?.crop) {
+        const crop = state.options.transform.crop;
+        adjustedOverlay = {
+          ...savedOverlay,
+          x: savedOverlay.x - crop.x,
+          y: savedOverlay.y - crop.y,
+        };
+      }
+      
+      setOverlays([adjustedOverlay]);
+    } else {
       setOverlays([]);
-      setIsInitialized(false);
     }
-  }, [transform?.textOverlay, isInitialized]);
+  }, [state.options.transform?.textOverlay, state.options.transform?.crop]);
 
-  // Draw preview on canvas
+  // Draw canvas preview
   useEffect(() => {
-    if (!canvasRef.current || !previewImage) return;
+    if (!canvasRef.current || !currentImage) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size to fit container
+    // Scale to fit container
     const maxWidth = 500;
     const maxHeight = 350;
-    const scale = Math.min(
-      maxWidth / previewImage.width,
-      maxHeight / previewImage.height,
-      1
-    );
+    const scale = Math.min(maxWidth / currentImage.width, maxHeight / currentImage.height, 1);
 
-    canvas.width = Math.floor(previewImage.width * scale);
-    canvas.height = Math.floor(previewImage.height * scale);
+    canvas.width = Math.floor(currentImage.width * scale);
+    canvas.height = Math.floor(currentImage.height * scale);
 
     // Draw image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(previewImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
 
     // Draw text overlays
     overlays.forEach((overlay, index) => {
@@ -113,38 +133,28 @@ export const TextOverlayTool = () => {
       }
       ctx.restore();
     });
-  }, [previewImage, overlays, selectedOverlay]);
+  }, [currentImage, overlays, selectedOverlay]);
 
   const addTextOverlay = () => {
-    if (!originalImage) {
+    if (!currentImage) {
       toast.error('Image not loaded');
       return;
     }
 
-    // Position text in center of the original image (accounting for crop)
-    let centerX = originalImage.width / 2 - 50;
-    let centerY = originalImage.height / 2 - 20;
-    
-    // If crop is applied, adjust position to be in center of cropped area
-    if (transform?.crop) {
-      centerX = transform.crop.x + transform.crop.width / 2 - 50;
-      centerY = transform.crop.y + transform.crop.height / 2 - 20;
-    }
-
+    // Add text in center of CURRENT image (which may be cropped)
     const newOverlay: TextOverlayConfig = {
       text: 'Sample Text',
-      x: Math.max(0, centerX),
-      y: Math.max(0, centerY),
+      x: Math.max(0, currentImage.width / 2 - 50),
+      y: Math.max(0, currentImage.height / 2 - 20),
       fontSize: 40,
       fontFamily: 'Arial',
       color: '#ffffff',
       opacity: 1,
     };
+    
     setOverlays([...overlays, newOverlay]);
     setSelectedOverlay(overlays.length);
-    toast.success('Text added', {
-      duration: 2000,
-    });
+    toast.success('Text added', { duration: 2000 });
   };
 
   const removeOverlay = (index: number) => {
@@ -152,35 +162,21 @@ export const TextOverlayTool = () => {
     if (selectedOverlay === index) {
       setSelectedOverlay(null);
     }
-    toast.success('Text removed', {
-      duration: 2000,
-    });
+    toast.success('Text removed', { duration: 2000 });
   };
 
   const updateOverlay = (index: number, updates: Partial<TextOverlayConfig>) => {
-    setOverlays(
-      overlays.map((overlay, i) => (i === index ? { ...overlay, ...updates } : overlay))
-    );
+    setOverlays(overlays.map((overlay, i) => (i === index ? { ...overlay, ...updates } : overlay)));
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !previewImage || !originalImage) return;
+    if (!canvasRef.current || !currentImage) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / previewImage.width;
-    
-    // Get click position relative to preview image
-    const clickX = (e.clientX - rect.left) / scale;
-    const clickY = (e.clientY - rect.top) / scale;
-
-    // Convert to original image coordinates if crop is applied
-    let originalX = clickX;
-    let originalY = clickY;
-    if (transform?.crop) {
-      originalX = clickX + transform.crop.x;
-      originalY = clickY + transform.crop.y;
-    }
+    const scale = canvas.width / currentImage.width;
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
 
     // Check if clicked on existing overlay
     const canvas2d = canvas.getContext('2d');
@@ -192,13 +188,7 @@ export const TextOverlayTool = () => {
       const metrics = canvas2d.measureText(overlay.text);
       const textHeight = overlay.fontSize * 1.2;
 
-      // Check if click is within overlay bounds (in original coordinates)
-      if (
-        originalX >= overlay.x &&
-        originalX <= overlay.x + metrics.width &&
-        originalY >= overlay.y &&
-        originalY <= overlay.y + textHeight
-      ) {
+      if (x >= overlay.x && x <= overlay.x + metrics.width && y >= overlay.y && y <= overlay.y + textHeight) {
         setSelectedOverlay(i);
         setIsDragging(true);
         return;
@@ -209,29 +199,19 @@ export const TextOverlayTool = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || selectedOverlay === null || !canvasRef.current || !previewImage || !originalImage) return;
+    if (!isDragging || selectedOverlay === null || !canvasRef.current || !currentImage) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / previewImage.width;
-    
-    // Get mouse position relative to preview image
-    const mouseX = (e.clientX - rect.left) / scale;
-    const mouseY = (e.clientY - rect.top) / scale;
+    const scale = canvas.width / currentImage.width;
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
 
-    // Convert to original image coordinates if crop is applied
-    let newX = mouseX;
-    let newY = mouseY;
-    if (transform?.crop) {
-      newX = mouseX + transform.crop.x;
-      newY = mouseY + transform.crop.y;
-    }
+    // Keep within bounds
+    const boundedX = Math.max(0, Math.min(x, currentImage.width - 50));
+    const boundedY = Math.max(0, Math.min(y, currentImage.height - 20));
 
-    // Apply boundary constraints (keep within original image bounds)
-    newX = Math.max(0, Math.min(newX, originalImage.width - 50));
-    newY = Math.max(0, Math.min(newY, originalImage.height - 20));
-
-    updateOverlay(selectedOverlay, { x: newX, y: newY });
+    updateOverlay(selectedOverlay, { x: boundedX, y: boundedY });
   };
 
   const handleCanvasMouseUp = () => {
@@ -244,41 +224,47 @@ export const TextOverlayTool = () => {
       return;
     }
 
-    // Validate overlay has text
     if (!overlays[0].text || overlays[0].text.trim() === '') {
-      toast.error('Text overlay cannot be empty');
+      toast.error('Text cannot be empty');
       return;
     }
 
-    const currentTransform = transform || {
+    // Convert overlay coordinates back to original image space
+    let savedOverlay = { ...overlays[0] };
+    
+    if (state.options.transform?.crop) {
+      const crop = state.options.transform.crop;
+      savedOverlay = {
+        ...overlays[0],
+        x: overlays[0].x + crop.x,
+        y: overlays[0].y + crop.y,
+      };
+    }
+
+    const currentTransform = state.options.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
     };
 
-    // Save the first overlay (coordinates are in original image space)
-    // Note: Currently supports single overlay. Multiple overlay support can be added later.
     dispatch({
       type: 'SET_OPTIONS',
       payload: {
         transform: {
           ...currentTransform,
-          textOverlay: overlays[0],
+          textOverlay: savedOverlay,
         },
       },
     });
 
-    toast.success('Text applied', {
-      duration: 2000,
-    });
+    toast.success('Text applied', { duration: 2000 });
   };
 
   const resetTextOverlay = () => {
     setOverlays([]);
     setSelectedOverlay(null);
-    setIsInitialized(false);
 
-    const currentTransform = transform || {
+    const currentTransform = state.options.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
@@ -294,21 +280,15 @@ export const TextOverlayTool = () => {
       },
     });
 
-    toast.success('Text removed', {
-      duration: 2000,
-    });
+    toast.success('Text removed', { duration: 2000 });
   };
-
-  const hasTextOverlay = overlays.length > 0;
 
   if (state.files.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 mb-4">
           <Type className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Text Overlay
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Text Overlay</h2>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Upload an image to add text overlays
@@ -319,15 +299,12 @@ export const TextOverlayTool = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Type className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Text Overlay
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Text Overlay</h2>
         </div>
-        {hasTextOverlay && (
+        {overlays.length > 0 && (
           <button
             onClick={resetTextOverlay}
             className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
@@ -337,7 +314,6 @@ export const TextOverlayTool = () => {
         )}
       </div>
 
-      {/* Canvas Preview */}
       <div className="mb-4 flex justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
         <canvas
           ref={canvasRef}
@@ -345,11 +321,10 @@ export const TextOverlayTool = () => {
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
           onMouseLeave={handleCanvasMouseUp}
-          className="cursor-pointer border border-gray-300 dark:border-gray-600"
+          className="cursor-pointer border border-gray-300 dark:border-gray-600 rounded"
         />
       </div>
 
-      {/* Add Overlay Button */}
       <button
         onClick={addTextOverlay}
         className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
@@ -358,7 +333,6 @@ export const TextOverlayTool = () => {
         Add Text Overlay
       </button>
 
-      {/* Overlay List and Editor */}
       {overlays.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
@@ -389,11 +363,8 @@ export const TextOverlayTool = () => {
               </div>
 
               <div className="space-y-3">
-                {/* Text Input */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">
-                    Text
-                  </label>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Text</label>
                   <input
                     type="text"
                     value={overlay.text}
@@ -403,11 +374,8 @@ export const TextOverlayTool = () => {
                   />
                 </div>
 
-                {/* Font Family */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">
-                    Font
-                  </label>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Font</label>
                   <select
                     value={overlay.fontFamily}
                     onChange={(e) => updateOverlay(index, { fontFamily: e.target.value })}
@@ -425,15 +393,10 @@ export const TextOverlayTool = () => {
                   </select>
                 </div>
 
-                {/* Font Size */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      Font Size
-                    </label>
-                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
-                      {overlay.fontSize}px
-                    </span>
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Font Size</label>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{overlay.fontSize}px</span>
                   </div>
                   <input
                     type="range"
@@ -441,17 +404,14 @@ export const TextOverlayTool = () => {
                     max="200"
                     value={overlay.fontSize}
                     onChange={(e) => updateOverlay(index, { fontSize: Number(e.target.value) })}
-                    aria-label="Font size in pixels"
+                    aria-label="Font size"
                     className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
                   />
                 </div>
 
-                {/* Color */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">
-                      Color
-                    </label>
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Color</label>
                     <input
                       type="color"
                       value={overlay.color}
@@ -462,9 +422,7 @@ export const TextOverlayTool = () => {
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        Opacity
-                      </label>
+                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Opacity</label>
                       <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
                         {Math.round(overlay.opacity * 100)}%
                       </span>
@@ -485,7 +443,6 @@ export const TextOverlayTool = () => {
             </div>
           ))}
 
-          {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               onClick={resetTextOverlay}
