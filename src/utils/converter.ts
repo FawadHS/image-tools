@@ -1,6 +1,6 @@
 import heic2any from 'heic2any';
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
-import { getMimeType, getExtension, calculateDimensions } from './imageHelpers';
+import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
 
 /**
  * Check if Web Workers are supported in the current browser
@@ -13,28 +13,12 @@ export const isWorkerSupported = (): boolean => {
 /**
  * Get MIME type for output format
  */
-export const getMimeType = (format: OutputFormat): string => {
-  const mimeTypes: Record<OutputFormat, string> = {
-    webp: 'image/webp',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    avif: 'image/avif',
-  };
-  return mimeTypes[format];
-};
+export const getMimeType = getImageMimeType;
 
 /**
  * Get file extension for output format
  */
-export const getExtension = (format: OutputFormat): string => {
-  const extensions: Record<OutputFormat, string> = {
-    webp: '.webp',
-    jpeg: '.jpg',
-    png: '.png',
-    avif: '.avif',
-  };
-  return extensions[format];
-};
+export const getExtension = getImageExtension;
 
 /**
  * Check if browser supports the output format
@@ -83,67 +67,39 @@ export const convertHeicToBlob = async (file: File): Promise<Blob> => {
   } catch (error) {
     console.error('HEIC conversion error:', error);
     throw new Error('Failed to convert HEIC file');
-  }HTMLImageElement
+  }
+};
+
+/**
+ * Load an image from a blob into an HTMLImageElement
  * Automatically revokes object URL after loading
  * @param blob - The image blob to load
  * @returns Promise resolving to loaded image element
  * @throws {Error} If image fails to load
-};
-
-/**
- * Load an image from a blob and return dimensions
  */
-export const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
+const loadImage = async (blob: Blob): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const url = URL.createObjectURL(blob);
+    
     img.onload = () => {
-      URL.revokeObjectURL(img.src);
+      URL.revokeObjectURL(url);
       resolve(img);
     };
+    
     img.onerror = () => {
-      URL.revokeObjectURL(img.src);
+      URL.revokeObjectURL(url);
       reject(new Error('Failed to load image'));
     };
-    img.src = URL.createObjectURL(blob);
+    
+    img.src = url;
   });
 };
 
 /**
  * Calculate new dimensions maintaining aspect ratio
  */
-export const calculateDimensions = (
-  originalWidth: number,
-  originalHeight: number,
-  maxWidth?: number,
-  maxHeight?: number,
-  maintainAspectRatio: boolean = true
-): { width: number; height: number } => {
-  if (!maxWidth && !maxHeight) {
-    return { width: originalWidth, height: originalHeight };
-  }
-
-  let newWidth = originalWidth;
-  let newHeight = originalHeight;
-
-  if (maintainAspectRatio) {
-    const aspectRatio = originalWidth / originalHeight;
-
-    if (maxWidth && newWidth > maxWidth) {
-      newWidth = maxWidth;
-      newHeight = Math.round(newWidth / aspectRatio);
-    }
-
-    if (maxHeight && newHeight > maxHeight) {
-      newHeight = maxHeight;
-      newWidth = Math.round(newHeight * aspectRatio);
-    }
-  } else {
-    if (maxWidth) newWidth = Math.min(originalWidth, maxWidth);
-    if (maxHeight) newHeight = Math.min(originalHeight, maxHeight);
-  }
-
-  return { width: newWidth, height: newHeight };
-};
+export const calculateDimensions = calcDimensions;
 
 /**
  * Convert image to selected output format using Canvas API

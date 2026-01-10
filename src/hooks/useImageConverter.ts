@@ -3,7 +3,6 @@ import { useConverter } from '../context/ConverterContext';
 import { convertImage, isHeicFile, convertHeicToBlob, isWorkerSupported } from '../utils/converter';
 import { addToHistory } from '../utils/history';
 import { ConvertResult } from '../types';
-import { CONVERSION_DELAY_MS, UI_UPDATE_DELAY_MS } from '../constants';
 import toast from 'react-hot-toast';
 
 /**

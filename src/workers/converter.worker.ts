@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
+import { ConvertOptions, ConvertResult } from '../types';
 
 // Import shared utilities to avoid code duplication
 import { getMimeType, getExtension, calculateDimensions } from '../utils/imageHelpers';
