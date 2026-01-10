@@ -108,13 +108,16 @@ export const ImageEditor = () => {
   useEffect(() => {
     if (!canvasRef.current || state.files.length === 0) return;
 
+    // Get the active file or fall back to first file
+    const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
+    if (!activeFile) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const firstFile = state.files[0];
     const img = new Image();
-    img.src = firstFile.preview;
+    img.src = activeFile.preview;
 
     img.onload = () => {
       // Set canvas size
@@ -150,7 +153,7 @@ export const ImageEditor = () => {
       ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
       ctx.restore();
     };
-  }, [previewTransform, state.files, filters]);
+  }, [previewTransform, state.files, state.activeFileId, filters]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">

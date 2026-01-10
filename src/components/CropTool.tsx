@@ -24,6 +24,7 @@ export const CropTool = () => {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
   const [originalImageSrc, setOriginalImageSrc] = useState<string>('');
+  const [lastTransformState, setLastTransformState] = useState<string>('');
   
   // Track committed crop state from global context
   const committedCrop = state.options.transform?.crop;
@@ -37,31 +38,79 @@ export const CropTool = () => {
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(previewCrop) !== JSON.stringify(committedCrop);
 
-  // Load the base image (no transformations)
-  // CropTool works on the original image only
+  // Load the image with rotation/flip applied (from ImageEditor)
+  // CropTool must work on the TRANSFORMED image, not the original
   useEffect(() => {
-    if (state.files.length === 0 || !state.files[0].preview) return;
+    if (state.files.length === 0) return;
 
-    // Only reload if the image source actually changed
-    if (originalImageSrc === state.files[0].preview) return;
+    // Get the active file or fall back to first file
+    const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
+    if (!activeFile?.preview) return;
+
+    // Check if we need to reload - compare both src and transforms
+    const currentSrc = activeFile.preview;
+    const currentTransformState = JSON.stringify({
+      rotation: state.options.transform?.rotation,
+      flipHorizontal: state.options.transform?.flipHorizontal,
+      flipVertical: state.options.transform?.flipVertical,
+    });
+    
+    if (originalImageSrc === currentSrc && lastTransformState === currentTransformState) return;
 
     const img = new Image();
     img.onload = () => {
-      setCurrentImage(img);
-      setOriginalImageSrc(state.files[0].preview);
+      // Apply rotation and flip to create a transformed image
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const rotation = state.options.transform?.rotation || 0;
+      const flipH = state.options.transform?.flipHorizontal || false;
+      const flipV = state.options.transform?.flipVertical || false;
+
+      // Calculate canvas size based on rotation
+      if (rotation === 90 || rotation === 270) {
+        canvas.width = img.height;
+        canvas.height = img.width;
+      } else {
+        canvas.width = img.width;
+        canvas.height = img.height;
+      }
+
+      ctx.save();
       
-      // Initialize crop area to full image or committed crop
-      const initialCrop = committedCrop || {
-        x: 0,
-        y: 0,
-        width: img.width,
-        height: img.height,
+      // Apply transforms
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      
+      const scaleX = flipH ? -1 : 1;
+      const scaleY = flipV ? -1 : 1;
+      ctx.scale(scaleX, scaleY);
+      
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
+
+      // Convert canvas to image
+      const transformedImg = new Image();
+      transformedImg.onload = () => {
+        setCurrentImage(transformedImg);
+        setOriginalImageSrc(currentSrc);
+        setLastTransformState(currentTransformState);
+        
+        // Initialize crop area to full transformed image or committed crop
+        const initialCrop = committedCrop || {
+          x: 0,
+          y: 0,
+          width: transformedImg.width,
+          height: transformedImg.height,
+        };
+        setCropArea(initialCrop);
+        setPreviewCrop(initialCrop);
       };
-      setCropArea(initialCrop);
-      setPreviewCrop(initialCrop);
+      transformedImg.src = canvas.toDataURL();
     };
-    img.src = state.files[0].preview;
-  }, [state.files, originalImageSrc]);
+    img.src = currentSrc;
+  }, [state.files, state.activeFileId, state.options.transform?.rotation, state.options.transform?.flipHorizontal, state.options.transform?.flipVertical, originalImageSrc, lastTransformState]);
 
   // Draw canvas preview
   useEffect(() => {

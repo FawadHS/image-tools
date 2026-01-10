@@ -48,32 +48,87 @@ export const TextOverlayTool = () => {
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
 
-  // Load image with crop applied (the "current" state for text overlay)
-  // Text overlay works on whatever image state exists (after crop)
+  // Load image with ALL transforms applied (rotation, flip, filters, crop)
+  // Text overlay works on the fully transformed image
   useEffect(() => {
-    if (state.files.length === 0 || !state.files[0].preview) return;
+    if (state.files.length === 0) return;
 
-    // Check if we need to reload by comparing src and crop state
-    const currentSrc = state.files[0].preview;
-    const currentCropState = JSON.stringify(state.options.transform?.crop || null);
+    // Get the active file or fall back to first file
+    const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
+    if (!activeFile?.preview) return;
+
+    // Check if we need to reload by comparing src and all transform states
+    const currentSrc = activeFile.preview;
+    const currentTransformState = JSON.stringify({
+      rotation: state.options.transform?.rotation,
+      flipHorizontal: state.options.transform?.flipHorizontal,
+      flipVertical: state.options.transform?.flipVertical,
+      filters: state.options.transform?.filters,
+      crop: state.options.transform?.crop,
+    });
     
-    if (lastLoadedSrc === currentSrc && lastCropState === currentCropState) {
+    if (lastLoadedSrc === currentSrc && lastCropState === currentTransformState) {
       return; // No change, skip reload
     }
 
     const img = new Image();
     img.onload = () => {
-      // If there's a crop, create a cropped version
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Step 1: Apply rotation and flip
+      const rotation = state.options.transform?.rotation || 0;
+      const flipH = state.options.transform?.flipHorizontal || false;
+      const flipV = state.options.transform?.flipVertical || false;
+
+      // Calculate canvas size based on rotation
+      if (rotation === 90 || rotation === 270) {
+        canvas.width = img.height;
+        canvas.height = img.width;
+      } else {
+        canvas.width = img.width;
+        canvas.height = img.height;
+      }
+
+      ctx.save();
+      
+      // Apply rotation and flip
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      
+      const scaleX = flipH ? -1 : 1;
+      const scaleY = flipV ? -1 : 1;
+      ctx.scale(scaleX, scaleY);
+
+      // Apply filters
+      const filters = state.options.transform?.filters;
+      if (filters) {
+        const filterArray: string[] = [];
+        if (filters.brightness !== 100) filterArray.push(`brightness(${filters.brightness}%)`);
+        if (filters.contrast !== 100) filterArray.push(`contrast(${filters.contrast}%)`);
+        if (filters.saturation !== 100) filterArray.push(`saturate(${filters.saturation}%)`);
+        if (filters.grayscale) filterArray.push('grayscale(100%)');
+        if (filters.sepia) filterArray.push('sepia(100%)');
+        if (filterArray.length > 0) {
+          ctx.filter = filterArray.join(' ');
+        }
+      }
+      
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
+
+      // Step 2: Apply crop if exists
       if (state.options.transform?.crop) {
         const crop = state.options.transform.crop;
-        const canvas = document.createElement('canvas');
-        canvas.width = crop.width;
-        canvas.height = crop.height;
-        const ctx = canvas.getContext('2d');
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = crop.width;
+        croppedCanvas.height = crop.height;
+        const croppedCtx = croppedCanvas.getContext('2d');
         
-        if (ctx) {
-          ctx.drawImage(
-            img,
+        if (croppedCtx) {
+          croppedCtx.drawImage(
+            canvas,
             crop.x,
             crop.y,
             crop.width,
@@ -84,27 +139,28 @@ export const TextOverlayTool = () => {
             crop.height
           );
           
-          const croppedImg = new Image();
-          croppedImg.onload = () => {
-            setCurrentImage(croppedImg);
+          const transformedImg = new Image();
+          transformedImg.onload = () => {
+            setCurrentImage(transformedImg);
             setLastLoadedSrc(currentSrc);
-            setLastCropState(currentCropState);
+            setLastCropState(currentTransformState);
           };
-          croppedImg.src = canvas.toDataURL();
-        } else {
-          setCurrentImage(img);
-          setLastLoadedSrc(currentSrc);
-          setLastCropState(currentCropState);
+          transformedImg.src = croppedCanvas.toDataURL();
+          return;
         }
-      } else {
-        // No crop, use original image
-        setCurrentImage(img);
-        setLastLoadedSrc(currentSrc);
-        setLastCropState(currentCropState);
       }
+
+      // No crop, use transformed image
+      const transformedImg = new Image();
+      transformedImg.onload = () => {
+        setCurrentImage(transformedImg);
+        setLastLoadedSrc(currentSrc);
+        setLastCropState(currentTransformState);
+      };
+      transformedImg.src = canvas.toDataURL();
     };
-    img.src = state.files[0].preview;
-  }, [state.files, state.options.transform?.crop, lastLoadedSrc, lastCropState]);
+    img.src = currentSrc;
+  }, [state.files, state.activeFileId, state.options.transform, lastLoadedSrc, lastCropState]);
 
   // Draw canvas preview
   useEffect(() => {

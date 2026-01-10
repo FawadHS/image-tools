@@ -4,6 +4,7 @@ import { DEFAULT_QUALITY } from '../constants';
 
 interface ConverterState {
   files: SelectedFile[];
+  activeFileId: string | null;
   options: ConvertOptions;
   isConverting: boolean;
 }
@@ -16,7 +17,8 @@ type ConverterAction =
   | { type: 'SET_OPTIONS'; payload: Partial<ConvertOptions> }
   | { type: 'SET_PRESET'; payload: PresetType }
   | { type: 'SET_OUTPUT_FORMAT'; payload: OutputFormat }
-  | { type: 'SET_CONVERTING'; payload: boolean };
+  | { type: 'SET_CONVERTING'; payload: boolean }
+  | { type: 'SET_ACTIVE_FILE'; payload: string | null };
 
 const initialOptions: ConvertOptions = {
   quality: DEFAULT_QUALITY,
@@ -29,6 +31,7 @@ const initialOptions: ConvertOptions = {
 
 const initialState: ConverterState = {
   files: [],
+  activeFileId: null,
   options: initialOptions,
   isConverting: false,
 };
@@ -36,21 +39,30 @@ const initialState: ConverterState = {
 const converterReducer = (state: ConverterState, action: ConverterAction): ConverterState => {
   switch (action.type) {
     case 'ADD_FILES':
+      const newFiles = [...state.files, ...action.payload];
       return {
         ...state,
-        files: [...state.files, ...action.payload],
+        files: newFiles,
+        // Set first file as active if no active file exists
+        activeFileId: state.activeFileId || (newFiles.length > 0 ? newFiles[0].id : null),
       };
 
     case 'REMOVE_FILE':
+      const remainingFiles = state.files.filter((f) => f.id !== action.payload);
       return {
         ...state,
-        files: state.files.filter((f) => f.id !== action.payload),
+        files: remainingFiles,
+        // If removed file was active, set first remaining file as active
+        activeFileId: state.activeFileId === action.payload
+          ? (remainingFiles.length > 0 ? remainingFiles[0].id : null)
+          : state.activeFileId,
       };
 
     case 'CLEAR_FILES':
       return {
         ...state,
         files: [],
+        activeFileId: null,
       };
 
     case 'UPDATE_FILE':
@@ -90,6 +102,12 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
       return {
         ...state,
         isConverting: action.payload,
+      };
+
+    case 'SET_ACTIVE_FILE':
+      return {
+        ...state,
+        activeFileId: action.payload,
       };
 
     default:

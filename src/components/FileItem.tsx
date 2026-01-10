@@ -4,16 +4,23 @@ import { SelectedFile } from '../types';
 import { formatFileSize } from '../utils/fileUtils';
 import { isHeicFile } from '../utils/converter';
 import { ComparisonSlider } from './ComparisonSlider';
+import { useConverter } from '../context/ConverterContext';
 import heic2any from 'heic2any';
 
 interface FileItemProps {
   file: SelectedFile;
   onRemove: (id: string) => void;
+  isActive?: boolean;
 }
 
-export const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
+export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = false }) => {
+  const { dispatch } = useConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+
+  const handleClick = () => {
+    dispatch({ type: 'SET_ACTIVE_FILE', payload: file.id });
+  };
 
   useEffect(() => {
     // For HEIC files, we need to convert for preview
@@ -57,11 +64,16 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
 
   return (
     <div
+      onClick={handleClick}
       className={`
         relative flex items-center gap-3 p-3 bg-white dark:bg-gray-800 
         rounded-lg border-2 ${statusBorder[file.status]}
-        transition-all duration-200
+        transition-all duration-200 cursor-pointer
+        ${isActive ? 'ring-2 ring-primary-500 dark:ring-primary-400' : 'hover:border-primary-300 dark:hover:border-primary-600'}
       `}
+      role="button"
+      tabIndex={0}
+      aria-label={`Select ${file.file.name} for editing`}
     >
       {/* Preview */}
       <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">

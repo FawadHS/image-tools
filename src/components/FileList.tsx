@@ -2,9 +2,11 @@ import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { FileItem } from './FileItem';
 import { useFileSelection } from '../hooks/useFileSelection';
+import { useConverter } from '../context/ConverterContext';
 
 export const FileList: React.FC = () => {
   const { files, removeFile, clearFiles } = useFileSelection();
+  const { state } = useConverter();
 
   if (files.length === 0) {
     return null;
@@ -27,7 +29,12 @@ export const FileList: React.FC = () => {
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
         {files.map((file) => (
-          <FileItem key={file.id} file={file} onRemove={removeFile} />
+          <FileItem 
+            key={file.id} 
+            file={file} 
+            onRemove={removeFile}
+            isActive={file.id === state.activeFileId}
+          />
         ))}
       </div>
     </div>
