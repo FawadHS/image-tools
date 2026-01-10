@@ -13,8 +13,11 @@ export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // Get the actual committed state
-  const committedTransform = state.options.transform || {
+  // Get the active file
+  const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
+  
+  // Get the actual committed state from the active file
+  const committedTransform = activeFile?.transform || {
     rotation: 0,
     flipHorizontal: false,
     flipVertical: false,
@@ -34,7 +37,7 @@ export const ImageEditor = () => {
   // Using JSON.stringify to track deep changes in the transform object
   useEffect(() => {
     setPreviewTransform(committedTransform);
-  }, [JSON.stringify(state.options.transform)]);
+  }, [JSON.stringify(activeFile?.transform), activeFile?.id]);
 
   const filters = previewTransform.filters || {
     brightness: 100,
@@ -86,10 +89,15 @@ export const ImageEditor = () => {
   };
 
   const applyChanges = () => {
+    if (!activeFile) return;
+    
     dispatch({
-      type: 'SET_OPTIONS',
+      type: 'UPDATE_FILE',
       payload: {
-        transform: previewTransform,
+        id: activeFile.id,
+        updates: {
+          transform: previewTransform,
+        },
       },
     });
   };
@@ -112,11 +120,7 @@ export const ImageEditor = () => {
 
   // Draw preview on canvas
   useEffect(() => {
-    if (!canvasRef.current || state.files.length === 0) return;
-
-    // Get the active file or fall back to first file
-    const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
-    if (!activeFile) return;
+    if (!canvasRef.current || state.files.length === 0 || !activeFile) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -158,7 +162,7 @@ export const ImageEditor = () => {
       ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
       ctx.restore();
     };
-  }, [previewTransform, state.files, state.activeFileId, filters]);
+  }, [previewTransform, activeFile, filters]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">

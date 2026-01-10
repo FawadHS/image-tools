@@ -41,8 +41,6 @@ export interface ConvertOptions {
   nameSuffix?: string;
   addTimestamp?: boolean;
   addDimensions?: boolean;
-  // Image editing transforms
-  transform?: ImageTransform;
 }
 
 export interface SelectedFile {
@@ -53,6 +51,8 @@ export interface SelectedFile {
   progress: number;
   result?: ConvertResult;
   error?: string;
+  // Image-specific transformations
+  transform?: ImageTransform;
 }
 
 export interface ConvertResult {

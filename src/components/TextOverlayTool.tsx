@@ -23,8 +23,11 @@ export const TextOverlayTool = () => {
   const [lastLoadedSrc, setLastLoadedSrc] = useState<string>('');
   const [lastCropState, setLastCropState] = useState<string>('');
 
-  // Track committed overlay from global context
-  const committedOverlay = state.options.transform?.textOverlay;
+  // Get the active file
+  const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
+
+  // Track committed overlay from active file
+  const committedOverlay = activeFile?.transform?.textOverlay;
   
   // Sync overlays with committed state when it changes externally
   // Text coordinates are stored in transformed+cropped space, no adjustment needed
@@ -34,7 +37,7 @@ export const TextOverlayTool = () => {
     } else {
       setOverlays([]);
     }
-  }, [JSON.stringify(committedOverlay)]);
+  }, [JSON.stringify(committedOverlay), activeFile?.id]);
   
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
@@ -42,20 +45,16 @@ export const TextOverlayTool = () => {
   // Load image with ALL transforms applied (rotation, flip, filters, crop)
   // Text overlay works on the fully transformed image
   useEffect(() => {
-    if (state.files.length === 0) return;
-
-    // Get the active file or fall back to first file
-    const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
-    if (!activeFile?.preview) return;
+    if (state.files.length === 0 || !activeFile) return;
 
     // Check if we need to reload by comparing src and all transform states
     const currentSrc = activeFile.preview;
     const currentTransformState = JSON.stringify({
-      rotation: state.options.transform?.rotation,
-      flipHorizontal: state.options.transform?.flipHorizontal,
-      flipVertical: state.options.transform?.flipVertical,
-      filters: state.options.transform?.filters,
-      crop: state.options.transform?.crop,
+      rotation: activeFile.transform?.rotation,
+      flipHorizontal: activeFile.transform?.flipHorizontal,
+      flipVertical: activeFile.transform?.flipVertical,
+      filters: activeFile.transform?.filters,
+      crop: activeFile.transform?.crop,
     });
     
     if (lastLoadedSrc === currentSrc && lastCropState === currentTransformState) {
@@ -69,9 +68,9 @@ export const TextOverlayTool = () => {
       if (!ctx) return;
 
       // Step 1: Apply rotation and flip
-      const rotation = state.options.transform?.rotation || 0;
-      const flipH = state.options.transform?.flipHorizontal || false;
-      const flipV = state.options.transform?.flipVertical || false;
+      const rotation = activeFile.transform?.rotation || 0;
+      const flipH = activeFile.transform?.flipHorizontal || false;
+      const flipV = activeFile.transform?.flipVertical || false;
 
       // Calculate canvas size based on rotation
       if (rotation === 90 || rotation === 270) {
@@ -93,7 +92,7 @@ export const TextOverlayTool = () => {
       ctx.scale(scaleX, scaleY);
 
       // Apply filters
-      const filters = state.options.transform?.filters;
+      const filters = activeFile.transform?.filters;
       if (filters) {
         const filterArray: string[] = [];
         if (filters.brightness !== 100) filterArray.push(`brightness(${filters.brightness}%)`);
@@ -110,8 +109,8 @@ export const TextOverlayTool = () => {
       ctx.restore();
 
       // Step 2: Apply crop if exists
-      if (state.options.transform?.crop) {
-        const crop = state.options.transform.crop;
+      if (activeFile.transform?.crop) {
+        const crop = activeFile.transform.crop;
         const croppedCanvas = document.createElement('canvas');
         croppedCanvas.width = crop.width;
         croppedCanvas.height = crop.height;
@@ -151,7 +150,7 @@ export const TextOverlayTool = () => {
       transformedImg.src = canvas.toDataURL();
     };
     img.src = currentSrc;
-  }, [state.files, state.activeFileId, state.options.transform, lastLoadedSrc, lastCropState]);
+  }, [activeFile, lastLoadedSrc, lastCropState]);
 
   // Draw canvas preview
   useEffect(() => {
@@ -302,22 +301,27 @@ export const TextOverlayTool = () => {
       return;
     }
 
+    if (!activeFile) return;
+
     // Store overlay coordinates as-is (they're already in transformed+cropped space)
     // The text is positioned on the image shown in the preview
     const savedOverlay = { ...overlays[0] };
 
-    const currentTransform = state.options.transform || {
+    const currentTransform = activeFile.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'SET_OPTIONS',
+      type: 'UPDATE_FILE',
       payload: {
-        transform: {
-          ...currentTransform,
-          textOverlay: savedOverlay,
+        id: activeFile.id,
+        updates: {
+          transform: {
+            ...currentTransform,
+            textOverlay: savedOverlay,
+          },
         },
       },
     });
@@ -326,21 +330,26 @@ export const TextOverlayTool = () => {
   };
 
   const resetTextOverlay = () => {
+    if (!activeFile) return;
+    
     setOverlays([]);
     setSelectedOverlay(null);
 
-    const currentTransform = state.options.transform || {
+    const currentTransform = activeFile.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'SET_OPTIONS',
+      type: 'UPDATE_FILE',
       payload: {
-        transform: {
-          ...currentTransform,
-          textOverlay: undefined,
+        id: activeFile.id,
+        updates: {
+          transform: {
+            ...currentTransform,
+            textOverlay: undefined,
+          },
         },
       },
     });

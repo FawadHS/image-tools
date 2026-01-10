@@ -26,14 +26,17 @@ export const CropTool = () => {
   const [originalImageSrc, setOriginalImageSrc] = useState<string>('');
   const [lastTransformState, setLastTransformState] = useState<string>('');
   
-  // Track committed crop state from global context
-  const committedCrop = state.options.transform?.crop;
+  // Get the active file
+  const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
+  
+  // Track committed crop state from active file
+  const committedCrop = activeFile?.transform?.crop;
   const [previewCrop, setPreviewCrop] = useState<CropArea | null>(committedCrop || null);
   
   // Sync preview crop with committed state when it changes externally
   useEffect(() => {
     setPreviewCrop(committedCrop || null);
-  }, [JSON.stringify(committedCrop)]);
+  }, [JSON.stringify(committedCrop), activeFile?.id]);
   
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(previewCrop) !== JSON.stringify(committedCrop);
@@ -41,18 +44,14 @@ export const CropTool = () => {
   // Load the image with rotation/flip applied (from ImageEditor)
   // CropTool must work on the TRANSFORMED image, not the original
   useEffect(() => {
-    if (state.files.length === 0) return;
-
-    // Get the active file or fall back to first file
-    const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
-    if (!activeFile?.preview) return;
+    if (state.files.length === 0 || !activeFile) return;
 
     // Check if we need to reload - compare both src and transforms
     const currentSrc = activeFile.preview;
     const currentTransformState = JSON.stringify({
-      rotation: state.options.transform?.rotation,
-      flipHorizontal: state.options.transform?.flipHorizontal,
-      flipVertical: state.options.transform?.flipVertical,
+      rotation: activeFile.transform?.rotation,
+      flipHorizontal: activeFile.transform?.flipHorizontal,
+      flipVertical: activeFile.transform?.flipVertical,
     });
     
     if (originalImageSrc === currentSrc && lastTransformState === currentTransformState) return;
@@ -64,9 +63,9 @@ export const CropTool = () => {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const rotation = state.options.transform?.rotation || 0;
-      const flipH = state.options.transform?.flipHorizontal || false;
-      const flipV = state.options.transform?.flipVertical || false;
+      const rotation = activeFile.transform?.rotation || 0;
+      const flipH = activeFile.transform?.flipHorizontal || false;
+      const flipV = activeFile.transform?.flipVertical || false;
 
       // Calculate canvas size based on rotation
       if (rotation === 90 || rotation === 270) {
@@ -110,7 +109,7 @@ export const CropTool = () => {
       transformedImg.src = canvas.toDataURL();
     };
     img.src = currentSrc;
-  }, [state.files, state.activeFileId, state.options.transform?.rotation, state.options.transform?.flipHorizontal, state.options.transform?.flipVertical, originalImageSrc, lastTransformState]);
+  }, [activeFile, committedCrop, originalImageSrc, lastTransformState]);
 
   // Draw canvas preview
   useEffect(() => {
@@ -270,26 +269,29 @@ export const CropTool = () => {
   };
 
   const applyCrop = () => {
-    if (!previewCrop || !currentImage) return;
+    if (!previewCrop || !currentImage || !activeFile) return;
 
     if (previewCrop.width <= 0 || previewCrop.height <= 0) {
       toast.error('Invalid crop area');
       return;
     }
 
-    // Save crop to state - coordinates are relative to the ORIGINAL image
-    const currentTransform = state.options.transform || {
+    // Save crop to active file - coordinates are relative to the transformed image
+    const currentTransform = activeFile.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'SET_OPTIONS',
+      type: 'UPDATE_FILE',
       payload: {
-        transform: {
-          ...currentTransform,
-          crop: previewCrop,
+        id: activeFile.id,
+        updates: {
+          transform: {
+            ...currentTransform,
+            crop: previewCrop,
+          },
         },
       },
     });
@@ -333,24 +335,29 @@ export const CropTool = () => {
   };
 
   const resetCrop = () => {
-    const currentTransform = state.options.transform || {
+    if (!activeFile) return;
+    
+    const currentTransform = activeFile.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'SET_OPTIONS',
+      type: 'UPDATE_FILE',
       payload: {
-        transform: {
-          ...currentTransform,
-          crop: undefined,
+        id: activeFile.id,
+        updates: {
+          transform: {
+            ...currentTransform,
+            crop: undefined,
+          },
         },
       },
     });
 
     // Reload the original image
-    if (state.files.length > 0 && state.files[0].preview) {
+    if (activeFile.preview) {
       const img = new Image();
       img.onload = () => {
         setCurrentImage(img);
@@ -363,7 +370,7 @@ export const CropTool = () => {
         setCropArea(fullCrop);
         setPreviewCrop(fullCrop);
       };
-      img.src = state.files[0].preview;
+      img.src = activeFile.preview;
     }
 
     toast.success('Crop reset', { duration: 2000 });
@@ -395,7 +402,7 @@ export const CropTool = () => {
             </span>
           )}
         </div>
-        {(state.options.transform?.crop || hasUnappliedChanges) && (
+        {(activeFile?.transform?.crop || hasUnappliedChanges) && (
           <button
             onClick={resetCrop}
             className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"

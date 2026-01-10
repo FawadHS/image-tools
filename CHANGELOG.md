@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-01-10
+
+### Changed
+- **Per-File Transformations**: All transformations (rotation, flip, filters, crop, text overlay) are now image-specific. Each file maintains its own transform state independently, preventing transforms from affecting other images in the batch.
+  - Moved `transform` property from global `ConvertOptions` to individual `SelectedFile` objects
+  - Updated ImageEditor, CropTool, and TextOverlayTool to work with file-specific transforms
+  - Modified converter utilities to apply transforms per file during conversion
+  - This allows users to edit multiple images with different transformations before batch conversion
+
 ## [2.1.1] - 2026-01-10
 
 ### Fixed

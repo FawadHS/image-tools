@@ -78,11 +78,7 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
         ...state,
         options: { 
           ...state.options, 
-          ...action.payload,
-          // Deep merge transform object to preserve crop/text/filters
-          transform: action.payload.transform 
-            ? { ...state.options.transform, ...action.payload.transform }
-            : state.options.transform
+          ...action.payload
         },
       };
 

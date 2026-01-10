@@ -44,7 +44,7 @@ export const useImageConverter = () => {
    * @returns Promise resolving to conversion result
    */
   const convertWithWorker = useCallback(
-    async (file: File, fileId: string): Promise<ConvertResult> => {
+    async (file: File, fileId: string, fileTransform: any): Promise<ConvertResult> => {
       return new Promise(async (resolve, reject) => {
         if (!workerRef.current) {
           reject(new Error('Worker not available'));
@@ -83,14 +83,17 @@ export const useImageConverter = () => {
 
         worker.addEventListener('message', handleMessage);
 
-        // Send to worker
+        // Send to worker with file-specific transform
         worker.postMessage({
           type: 'convert',
           payload: {
             blob,
             filename: file.name,
             originalSize: file.size,
-            options,
+            options: {
+              ...options,
+              transform: fileTransform, // Use file-specific transform
+            },
           },
         });
       });
@@ -138,13 +141,16 @@ export const useImageConverter = () => {
         
         // Use Web Worker if available, otherwise fall back to main thread
         if (useWorker.current && workerRef.current) {
-          result = await convertWithWorker(selectedFile.file, selectedFile.id);
+          result = await convertWithWorker(selectedFile.file, selectedFile.id, selectedFile.transform);
         } else {
           dispatch({
             type: 'UPDATE_FILE',
             payload: { id: selectedFile.id, updates: { progress: 50 } },
           });
-          result = await convertImage(selectedFile.file, options);
+          result = await convertImage(selectedFile.file, {
+            ...options,
+            transform: selectedFile.transform, // Use file-specific transform
+          });
         }
 
         dispatch({
@@ -212,13 +218,16 @@ export const useImageConverter = () => {
         
         // Use Web Worker if available, otherwise fall back to main thread
         if (useWorker.current && workerRef.current) {
-          result = await convertWithWorker(selectedFile.file, fileId);
+          result = await convertWithWorker(selectedFile.file, fileId, selectedFile.transform);
         } else {
           dispatch({
             type: 'UPDATE_FILE',
             payload: { id: fileId, updates: { progress: 50 } },
           });
-          result = await convertImage(selectedFile.file, options);
+          result = await convertImage(selectedFile.file, {
+            ...options,
+            transform: selectedFile.transform, // Use file-specific transform
+          });
         }
 
         dispatch({
