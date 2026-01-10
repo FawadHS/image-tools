@@ -27,23 +27,14 @@ export const TextOverlayTool = () => {
   const committedOverlay = state.options.transform?.textOverlay;
   
   // Sync overlays with committed state when it changes externally
+  // Text coordinates are stored in transformed+cropped space, no adjustment needed
   useEffect(() => {
     if (committedOverlay) {
-      // Adjust coordinates if there's a crop
-      let adjustedOverlay = { ...committedOverlay };
-      if (state.options.transform?.crop) {
-        const crop = state.options.transform.crop;
-        adjustedOverlay = {
-          ...committedOverlay,
-          x: committedOverlay.x - crop.x,
-          y: committedOverlay.y - crop.y,
-        };
-      }
-      setOverlays([adjustedOverlay]);
+      setOverlays([{ ...committedOverlay }]);
     } else {
       setOverlays([]);
     }
-  }, [JSON.stringify(committedOverlay), JSON.stringify(state.options.transform?.crop)]);
+  }, [JSON.stringify(committedOverlay)]);
   
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
@@ -311,17 +302,9 @@ export const TextOverlayTool = () => {
       return;
     }
 
-    // Convert overlay coordinates back to original image space
-    let savedOverlay = { ...overlays[0] };
-    
-    if (state.options.transform?.crop) {
-      const crop = state.options.transform.crop;
-      savedOverlay = {
-        ...overlays[0],
-        x: overlays[0].x + crop.x,
-        y: overlays[0].y + crop.y,
-      };
-    }
+    // Store overlay coordinates as-is (they're already in transformed+cropped space)
+    // The text is positioned on the image shown in the preview
+    const savedOverlay = { ...overlays[0] };
 
     const currentTransform = state.options.transform || {
       rotation: 0 as const,
@@ -339,7 +322,7 @@ export const TextOverlayTool = () => {
       },
     });
 
-    toast.success('Text applied', { duration: 2000 });
+    toast.success('Text overlay applied', { duration: 2000 });
   };
 
   const resetTextOverlay = () => {
