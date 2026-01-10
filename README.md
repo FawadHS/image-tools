@@ -121,7 +121,7 @@ npm run build
 
 Image Tools can be easily integrated into existing admin panels, CMS, or e-commerce dashboards:
 
-**Option 1: iFrame Embed**
+**Option 1: iFrame Embed** ⚡ (Recommended for Quick Setup)
 ```html
 <iframe 
   src="https://tools.fawadhs.dev" 
@@ -131,6 +131,11 @@ Image Tools can be easily integrated into existing admin panels, CMS, or e-comme
   title="Image Tools">
 </iframe>
 ```
+
+> **Note**: This works because the app is 100% client-side with no CORS restrictions. However, verify:
+> - Your hosting allows iframe embedding (no `X-Frame-Options: DENY`)
+> - Test in your specific environment before production use
+> - For localhost development, use `http://localhost:5173` (Vite dev server)
 
 **Option 2: NPM Package (Coming Soon)**
 ```bash
@@ -145,7 +150,7 @@ function AdminPage() {
 }
 ```
 
-**Option 3: Self-Hosted**
+**Option 3: Self-Hosted** ⭐ (Best for Production)
 ```bash
 # Clone and build
 git clone https://github.com/FawadHS/image-tools.git
@@ -156,11 +161,18 @@ npm install && npm run build
 # Example: https://yourdomain.com/image-tools
 ```
 
+**Why Self-Host?**
+- Full control over deployment
+- No external dependencies
+- Can customize features
+- Better performance (same domain)
+- No iframe restrictions
+
 ### WordPress/WooCommerce Integration
 Add to your admin panel using a custom plugin or theme:
 
 ```php
-// Add menu item
+// Add menu item to WordPress admin
 add_action('admin_menu', function() {
     add_menu_page(
         'Image Tools',
@@ -173,10 +185,17 @@ add_action('admin_menu', function() {
 });
 
 function render_image_tools_page() {
+    // Option A: Embed hosted version (requires internet)
     echo '<iframe src="https://tools.fawadhs.dev" 
           style="width:100%;height:90vh;border:none;"></iframe>';
+    
+    // Option B: Self-hosted (recommended for production)
+    // echo '<iframe src="' . site_url('/image-tools') . '" 
+    //       style="width:100%;height:90vh;border:none;"></iframe>';
 }
 ```
+
+> **Production Tip**: Self-host the tool in your WordPress `wp-content/uploads/image-tools/` directory for better performance and reliability.
 
 ### Shopify Admin Integration
 Use the Shopify App Bridge to embed in your Shopify admin:
