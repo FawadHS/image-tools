@@ -236,18 +236,12 @@ export const convertImage = async (
   if (options.transform?.textOverlay) {
     const overlay = options.transform.textOverlay;
     
-    // Calculate text position relative to the canvas
-    // Text coordinates are stored relative to the original image
-    let textX = overlay.x;
-    let textY = overlay.y;
+    // Text coordinates are already stored relative to the cropped/transformed image
+    // No adjustment needed - they're positioned correctly by TextOverlayTool
+    const textX = overlay.x;
+    const textY = overlay.y;
     
-    // If crop is applied, adjust text position by subtracting crop offset
-    if (options.transform?.crop) {
-      textX = overlay.x - options.transform.crop.x;
-      textY = overlay.y - options.transform.crop.y;
-    }
-    
-    // Calculate scale factor based on canvas vs source dimensions
+    // Calculate scale factor if canvas was resized
     const scaleFactor = canvas.width / sourceWidth;
     
     ctx.save();

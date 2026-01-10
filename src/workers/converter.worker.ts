@@ -201,18 +201,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     if (transform?.textOverlay) {
       const overlay = transform.textOverlay;
       
-      // Calculate text position relative to the canvas
-      // Text coordinates are stored relative to the original image
-      let textX = overlay.x;
-      let textY = overlay.y;
+      // Text coordinates are already stored relative to the cropped/transformed image
+      // No adjustment needed - they're positioned correctly by TextOverlayTool
+      const textX = overlay.x;
+      const textY = overlay.y;
       
-      // If crop is applied, adjust text position by subtracting crop offset
-      if (transform?.crop) {
-        textX = overlay.x - transform.crop.x;
-        textY = overlay.y - transform.crop.y;
-      }
-      
-      // Calculate scale factor based on canvas vs source dimensions
+      // Calculate scale factor if canvas was resized
       const scaleFactor = canvasWidth / sourceWidth;
       
       ctx.save();
