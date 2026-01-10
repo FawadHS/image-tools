@@ -41,6 +41,8 @@ export interface ConvertOptions {
   nameSuffix?: string;
   addTimestamp?: boolean;
   addDimensions?: boolean;
+  // Transform passed at conversion time (merged from file)
+  transform?: ImageTransform;
 }
 
 export interface SelectedFile {
@@ -51,7 +53,7 @@ export interface SelectedFile {
   progress: number;
   result?: ConvertResult;
   error?: string;
-  // Image-specific transformations
+  // Image-specific transformations (stored per-file)
   transform?: ImageTransform;
 }
 
