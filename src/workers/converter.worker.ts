@@ -1,65 +1,19 @@
 /**
  * Web Worker for image conversion
- * Handles heavy image processing off the main thread
+ * Handles heavy image processing off the main thread to prevent UI blocking
+ * @packageDocumentation
  */
 
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 
-// Helper functions duplicated in worker context
-const getMimeType = (format: OutputFormat): string => {
-  const mimeTypes: Record<OutputFormat, string> = {
-    webp: 'image/webp',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    avif: 'image/avif',
-  };
-  return mimeTypes[format];
-};
+// Import shared utilities to avoid code duplication
+import { getMimeType, getExtension, calculateDimensions } from '../utils/imageHelpers';
 
-const getExtension = (format: OutputFormat): string => {
-  const extensions: Record<OutputFormat, string> = {
-    webp: '.webp',
-    jpeg: '.jpg',
-    png: '.png',
-    avif: '.avif',
-  };
-  return extensions[format];
-};
-
-const calculateDimensions = (
-  originalWidth: number,
-  originalHeight: number,
-  maxWidth?: number,
-  maxHeight?: number,
-  maintainAspectRatio: boolean = true
-): { width: number; height: number } => {
-  if (!maxWidth && !maxHeight) {
-    return { width: originalWidth, height: originalHeight };
-  }
-
-  let newWidth = originalWidth;
-  let newHeight = originalHeight;
-
-  if (maintainAspectRatio) {
-    const aspectRatio = originalWidth / originalHeight;
-
-    if (maxWidth && newWidth > maxWidth) {
-      newWidth = maxWidth;
-      newHeight = Math.round(newWidth / aspectRatio);
-    }
-
-    if (maxHeight && newHeight > maxHeight) {
-      newHeight = maxHeight;
-      newWidth = Math.round(newHeight * aspectRatio);
-    }
-  } else {
-    if (maxWidth) newWidth = Math.min(originalWidth, maxWidth);
-    if (maxHeight) newHeight = Math.min(originalHeight, maxHeight);
-  }
-
-  return { width: newWidth, height: newHeight };
-};
-
+/**
+ * Load an image from a blob and return ImageBitmap (Worker-optimized)
+ * @param blob - The image blob to load
+ * @returns Promise resolving to ImageBitmap
+ */
 const loadImage = (blob: Blob): Promise<ImageBitmap> => {
   return createImageBitmap(blob);
 };

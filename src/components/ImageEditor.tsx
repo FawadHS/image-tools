@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
+import { CANVAS_PREVIEW_MAX_WIDTH } from '../constants';
 
+/**
+ * ImageEditor Component
+ * Provides rotation, flip, and filter controls with live preview
+ * Changes are applied locally until user confirms
+ */
 export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -121,8 +127,7 @@ export const ImageEditor = () => {
 
     img.onload = () => {
       // Set canvas size
-      const maxWidth = 300;
-      const scale = Math.min(1, maxWidth / img.width);
+      const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / img.width);
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
 

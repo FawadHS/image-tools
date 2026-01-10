@@ -1,8 +1,10 @@
 import heic2any from 'heic2any';
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
+import { getMimeType, getExtension, calculateDimensions } from './imageHelpers';
 
 /**
- * Check if Web Workers are supported
+ * Check if Web Workers are supported in the current browser
+ * @returns True if both Worker and OffscreenCanvas are supported
  */
 export const isWorkerSupported = (): boolean => {
   return typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined';
@@ -48,7 +50,9 @@ export const isFormatSupported = async (format: OutputFormat): Promise<boolean> 
 };
 
 /**
- * Check if a file is HEIC/HEIF format
+ * Check if a file is in HEIC/HEIF format
+ * @param file - The file to check
+ * @returns True if the file is HEIC or HEIF
  */
 export const isHeicFile = (file: File): boolean => {
   const type = file.type.toLowerCase();
@@ -62,7 +66,11 @@ export const isHeicFile = (file: File): boolean => {
 };
 
 /**
- * Convert HEIC to a standard format (PNG blob)
+ * Convert HEIC file to a standard PNG blob
+ * Uses heic2any library for conversion
+ * @param file - The HEIC file to convert
+ * @returns Promise resolving to PNG blob
+ * @throws {Error} If conversion fails
  */
 export const convertHeicToBlob = async (file: File): Promise<Blob> => {
   try {
@@ -75,7 +83,11 @@ export const convertHeicToBlob = async (file: File): Promise<Blob> => {
   } catch (error) {
     console.error('HEIC conversion error:', error);
     throw new Error('Failed to convert HEIC file');
-  }
+  }HTMLImageElement
+ * Automatically revokes object URL after loading
+ * @param blob - The image blob to load
+ * @returns Promise resolving to loaded image element
+ * @throws {Error} If image fails to load
 };
 
 /**

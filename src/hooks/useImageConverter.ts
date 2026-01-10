@@ -3,8 +3,14 @@ import { useConverter } from '../context/ConverterContext';
 import { convertImage, isHeicFile, convertHeicToBlob, isWorkerSupported } from '../utils/converter';
 import { addToHistory } from '../utils/history';
 import { ConvertResult } from '../types';
+import { CONVERSION_DELAY_MS, UI_UPDATE_DELAY_MS } from '../constants';
 import toast from 'react-hot-toast';
 
+/**
+ * Custom hook for image conversion operations
+ * Manages Web Worker initialization, conversion queue, and progress tracking
+ * @returns Conversion functions and state
+ */
 export const useImageConverter = () => {
   const { state, dispatch } = useConverter();
   const { files, options, isConverting } = state;
@@ -33,6 +39,10 @@ export const useImageConverter = () => {
 
   /**
    * Convert using Web Worker (if supported)
+   * Handles HEIC preprocessing on main thread (required) then sends to worker
+   * @param file - The file to convert
+   * @param fileId - Unique identifier for progress tracking
+   * @returns Promise resolving to conversion result
    */
   const convertWithWorker = useCallback(
     async (file: File, fileId: string): Promise<ConvertResult> => {
@@ -91,7 +101,8 @@ export const useImageConverter = () => {
 
   /**
    * Process files ONE BY ONE (sequential) to prevent memory issues
-   * This is intentional for a free service to avoid overloading browsers
+   * This is intentional to avoid browser memory overload on free service
+   * Shows progress updates for each file individually
    */
   const convertAll = useCallback(async () => {
     const pendingFiles = files.filter((f) => f.status === 'pending' || f.status === 'error');
@@ -121,7 +132,7 @@ export const useImageConverter = () => {
       });
 
       try {
-        // Small delay to allow UI to update and prevent blocking
+        // Small delay to allow UI to update and prevent UI_UPDATE_DELAY_MSocking
         await new Promise(resolve => setTimeout(resolve, 50));
         
         let result: ConvertResult;
@@ -157,7 +168,7 @@ export const useImageConverter = () => {
         
         successCount++;
         
-        // Brief pause between conversions to free up memory
+        // Brief pause between conversions to free up memCONVERSION_DELAY_MS
         await new Promise(resolve => setTimeout(resolve, 100));
         
       } catch (error) {
