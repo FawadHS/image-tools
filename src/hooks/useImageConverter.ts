@@ -201,6 +201,103 @@ export const useImageConverter = () => {
     }
   }, [files, options, dispatch, convertWithWorker]);
 
+  /**
+   * Convert only selected files
+   * Similar to convertAll but only processes files with selected=true
+   */
+  const convertSelected = useCallback(async () => {
+    const selectedFiles = files.filter((f) => f.selected && (f.status === 'pending' || f.status === 'error'));
+
+    if (selectedFiles.length === 0) {
+      toast.error('No files selected for conversion');
+      return;
+    }
+
+    dispatch({ type: 'SET_CONVERTING', payload: true });
+    abortRef.current = false;
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Process ONE BY ONE to prevent memory issues
+    for (const selectedFile of selectedFiles) {
+      // Check if conversion was cancelled
+      if (abortRef.current) {
+        toast('Conversion cancelled', { icon: '⚠️' });
+        break;
+      }
+
+      dispatch({
+        type: 'UPDATE_FILE',
+        payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
+      });
+
+      try {
+        // Small delay to allow UI to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        let result: ConvertResult;
+        
+        // Use Web Worker if available, otherwise fall back to main thread
+        if (useWorker.current && workerRef.current) {
+          result = await convertWithWorker(selectedFile.file, selectedFile.id, selectedFile.transform);
+        } else {
+          dispatch({
+            type: 'UPDATE_FILE',
+            payload: { id: selectedFile.id, updates: { progress: 50 } },
+          });
+          result = await convertImage(selectedFile.file, {
+            ...options,
+            transform: selectedFile.transform,
+          });
+        }
+
+        dispatch({
+          type: 'UPDATE_FILE',
+          payload: {
+            id: selectedFile.id,
+            updates: { status: 'completed', progress: 100, result },
+          },
+        });
+        
+        // Save to history
+        addToHistory({
+          filename: result.filename,
+          originalSize: result.originalSize,
+          convertedSize: result.convertedSize,
+          reduction: result.reduction,
+          format: options.outputFormat || 'webp',
+          quality: options.quality,
+        });
+        
+        successCount++;
+        
+        // Brief pause between conversions
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Conversion failed';
+        dispatch({
+          type: 'UPDATE_FILE',
+          payload: {
+            id: selectedFile.id,
+            updates: { status: 'error', progress: 0, error: errorMessage },
+          },
+        });
+        errorCount++;
+      }
+    }
+
+    dispatch({ type: 'SET_CONVERTING', payload: false });
+
+    if (successCount > 0) {
+      toast.success(`Successfully converted ${successCount} selected file(s)`);
+    }
+    if (errorCount > 0) {
+      toast.error(`Failed to convert ${errorCount} file(s)`);
+    }
+  }, [files, options, dispatch, convertWithWorker]);
+
   const cancelConversion = useCallback(() => {
     abortRef.current = true;
   }, []);
@@ -257,6 +354,7 @@ export const useImageConverter = () => {
 
   return {
     convertAll,
+    convertSelected,
     convertSingle,
     cancelConversion,
     isConverting,

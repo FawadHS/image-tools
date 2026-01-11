@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Github } from 'lucide-react';
+import packageJson from '../../package.json';
 
 export const Footer: React.FC = () => {
   return (
@@ -58,7 +59,11 @@ export const Footer: React.FC = () => {
               Fawad Hussain
             </a>
           </p>
-          <p className="mt-1">© {new Date().getFullYear()} fawadhs.dev — MIT License</p>
+          <p className="mt-1">
+            © {new Date().getFullYear()} fawadhs.dev — MIT License
+            <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+            <span className="font-mono">v{packageJson.version}</span>
+          </p>
         </div>
       </div>
     </footer>

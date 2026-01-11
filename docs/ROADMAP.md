@@ -1,8 +1,8 @@
 # Image Tools - Development Roadmap
 
-> **Last Updated**: January 11, 2025  
-> **Current Version**: 2.3.0 (Phase 7 Complete)  
-> **Project Status**: ✅ Core Complete + Tested | Production Ready
+> **Last Updated**: January 11, 2026  
+> **Current Version**: 2.4.1 (Phase 8 In Progress)  
+> **Project Status**: ✅ Production Ready | Active Development
 
 ---
 
@@ -16,10 +16,14 @@ Phase 4: Advanced Features            ██████████████
 Phase 5: Polish & Optimization        ████████████████████  100% ✅
 Phase 6: Stabilization & Quality      ████████████████████  100% ✅
 Phase 7: Testing Infrastructure       ████████████████████  100% ✅
-Phase 8: E2E Completion & CI/CD       ████░░░░░░░░░░░░░░░░   20% 🚧
+Phase 8: UX Enhancements & Quality    ███████░░░░░░░░░░░░░   35% 🚧
 ```
 
-**Phase 7 Achievement**: Comprehensive testing infrastructure with Jest unit tests (21 passing, 100% coverage for math helpers) and Playwright E2E framework. Test performance optimized to 1.5s runtime. Documentation reorganized into logical subdirectories.
+**Recent Achievements (v2.4.1)**: 
+- Fixed comparison slider image ordering (converted left, original right)
+- Added selective file conversion with checkbox-based selection
+- Fixed HEIC comparison viewer display with high-quality conversion
+- All E2E tests passing (6/6 - 100% success rate)
 
 ---
 
@@ -251,16 +255,25 @@ Comprehensive testing framework with unit tests, E2E tests, and documentation or
 
 ---
 
-## 🚧 Phase 8: E2E Completion & CI/CD — IN PROGRESS (20%)
+## 🚧 Phase 8: UX Enhancements & Quality — IN PROGRESS (35%)
 
-### E2E Test Completion
+### User Experience Improvements
 | Feature | Status | Priority | Description |
 |---------|--------|----------|-------------|
-| **Run Smoke Tests** | ⚠️ TODO | High | Execute existing smoke test suite |
-| **Generate Fixtures** | ⚠️ TODO | High | Create test images (red/blue 500×500) |
-| **Circle Crop Tests** | ⚠️ TODO | High | PNG alpha, WebP alpha, JPEG white background |
-| **Golden-Image Tests** | ⚠️ TODO | Medium | HEIC with orientation metadata |
-| **Pixel Validation** | ⚠️ TODO | Medium | getImageData RGB/alpha checks |
+| **Comparison Slider Fix** | ✅ Done | High | Corrected image order (converted left, original right) |
+| **HEIC Comparison** | ✅ Done | High | High-quality HEIC→JPEG conversion for browser display |
+| **Selective Conversion** | ✅ Done | High | Checkbox-based file selection with "Convert Selected" |
+| **Selection Controls** | ✅ Done | Medium | Select All/Deselect All quick actions |
+| **Selection Badge** | ✅ Done | Low | Count display showing N selected files |
+
+### Quality & Testing
+| Feature | Status | Priority | Description |
+|---------|--------|----------|-------------|
+| **E2E Test Stability** | ✅ Done | High | 6/6 tests passing (100% success rate) |
+| **Test Navigation Fix** | ✅ Done | High | Proper routing to /image-tools |
+| **UI Test Attributes** | ✅ Done | Medium | data-testid for reliable selectors |
+| **Circle Crop Tests** | ⚠️ TODO | Medium | PNG alpha, WebP alpha, JPEG background |
+| **Golden-Image Tests** | ⚠️ TODO | Medium | HEIC orientation validation |
 
 ### CI/CD Integration
 | Feature | Status | Priority | Description |
@@ -270,11 +283,17 @@ Comprehensive testing framework with unit tests, E2E tests, and documentation or
 | **Coverage Reporting** | ⚠️ TODO | Medium | Automated coverage reports |
 | **Test Status Badge** | ⚠️ TODO | Low | README badge |
 
+**Recent Completions (v2.4.1)**:
+- ✅ Fixed comparison slider image layering for standard before/after UX
+- ✅ Added checkbox-based selective file conversion system
+- ✅ Implemented Select All/Deselect All bulk operations
+- ✅ Fixed HEIC display in comparison viewer with high-quality conversion
+
 **Next Steps**:
-1. Run `npm run dev` + `npm run test:e2e` (smoke test)
-2. Generate test fixtures using fixture-generator.html
-3. Complete circle crop E2E tests
-4. Set up GitHub Actions workflow
+1. Complete remaining E2E test scenarios (circle crop, golden images)
+2. Set up GitHub Actions workflow for CI/CD
+3. Add automated coverage reporting
+4. Implement additional UX enhancements
 
 ---
 

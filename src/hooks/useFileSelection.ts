@@ -87,20 +87,56 @@ export const useFileSelection = () => {
     toast.success('All files cleared');
   }, [files, dispatch]);
 
+  const toggleFileSelection = useCallback(
+    (id: string) => {
+      const file = files.find((f) => f.id === id);
+      if (file) {
+        dispatch({
+          type: 'UPDATE_FILE',
+          payload: { id, updates: { selected: !file.selected } },
+        });
+      }
+    },
+    [files, dispatch]
+  );
+
+  const selectAll = useCallback(() => {
+    files.forEach((file) => {
+      dispatch({
+        type: 'UPDATE_FILE',
+        payload: { id: file.id, updates: { selected: true } },
+      });
+    });
+  }, [files, dispatch]);
+
+  const deselectAll = useCallback(() => {
+    files.forEach((file) => {
+      dispatch({
+        type: 'UPDATE_FILE',
+        payload: { id: file.id, updates: { selected: false } },
+      });
+    });
+  }, [files, dispatch]);
+
   const totalSize = files.reduce((acc, f) => acc + f.file.size, 0);
   const pendingFiles = files.filter((f) => f.status === 'pending');
   const completedFiles = files.filter((f) => f.status === 'completed');
   const errorFiles = files.filter((f) => f.status === 'error');
+  const selectedFiles = files.filter((f) => f.selected && (f.status === 'pending' || f.status === 'error'));
 
   return {
     files,
     addFiles,
     removeFile,
     clearFiles,
+    toggleFileSelection,
+    selectAll,
+    deselectAll,
     totalSize,
     pendingFiles,
     completedFiles,
     errorFiles,
+    selectedFiles,
     fileCount: files.length,
     isAtLimit: files.length >= MAX_FILES,
   };

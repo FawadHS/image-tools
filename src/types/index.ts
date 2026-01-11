@@ -54,6 +54,7 @@ export interface SelectedFile {
   progress: number;
   result?: ConvertResult;
   error?: string;
+  selected?: boolean; // For selective conversion
   // Image-specific transformations (stored per-file)
   transform?: ImageTransform;
 }

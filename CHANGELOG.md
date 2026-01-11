@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-01-11
+
+### Fixed
+- **Comparison Slider Image Order** - Fixed comparison viewer to show converted image on left (progress) and original on right (reference), following standard before/after comparison pattern
+- **HEIC Comparison Display** - Fixed HEIC files not displaying in comparison viewer by converting to JPEG at high quality (1.0) for browser compatibility
+
+### Added
+- **Selective File Conversion** - New checkbox-based file selection system:
+  - Individual checkboxes for each file in the list
+  - "Select All" and "Deselect All" quick actions in file list header
+  - "Convert Selected (N)" button to process only checked files
+  - Selection count badge showing number of selected files
+  - Both "Convert Selected" and "Convert All" options available
+- **Enhanced File Management** - Selection state persists during editing and conversion operations
+
+### Technical
+- Added `selected` property to SelectedFile type for tracking selection state
+- Implemented `toggleFileSelection`, `selectAll`, and `deselectAll` in useFileSelection hook
+- Added `convertSelected` function to useImageConverter for processing selected files
+- FileItem component now supports checkbox selection with proper event handling
+- FileList component displays selection controls and count badge
+
 ## [2.4.0] - 2026-01-11
 
 ### Fixed

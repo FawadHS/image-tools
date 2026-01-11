@@ -10,10 +10,11 @@ import heic2any from 'heic2any';
 interface FileItemProps {
   file: SelectedFile;
   onRemove: (id: string) => void;
+  onToggleSelect?: (id: string) => void;
   isActive?: boolean;
 }
 
-export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = false }) => {
+export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSelect, isActive = false }) => {
   const { dispatch } = useConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
@@ -22,6 +23,11 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = f
 
   const handleClick = () => {
     dispatch({ type: 'SET_ACTIVE_FILE', payload: file.id });
+  };
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleSelect?.(file.id);
   };
 
   // Handle preview URL for HEIC files
@@ -53,13 +59,34 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = f
 
   // Handle original image URL for comparison (always from original file)
   useEffect(() => {
-    // For comparison, always use the original file without any transformations
-    // This ensures the "Original" side shows the untransformed image
-    const url = URL.createObjectURL(file.file);
-    setOriginalImageUrl(url);
+    // For comparison, we need to show the original file
+    // For HEIC files, convert to a viewable format WITHOUT any transformations
+    if (isHeicFile(file.file)) {
+      heic2any({
+        blob: file.file,
+        toType: 'image/jpeg',
+        quality: 1.0, // High quality for comparison
+      })
+        .then((result) => {
+          const blob = Array.isArray(result) ? result[0] : result;
+          const url = URL.createObjectURL(blob);
+          setOriginalImageUrl(url);
+        })
+        .catch(() => {
+          // Fallback: try to create URL from original file anyway
+          const url = URL.createObjectURL(file.file);
+          setOriginalImageUrl(url);
+        });
+    } else {
+      // For non-HEIC files, use original directly
+      const url = URL.createObjectURL(file.file);
+      setOriginalImageUrl(url);
+    }
     
     return () => {
-      URL.revokeObjectURL(url);
+      if (originalImageUrl) {
+        URL.revokeObjectURL(originalImageUrl);
+      }
     };
   }, [file.file]);
 
@@ -105,6 +132,19 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = f
       tabIndex={0}
       aria-label={`Select ${file.file.name} for editing`}
     >
+      {/* Selection Checkbox */}
+      {onToggleSelect && (
+        <div onClick={handleCheckboxClick} className="flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={file.selected ?? false}
+            onChange={() => {}}
+            className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+            aria-label={`Select ${file.file.name} for conversion`}
+          />
+        </div>
+      )}
+
       {/* Preview */}
       <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
         {previewUrl ? (

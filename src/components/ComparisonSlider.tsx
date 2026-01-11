@@ -133,23 +133,23 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
         >
-          {/* Converted Image (Background) */}
+          {/* Original Image (Background - Full) */}
           <img
-            src={convertedImage}
-            alt="Converted"
+            src={originalImage}
+            alt="Original"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none"
             draggable={false}
             style={{ userSelect: 'none' }}
           />
 
-          {/* Original Image (Clipped) */}
+          {/* Converted Image (Clipped - Shows from left to slider) */}
           <div
             className="absolute inset-0 overflow-hidden"
             style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
           >
             <img
-              src={originalImage}
-              alt="Original"
+              src={convertedImage}
+              alt="Converted"
               className="absolute inset-0 w-full h-full object-contain pointer-events-none"
               draggable={false}
               style={{ userSelect: 'none' }}

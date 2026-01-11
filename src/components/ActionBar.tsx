@@ -5,8 +5,8 @@ import { useImageConverter } from '../hooks/useImageConverter';
 import { downloadFile, downloadAsZip } from '../utils/fileUtils';
 
 export const ActionBar: React.FC = () => {
-  const { files, completedFiles, pendingFiles } = useFileSelection();
-  const { convertAll, cancelConversion, isConverting } = useImageConverter();
+  const { files, completedFiles, pendingFiles, selectedFiles } = useFileSelection();
+  const { convertAll, convertSelected, cancelConversion, isConverting } = useImageConverter();
 
   const handleDownloadAll = async () => {
     const results = completedFiles
@@ -30,6 +30,7 @@ export const ActionBar: React.FC = () => {
   };
 
   const canConvert = pendingFiles.length > 0 || files.some((f) => f.status === 'error');
+  const canConvertSelected = selectedFiles.length > 0;
   const hasCompleted = completedFiles.length > 0;
 
   if (files.length === 0) return null;
@@ -37,11 +38,42 @@ export const ActionBar: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        {/* Convert Button */}
+        {/* Convert Buttons */}
         <div className="flex gap-2 w-full sm:w-auto">
+          {/* Convert Selected Button */}
+          {canConvertSelected && (
+            <button
+              onClick={convertSelected}
+              disabled={!canConvertSelected || isConverting}
+              data-testid="convert-selected-button"
+              className={`
+                flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium flex-1 sm:flex-none
+                transition-all duration-200
+                ${canConvertSelected && !isConverting
+                  ? 'bg-primary-600 hover:bg-primary-700 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                }
+              `}
+            >
+              {isConverting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Converting...
+                </>
+              ) : (
+                <>
+                  Convert Selected ({selectedFiles.length})
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Convert All Button */}
           <button
             onClick={convertAll}
-            disabled={!canConvert || isConverting}            data-testid="convert-button"            className={`
+            disabled={!canConvert || isConverting}
+            data-testid="convert-button"
+            className={`
               flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium flex-1 sm:flex-none
               transition-all duration-200
               ${canConvert && !isConverting
@@ -57,7 +89,7 @@ export const ActionBar: React.FC = () => {
               </>
             ) : (
               <>
-                Convert {pendingFiles.length > 0 ? `(${pendingFiles.length})` : 'All'}
+                Convert {pendingFiles.length > 0 ? `All (${pendingFiles.length})` : 'All'}
               </>
             )}
           </button>
