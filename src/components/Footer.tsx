@@ -44,6 +44,20 @@ export const Footer: React.FC = () => {
             <Github className="w-4 h-4" />
             Open Source
           </a>
+          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <a
+            href="https://www.npmjs.com/package/@fawadhs/image-tools"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          >
+            <img 
+              src="https://raw.githubusercontent.com/npm/logos/cc343d8c50139f645d165aedfe4d375240599fd1/npm%20square/n.svg"
+              alt="NPM"
+              className="w-4 h-4"
+            />
+            NPM Package
+          </a>
         </div>
 
         {/* Copyright */}
@@ -56,7 +70,7 @@ export const Footer: React.FC = () => {
               rel="noopener noreferrer"
               className="font-medium hover:text-primary-600 dark:hover:text-primary-400"
             >
-              Fawad Hussain
+              Fawad Hussain Syed
             </a>
           </p>
           <p className="mt-1">
