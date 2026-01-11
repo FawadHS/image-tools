@@ -51,6 +51,15 @@ export const Header: React.FC = () => {
               <span className="hidden sm:inline">Tools</span>
             </Link>
             <a
+              href="https://www.npmjs.com/package/@fawadhs/image-tools"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              aria-label="View on NPM"
+            >
+              <span className="text-base font-bold text-red-600 dark:text-red-400">N</span>
+            </a>
+            <a
               href="https://github.com/FawadHS/image-tools"
               target="_blank"
               rel="noopener noreferrer"
