@@ -15,16 +15,18 @@
 - **⚡ Web Workers** - Background processing for lightning-fast conversions
 - **📦 Batch Processing** - Convert up to 50 images at once with sequential processing
 - **🌙 Dark Mode** - Beautiful dark-first design with system preference support
+- **📱 Mobile Ready** - Full touch support for all interactive tools (v2.5.1)
 
-### Image Editing Suite (v2.0) 🎨
-- **✂️ Crop Tool** - Rectangle, circle shapes with aspect ratio presets (1:1, 16:9, 4:3, 3:2)
+### Image Editing Suite (v2.5) 🎨
+- **✂️ Crop Tool** - Rectangle, circle shapes with aspect ratio presets (1:1, 16:9, 4:3, 3:2) + mobile touch support
 - **🔄 Rotate & Flip** - 90°/180°/270° rotation, horizontal/vertical flip
 - **🎨 Filters** - Brightness, contrast, saturation, grayscale, sepia
-- **📝 Text Overlay** - Add watermarks and captions with custom fonts, colors, and opacity
+- **📝 Text Overlay** - Add watermarks and captions with custom fonts, colors, opacity + touch dragging
 - **🔗 Transform Pipeline** - All edits work together seamlessly
+- **👆 Touch Optimized** - Full mobile/tablet support for crop and text tools
 
 ### Advanced Features
-- **🔄 Before/After Comparison** - Interactive slider to visualize quality vs size
+- **🔄 Before/After Comparison** - Interactive slider with responsive design for all screen sizes
 - **📱 PWA Support** - Install as app, works offline
 - **📊 Conversion History** - Track your conversions with statistics
 - **🏷️ Advanced Naming** - Custom prefixes, suffixes, timestamps, dimensions
@@ -256,7 +258,7 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 ### Areas We Need Help With
 
 🎨 **UI/UX Improvements**
-- Mobile responsiveness enhancements
+- Additional mobile/tablet optimizations
 - Accessibility improvements
 - New theme options
 
@@ -356,6 +358,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **4 Output Formats** - WebP, JPEG, PNG, AVIF
 - **5 Editing Tools** - Crop, Rotate, Flip, Filters, Text Overlay
 - **Zero Dependencies** - No server required, works offline
+- **📱 Mobile & Touch** - Full support for smartphones and tablets
 
 ---
 
