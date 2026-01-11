@@ -133,16 +133,7 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
         >
-          {/* Original Image (Background - Full) */}
-          <img
-            src={originalImage}
-            alt="Original"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-            draggable={false}
-            style={{ userSelect: 'none' }}
-          />
-
-          {/* Converted Image (Clipped - Shows from left to slider) */}
+          {/* Converted Image - Left Side Only */}
           <div
             className="absolute inset-0 overflow-hidden"
             style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
@@ -150,6 +141,20 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
             <img
               src={convertedImage}
               alt="Converted"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+              draggable={false}
+              style={{ userSelect: 'none' }}
+            />
+          </div>
+
+          {/* Original Image - Right Side Only */}
+          <div
+            className="absolute inset-0 overflow-hidden"
+            style={{ clipPath: `inset(0 0 0 ${sliderPosition}%)` }}
+          >
+            <img
+              src={originalImage}
+              alt="Original"
               className="absolute inset-0 w-full h-full object-contain pointer-events-none"
               draggable={false}
               style={{ userSelect: 'none' }}
@@ -168,10 +173,10 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
 
           {/* Labels */}
           <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
-            <span className="text-xs font-medium text-white">Original</span>
+            <span className="text-xs font-medium text-white">Converted</span>
           </div>
           <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
-            <span className="text-xs font-medium text-white">Converted</span>
+            <span className="text-xs font-medium text-white">Original</span>
           </div>
         </div>
 
