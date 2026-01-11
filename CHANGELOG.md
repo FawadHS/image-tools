@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-01-11
+
+### Enhanced
+- **Comparison Viewer Frame** - Complete redesign with professional frame:
+  - Added filename display in header showing which file is being compared
+  - Enhanced title section with gradient background
+  - Improved close button with red hover state and better visual feedback
+  - Larger modal size (max-w-5xl) with rounded-2xl border
+  - Backdrop blur effect on overlay for better focus
+- **Before/After Labels** - Clearer distinction:
+  - "AFTER" label (left side - converted) with primary blue background
+  - "BEFORE" label (right side - original) with gray background
+  - Bold, uppercase text with enhanced backdrop blur
+  - Better contrast and visibility with white border accents
+
+### Fixed
+- **Side-by-Side Rendering** - True split comparison without layering:
+  - Left side shows ONLY converted image (no original underneath)
+  - Right side shows ONLY original image (no converted underneath)
+  - Eliminated transparency artifacts and image bleeding
+  - Clean split at slider position with no overlap
+
+### Technical
+- Refactored comparison slider from layered rendering to independent clipping
+- Added filename prop to ComparisonSlider component
+- Enhanced modal styling with gradient headers and improved shadows
+
 ## [2.4.1] - 2026-01-11
 
 ### Fixed

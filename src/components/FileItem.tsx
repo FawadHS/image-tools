@@ -221,6 +221,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
           convertedImage={convertedUrl}
           originalSize={file.file.size}
           convertedSize={file.result.convertedSize}
+          filename={file.file.name}
           onClose={() => setShowComparison(false)}
         />
       )}

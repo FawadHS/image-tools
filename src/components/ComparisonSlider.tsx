@@ -6,6 +6,7 @@ interface ComparisonSliderProps {
   convertedImage: string;
   originalSize: number;
   convertedSize: number;
+  filename: string;
   onClose: () => void;
 }
 
@@ -14,6 +15,7 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
   convertedImage,
   originalSize,
   convertedSize,
+  filename,
   onClose,
 }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
@@ -109,19 +111,24 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
     : 16 / 9; // Default to 16:9 while loading
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-5xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Before / After Comparison
-          </h2>
+        <div className="flex items-center justify-between p-5 border-b-2 border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              Before / After Comparison
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium truncate max-w-md">
+              {filename}
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2.5 rounded-lg bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/30 border border-gray-300 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700 transition-all shadow-sm"
             aria-label="Close comparison"
           >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <X className="w-5 h-5 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400" />
           </button>
         </div>
 
@@ -172,11 +179,11 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
           </div>
 
           {/* Labels */}
-          <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
-            <span className="text-xs font-medium text-white">Converted</span>
+          <div className="absolute top-4 left-4 px-4 py-2 bg-primary-600/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20">
+            <span className="text-sm font-bold text-white tracking-wide">AFTER</span>
           </div>
-          <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
-            <span className="text-xs font-medium text-white">Original</span>
+          <div className="absolute top-4 right-4 px-4 py-2 bg-gray-800/90 backdrop-blur-md rounded-lg shadow-lg border border-white/20">
+            <span className="text-sm font-bold text-white tracking-wide">BEFORE</span>
           </div>
         </div>
 
