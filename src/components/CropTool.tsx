@@ -261,6 +261,77 @@ export const CropTool = () => {
     setIsDragging(false);
     setDragStart(null);
   };
+
+  // Touch event handlers for mobile support
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || !transformedImage || e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
+    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
+    
+    const scaleX = canvas.width / imgWidth;
+    const scaleY = canvas.height / imgHeight;
+    
+    const x = (touch.clientX - rect.left) / scaleX;
+    const y = (touch.clientY - rect.top) / scaleY;
+
+    setIsDragging(true);
+    setDragStart({ x, y });
+    e.preventDefault();
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDragging || !dragStart || !transformedImage || e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
+    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
+    
+    const scaleX = canvas.width / imgWidth;
+    const scaleY = canvas.height / imgHeight;
+    
+    const x = (touch.clientX - rect.left) / scaleX;
+    const y = (touch.clientY - rect.top) / scaleY;
+
+    let width = Math.abs(x - dragStart.x);
+    let height = Math.abs(y - dragStart.y);
+
+    const ratio = getAspectRatioValue();
+    if (isLocked && ratio) {
+      if (width / height > ratio) {
+        width = height * ratio;
+      } else {
+        height = width / ratio;
+      }
+    }
+
+    const cropX = Math.max(0, Math.min(dragStart.x, x));
+    const cropY = Math.max(0, Math.min(dragStart.y, y));
+    const cropWidth = Math.min(width, imgWidth - cropX);
+    const cropHeight = Math.min(height, imgHeight - cropY);
+
+    const newCrop = {
+      x: Math.round(cropX),
+      y: Math.round(cropY),
+      width: Math.round(cropWidth),
+      height: Math.round(cropHeight),
+    };
+    setCropArea(newCrop);
+    setPreviewCrop(newCrop);
+    e.preventDefault();
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setDragStart(null);
+  };
   
   const discardCrop = () => {
     const imgWidth = transformedImage?.naturalWidth || transformedImage?.width || 0;
@@ -397,7 +468,11 @@ export const CropTool = () => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
         />
         </div>
       </div>

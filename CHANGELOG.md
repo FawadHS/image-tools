@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-01-11
+
+### Enhanced
+- **Mobile Touch Support** - Full mobile compatibility for interactive components:
+  - Added touch events (onTouchStart, onTouchMove, onTouchEnd) to CropTool for mobile crop functionality
+  - Added touch events to TextOverlayTool for dragging text on mobile devices
+  - Added `touch-none` CSS class to prevent unwanted scrolling during interactions
+  - Proper touch coordinate extraction with preventDefault to avoid gesture conflicts
+- **Responsive Typography** - Improved text scaling on mobile:
+  - DropZone: Responsive text sizes (text-base sm:text-lg, text-xs sm:text-sm)
+  - Added horizontal padding (px-2) to prevent text from touching edges on small screens
+  - Better readability across all device sizes
+
+### Technical
+- Unified touch and mouse event handlers for consistent behavior
+- Touch events properly handle single-touch interactions only
+- Canvas interactions fully compatible with both mouse and touch input
+- All interactive tools now work seamlessly on tablets and smartphones
+
 ## [2.5.0] - 2026-01-11
 
 ### Enhanced

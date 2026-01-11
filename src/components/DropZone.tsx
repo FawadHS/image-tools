@@ -59,25 +59,25 @@ export const DropZone: React.FC = () => {
           )}
         </div>
 
-        <div>
+        <div className="text-center px-2">
           {isDragActive ? (
-            <p className="text-lg font-medium text-primary-600 dark:text-primary-400">
+            <p className="text-base sm:text-lg font-medium text-primary-600 dark:text-primary-400">
               Drop images here...
             </p>
           ) : isAtLimit ? (
-            <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+            <p className="text-base sm:text-lg font-medium text-gray-500 dark:text-gray-400">
               Maximum {MAX_FILES} files reached
             </p>
           ) : (
             <>
-              <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
+              <p className="text-base sm:text-lg font-medium text-gray-700 dark:text-gray-200">
                 Drop images here or{' '}
                 <span className="text-primary-600 dark:text-primary-400">browse</span>
               </p>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 Supports: HEIC, JPEG, PNG, GIF, BMP, TIFF, WebP
               </p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
                 Maximum {MAX_FILES} files • 50MB per file
               </p>
             </>
