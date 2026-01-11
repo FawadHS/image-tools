@@ -18,7 +18,37 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
 }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<{
+    original: { width: number; height: number };
+    converted: { width: number; height: number };
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Load both images to get their dimensions
+  useEffect(() => {
+    const loadImages = async () => {
+      const original = new Image();
+      const converted = new Image();
+      
+      await Promise.all([
+        new Promise((resolve) => {
+          original.onload = () => resolve(null);
+          original.src = originalImage;
+        }),
+        new Promise((resolve) => {
+          converted.onload = () => resolve(null);
+          converted.src = convertedImage;
+        }),
+      ]);
+
+      setImageDimensions({
+        original: { width: original.naturalWidth, height: original.naturalHeight },
+        converted: { width: converted.naturalWidth, height: converted.naturalHeight },
+      });
+    };
+
+    loadImages();
+  }, [originalImage, convertedImage]);
 
   const handleMove = (clientX: number) => {
     if (!containerRef.current) return;
@@ -70,6 +100,14 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
 
   const reduction = Math.round(((originalSize - convertedSize) / originalSize) * 100);
 
+  // Calculate container aspect ratio based on larger image
+  const containerAspectRatio = imageDimensions
+    ? Math.max(
+        imageDimensions.original.width / imageDimensions.original.height,
+        imageDimensions.converted.width / imageDimensions.converted.height
+      )
+    : 16 / 9; // Default to 16:9 while loading
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
@@ -90,7 +128,8 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
         {/* Image Comparison */}
         <div
           ref={containerRef}
-          className="relative aspect-video bg-gray-900 overflow-hidden cursor-col-resize select-none"
+          className="relative bg-gray-900 overflow-hidden cursor-col-resize select-none"
+          style={{ aspectRatio: containerAspectRatio }}
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
         >
@@ -98,8 +137,9 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
           <img
             src={convertedImage}
             alt="Converted"
-            className="absolute inset-0 w-full h-full object-contain"
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
             draggable={false}
+            style={{ userSelect: 'none' }}
           />
 
           {/* Original Image (Clipped) */}
@@ -110,14 +150,15 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
             <img
               src={originalImage}
               alt="Original"
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
               draggable={false}
+              style={{ userSelect: 'none' }}
             />
           </div>
 
           {/* Slider Line */}
           <div
-            className="absolute top-0 bottom-0 w-1 bg-white shadow-lg"
+            className="absolute top-0 bottom-0 w-1 bg-white shadow-lg pointer-events-none"
             style={{ left: `${sliderPosition}%` }}
           >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">

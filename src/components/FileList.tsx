@@ -27,7 +27,7 @@ export const FileList: React.FC = () => {
         </button>
       </div>
 
-      <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+      <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
         {files.map((file) => (
           <FileItem 
             key={file.id} 

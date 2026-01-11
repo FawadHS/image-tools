@@ -41,8 +41,7 @@ export const ActionBar: React.FC = () => {
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={convertAll}
-            disabled={!canConvert || isConverting}
-            className={`
+            disabled={!canConvert || isConverting}            data-testid="convert-button"            className={`
               flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium flex-1 sm:flex-none
               transition-all duration-200
               ${canConvert && !isConverting
@@ -81,6 +80,7 @@ export const ActionBar: React.FC = () => {
             {completedFiles.length === 1 ? (
               <button
                 onClick={() => handleDownloadSingle(completedFiles[0].id)}
+                data-testid="download-button"
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium w-full sm:w-auto"
               >
                 <Download className="w-4 h-4" />
@@ -89,6 +89,7 @@ export const ActionBar: React.FC = () => {
             ) : (
               <button
                 onClick={handleDownloadAll}
+                data-testid="download-all-button"
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium w-full sm:w-auto"
               >
                 <Archive className="w-4 h-4" />

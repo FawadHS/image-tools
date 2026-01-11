@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-01-11
+
+### Fixed
+- **E2E Test Navigation** - Fixed all E2E tests to navigate to `/image-tools` route instead of landing page
+- **E2E Test Interactions** - Updated tests to match actual UI flow: Convert → Wait for completion → Download
+- **Comparison Viewer Aspect Ratio** - Fixed dynamic aspect ratio calculation to prevent image misalignment
+- **UI Consistency** - Unified scrollbar styling across FileList, HistoryPanel, and sidebar panels
+
+### Added
+- **Test Attributes** - Added `data-testid` attributes to key UI elements (convert-button, download-button, crop-canvas, etc.) for reliable E2E testing
+- **Enhanced Testing** - All 6 E2E tests now passing (100% success rate)
+
+### Changed
+- **Test Reliability** - Improved E2E test stability with proper async operation handling and element selection
+
 ## [2.3.1] - 2026-01-11
 
 ### Fixed

@@ -116,7 +116,7 @@ export const HistoryPanel: React.FC = () => {
           </div>
 
           {/* History List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {history.map((record) => (
                 <div

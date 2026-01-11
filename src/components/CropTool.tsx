@@ -392,6 +392,7 @@ export const CropTool = () => {
         <div className="flex justify-center items-center max-h-[300px] overflow-hidden">
         <canvas
           ref={canvasRef}
+          data-testid="crop-canvas"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -405,6 +406,7 @@ export const CropTool = () => {
         <div className="mb-4 flex gap-2">
           <button
             onClick={applyCrop}
+            data-testid="apply-crop-button"
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
           >
             <Check className="w-4 h-4" />
@@ -438,6 +440,7 @@ export const CropTool = () => {
           </button>
           <button
             onClick={() => setCropShape('circle')}
+            data-testid="circle-crop-button"
             className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
               cropShape === 'circle'
                 ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'

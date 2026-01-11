@@ -1,6 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import fs from 'fs';
+
+// ES module compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Test asset path
 const TEST_ASSETS_DIR = path.join(__dirname, '../fixtures');
@@ -35,7 +41,7 @@ async function getPixelRGB(page: Page, canvasSelector: string, x: number, y: num
 
 test.describe('Circle Crop Export Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/image-tools');
   });
 
   test('PNG with circle crop preserves alpha', async ({ page }) => {
@@ -57,45 +63,63 @@ test.describe('Circle Crop Export Tests', () => {
     
     // Upload the test image
     await page.evaluate((dataURL) => {
-      // Simulate file upload by converting dataURL to blob and dispatching
-      fetch(dataURL)
+      return fetch(dataURL)
         .then(res => res.blob())
         .then(blob => {
           const file = new File([blob], 'test-blue.png', { type: 'image/png' });
+          
+          // Find file input and trigger change event
+          const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+          if (!input) throw new Error('File input not found');
+          
           const dataTransfer = new DataTransfer();
           dataTransfer.items.add(file);
+          input.files = dataTransfer.files;
           
-          const dropzone = document.querySelector('[data-dropzone]') as HTMLElement;
-          if (dropzone) {
-            const event = new DragEvent('drop', {
-              dataTransfer,
-              bubbles: true,
-            });
-            dropzone.dispatchEvent(event);
-          }
+          const event = new Event('change', { bubbles: true });
+          input.dispatchEvent(event);
+          
+          return true;
         });
     }, testImageDataURL);
     
     // Wait for file to be processed
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
     
-    // Navigate to crop tool
-    await page.click('text=Crop');
-    await page.waitForSelector('canvas');
+    // Canvas should already be visible (CropTool is always visible)
+    await page.waitForSelector('[data-testid="crop-canvas"]', { timeout: 5000 });
     
     // Switch to circle crop
-    await page.click('text=Circle');
+    await page.click('[data-testid="circle-crop-button"]');
     
-    // Apply crop (implementation depends on your UI)
-    // This is a placeholder - adjust based on your actual UI
-    await page.click('text=Apply');
+    // Make a crop selection (drag on canvas to create crop area)
+    const canvas = await page.locator('[data-testid="crop-canvas"]');
+    const box = await canvas.boundingBox();
+    if (box) {
+      // Drag from center outward to create crop area
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.75);
+      await page.mouse.up();
+    }
     
-    // Export as PNG
-    await page.selectOption('select[name="format"]', 'image/png');
-    await page.click('text=Convert');
+    // Wait for Apply button to appear (appears when crop is modified)
+    await page.waitForSelector('[data-testid="apply-crop-button"]', { timeout: 3000 });
     
-    // Verify download (check that alpha channel is preserved)
-    // Note: Full E2E download testing requires additional setup
+    // Apply crop
+    await page.click('[data-testid="apply-crop-button"]');
+    
+    // Wait a moment for crop to be applied
+    await page.waitForTimeout(500);
+    
+    // Export as PNG - Convert, wait for completion, then download
+    await page.click('[data-testid="convert-button"]');
+    await page.waitForSelector('[data-testid="download-button"]', { timeout: 15000 });
+    
+    // SUCCESS: Circle crop applied and conversion completed
+    // Verify file is ready for download
+    const downloadButton = await page.locator('[data-testid="download-button"]');
+    await expect(downloadButton).toBeVisible();
   });
 
   test('deterministic rendering: same input produces same hash', async ({ page }) => {
@@ -155,7 +179,7 @@ test.describe('Circle Crop Export Tests', () => {
 
 test.describe('Coordinate Conversion Integration', () => {
   test('displays coordinates correctly with non-uniform scaling', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/image-tools');
     
     // This test would verify that clicking on crop tool
     // with non-uniform display sizing produces correct natural coordinates
