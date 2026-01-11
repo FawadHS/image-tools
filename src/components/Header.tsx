@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, Image, ArrowLeft, Github } from 'lucide-react';
+import { Moon, Sun, ArrowLeft, Github } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDarkMode } from '../hooks/useDarkMode';
 
@@ -16,7 +16,7 @@ export const Header: React.FC = () => {
               aria-label="Back to Tools"
               className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
             >
-              <Image className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              <img src="/favicon.svg" alt="Image Tools" className="w-6 h-6" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
