@@ -3,6 +3,7 @@ import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye } from 'lu
 import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
 import { CANVAS_PREVIEW_MAX_WIDTH } from '../constants';
+import { renderEditsToCanvas } from '../utils/imageTransform';
 
 /**
  * ImageEditor Component
@@ -118,7 +119,7 @@ export const ImageEditor = () => {
 
   const hasAnyEdits = hasTransforms || hasFilters;
 
-  // Draw preview on canvas
+  // Draw preview on canvas using unified render pipeline
   useEffect(() => {
     if (!canvasRef.current || state.files.length === 0 || !activeFile) return;
 
@@ -130,37 +131,39 @@ export const ImageEditor = () => {
     img.src = activeFile.preview;
 
     img.onload = () => {
-      // Set canvas size
-      const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-
-      // Apply transforms
-      ctx.save();
-      
-      // Center and rotate
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((previewTransform.rotation * Math.PI) / 180);
-      
-      // Apply flips
-      const scaleX = previewTransform.flipHorizontal ? -1 : 1;
-      const scaleY = previewTransform.flipVertical ? -1 : 1;
-      ctx.scale(scaleX, scaleY);
-
-      // Apply filters
-      const filterStr = [
-        `brightness(${filters.brightness}%)`,
-        `contrast(${filters.contrast}%)`,
-        `saturate(${filters.saturation}%)`,
-        filters.grayscale ? 'grayscale(100%)' : '',
-        filters.sepia ? 'sepia(100%)' : '',
-      ].filter(Boolean).join(' ');
-      
-      ctx.filter = filterStr;
-
-      // Draw image
-      ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
-      ctx.restore();
+      try {
+        // Use the unified render pipeline to properly apply ALL transformations
+        // including crop, which is stored in activeFile.transform
+        const fullTransform: ImageTransform = {
+          ...previewTransform,
+          // CRITICAL: Include the crop from the committed state
+          // Crop should not be modified in the editor, only rotation/flip/filters
+          crop: activeFile.transform?.crop,
+          textOverlay: activeFile.transform?.textOverlay,
+        };
+        
+        // Render using the unified pipeline (without text overlay for editing preview)
+        const renderedCanvas = renderEditsToCanvas(img, fullTransform, false);
+        
+        // Scale for display if needed
+        const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / renderedCanvas.width);
+        canvas.width = renderedCanvas.width * scale;
+        canvas.height = renderedCanvas.height * scale;
+        
+        // Clear and draw the rendered result
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(renderedCanvas, 0, 0, canvas.width, canvas.height);
+      } catch (error) {
+        console.error('Failed to render preview:', error);
+        // Fallback to simple rendering
+        const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
     };
   }, [previewTransform, activeFile, filters]);
 

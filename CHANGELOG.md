@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-01-11
+
+### Fixed
+- **Image Editor Filter Preview** - Fixed issue where brightness, contrast, and saturation filters were not being applied to cropped images in the Image Editing panel. The preview now correctly uses the unified render pipeline (`renderEditsToCanvas`) to show filters applied to the current crop state, matching the behavior of text overlay and download.
+
 ## [2.3.0] - 2025-01-11
 
 ### 🧪 Testing Infrastructure & Documentation Organization
