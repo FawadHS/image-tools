@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Image Editor Filter Preview** - Fixed issue where brightness, contrast, and saturation filters were not being applied to cropped images in the Image Editing panel. The preview now correctly uses the unified render pipeline (`renderEditsToCanvas`) to show filters applied to the current crop state, matching the behavior of text overlay and download.
+- **Comparison Viewer** - Fixed before/after comparison to show correct images:
+  - Original side now displays the untransformed source image (directly from file blob)
+  - Converted side displays the fully transformed output with all edits baked in
+  - Fixed blob URL memory leaks by properly managing lifecycle
+- **Web Worker Unified Pipeline** - Rebuilt Web Worker to use the same transformation pipeline as main thread:
+  - Implements `renderEditsToOffscreenCanvas()` matching `renderEditsToCanvas()` exactly
+  - Same transformation order: EXIF → rotation → flip → filters → crop → text overlay
+  - Now supports all features: circle crop, CSS filters, text overlay, EXIF normalization
+  - Ensures preview and export are identical regardless of execution context
+
+### Technical
+- All rendering paths now verified to use unified transformation pipeline
+- Worker uses OffscreenCanvas with same CSS filter support as main thread
+- FileItem component now creates separate blob URLs for original and converted images
+- Both main thread and worker execution paths produce identical results
 
 ## [2.3.0] - 2025-01-11
 

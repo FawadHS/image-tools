@@ -16,12 +16,15 @@ interface FileItemProps {
 export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = false }) => {
   const { dispatch } = useConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
 
   const handleClick = () => {
     dispatch({ type: 'SET_ACTIVE_FILE', payload: file.id });
   };
 
+  // Handle preview URL for HEIC files
   useEffect(() => {
     // For HEIC files, we need to convert for preview
     if (isHeicFile(file.file)) {
@@ -47,6 +50,33 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = f
       }
     };
   }, [file]);
+
+  // Handle original image URL for comparison (always from original file)
+  useEffect(() => {
+    // For comparison, always use the original file without any transformations
+    // This ensures the "Original" side shows the untransformed image
+    const url = URL.createObjectURL(file.file);
+    setOriginalImageUrl(url);
+    
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file.file]);
+
+  // Handle converted image URL
+  useEffect(() => {
+    if (file.result?.blob) {
+      // Create blob URL once and store it
+      const url = URL.createObjectURL(file.result.blob);
+      setConvertedUrl(url);
+      
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setConvertedUrl(null);
+    }
+  }, [file.result]);
 
   const statusIcon = {
     pending: null,
@@ -145,10 +175,10 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, isActive = f
       </button>
       
       {/* Comparison Modal */}
-      {showComparison && file.result && previewUrl && (
+      {showComparison && file.result && originalImageUrl && convertedUrl && (
         <ComparisonSlider
-          originalImage={previewUrl}
-          convertedImage={URL.createObjectURL(file.result.blob)}
+          originalImage={originalImageUrl}
+          convertedImage={convertedUrl}
           originalSize={file.file.size}
           convertedSize={file.result.convertedSize}
           onClose={() => setShowComparison(false)}

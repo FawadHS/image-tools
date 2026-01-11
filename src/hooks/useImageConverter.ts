@@ -15,6 +15,8 @@ export const useImageConverter = () => {
   const { files, options, isConverting } = state;
   const abortRef = useRef(false);
   const workerRef = useRef<Worker | null>(null);
+  // Web Worker now uses unified pipeline (renderEditsToOffscreenCanvas)
+  // matching the exact transformation order of main thread
   const useWorker = useRef(isWorkerSupported());
 
   // Initialize worker

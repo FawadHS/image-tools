@@ -1,21 +1,195 @@
 /**
- * Web Worker for image conversion
- * Handles heavy image processing off the main thread to prevent UI blocking
+ * Web Worker for image conversion - UNIFIED PIPELINE IMPLEMENTATION
+ * 
+ * This worker implements the EXACT SAME transformation pipeline as renderEditsToCanvas()
+ * but using worker-compatible APIs (OffscreenCanvas, ImageBitmap).
+ * 
+ * TRANSFORMATION ORDER (MUST MATCH renderEditsToCanvas):
+ * 1. Normalize EXIF orientation (handled on main thread before sending to worker)
+ * 2. Apply rotation (user-defined)
+ * 3. Apply flip (horizontal/vertical)
+ * 4. Apply filters (brightness, contrast, etc.) - using CSS filters
+ * 5. Apply crop (cuts the final region)
+ * 6. Apply text overlay (optional)
+ * 
  * @packageDocumentation
  */
 
-import { ConvertOptions, ConvertResult } from '../types';
+import { ConvertOptions, ConvertResult, ImageTransform } from '../types';
 
 // Import shared utilities to avoid code duplication
 import { getMimeType, getExtension, calculateDimensions } from '../utils/imageHelpers';
 
 /**
  * Load an image from a blob and return ImageBitmap (Worker-optimized)
- * @param blob - The image blob to load
+ * NOTE: EXIF normalization must be done on main thread before sending to worker
+ * @param blob - The image blob to load (already EXIF-normalized)
  * @returns Promise resolving to ImageBitmap
  */
 const loadImage = (blob: Blob): Promise<ImageBitmap> => {
   return createImageBitmap(blob);
+};
+
+/**
+ * Apply filter transforms to a canvas context
+ * Returns the filter string to be applied to ctx.filter
+ * MUST MATCH: imageTransform.ts applyFilters()
+ */
+const applyFilters = (transform: ImageTransform | undefined): string => {
+  if (!transform?.filters) return 'none';
+
+  const filters = transform.filters;
+  const filterArray: string[] = [];
+
+  if (filters.brightness !== 100) {
+    filterArray.push(`brightness(${filters.brightness}%)`);
+  }
+  if (filters.contrast !== 100) {
+    filterArray.push(`contrast(${filters.contrast}%)`);
+  }
+  if (filters.saturation !== 100) {
+    filterArray.push(`saturate(${filters.saturation}%)`);
+  }
+  if (filters.grayscale) {
+    filterArray.push('grayscale(100%)');
+  }
+  if (filters.sepia) {
+    filterArray.push('sepia(100%)');
+  }
+
+  return filterArray.length > 0 ? filterArray.join(' ') : 'none';
+};
+
+/**
+ * UNIFIED RENDER PIPELINE - Worker Implementation
+ * 
+ * This function replicates renderEditsToCanvas() but uses OffscreenCanvas.
+ * It applies ALL transformations in the correct order to ensure preview and
+ * export produce IDENTICAL output.
+ * 
+ * @param img - ImageBitmap (already EXIF-normalized)
+ * @param transform - All transformations to apply
+ * @param includeTextOverlay - Whether to bake text overlay into output
+ * @returns OffscreenCanvas with final processed pixels
+ */
+const renderEditsToOffscreenCanvas = (
+  img: ImageBitmap,
+  transform: ImageTransform | undefined,
+  includeTextOverlay: boolean = true
+): OffscreenCanvas => {
+  // Step 1: Calculate dimensions after rotation
+  const rotation = transform?.rotation || 0;
+  const needsDimensionSwap = rotation === 90 || rotation === 270;
+  
+  let workingWidth = img.width;
+  let workingHeight = img.height;
+  
+  if (needsDimensionSwap) {
+    [workingWidth, workingHeight] = [workingHeight, workingWidth];
+  }
+
+  // Step 2: Create canvas for rotation + flip + filters
+  const transformCanvas = new OffscreenCanvas(workingWidth, workingHeight);
+  const transformCtx = transformCanvas.getContext('2d', { alpha: true });
+  if (!transformCtx) throw new Error('Could not get transform canvas context');
+
+  transformCtx.save();
+  transformCtx.imageSmoothingEnabled = true;
+  transformCtx.imageSmoothingQuality = 'high';
+
+  // Apply rotation and flip
+  transformCtx.translate(workingWidth / 2, workingHeight / 2);
+  
+  if (rotation !== 0) {
+    transformCtx.rotate((rotation * Math.PI) / 180);
+  }
+  
+  const flipH = transform?.flipHorizontal || false;
+  const flipV = transform?.flipVertical || false;
+  const scaleX = flipH ? -1 : 1;
+  const scaleY = flipV ? -1 : 1;
+  transformCtx.scale(scaleX, scaleY);
+
+  // Apply filters using CSS filters (same as main thread)
+  transformCtx.filter = applyFilters(transform);
+
+  // Draw original image with transforms
+  transformCtx.drawImage(img, -img.width / 2, -img.height / 2);
+
+  transformCtx.filter = 'none';
+  transformCtx.restore();
+
+  // Step 3: Apply crop (if exists)
+  const canvas = new OffscreenCanvas(workingWidth, workingHeight);
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) throw new Error('Could not get canvas context');
+
+  if (transform?.crop) {
+    const crop = transform.crop;
+    
+    // Validate crop dimensions
+    const cropX = Math.max(0, Math.min(crop.x, workingWidth));
+    const cropY = Math.max(0, Math.min(crop.y, workingHeight));
+    const cropWidth = Math.max(1, Math.min(crop.width, workingWidth - cropX));
+    const cropHeight = Math.max(1, Math.min(crop.height, workingHeight - cropY));
+    
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
+    
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Handle circle crop with clipping
+    if (crop.shape === 'circle') {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(
+        cropWidth / 2,
+        cropHeight / 2,
+        Math.min(cropWidth, cropHeight) / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.clip();
+    }
+    
+    // Draw cropped region from transformed image
+    ctx.drawImage(
+      transformCanvas,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      cropWidth,
+      cropHeight
+    );
+    
+    if (crop.shape === 'circle') {
+      ctx.restore();
+    }
+  } else {
+    // No crop - use full transformed image
+    canvas.width = workingWidth;
+    canvas.height = workingHeight;
+    ctx.drawImage(transformCanvas, 0, 0);
+  }
+
+  // Step 4: Apply text overlay (if exists and requested)
+  if (includeTextOverlay && transform?.textOverlay) {
+    const overlay = transform.textOverlay;
+    
+    ctx.save();
+    ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+    ctx.fillStyle = overlay.color;
+    ctx.globalAlpha = overlay.opacity;
+    ctx.textBaseline = 'top';
+    ctx.fillText(overlay.text, overlay.x, overlay.y);
+    ctx.restore();
+  }
+
+  return canvas;
 };
 
 interface WorkerMessage {
@@ -49,179 +223,68 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     // Report progress
     postMessage({ type: 'progress', progress: 10 } as WorkerResponse);
 
-    // Load the image
+    // Load the image (already EXIF-normalized by main thread)
     const img = await loadImage(blob);
     postMessage({ type: 'progress', progress: 30 } as WorkerResponse);
 
-    // Get transformation options
-    const transform = options.transform;
+    // Use UNIFIED render pipeline to get final canvas
+    // This applies: rotation → flip → filters → crop → text overlay
+    // in the EXACT same order as main thread renderEditsToCanvas()
+    const processedCanvas = renderEditsToOffscreenCanvas(img, options.transform, true);
     
-    // Apply crop if specified
-    let sourceX = 0;
-    let sourceY = 0;
-    let sourceWidth = img.width;
-    let sourceHeight = img.height;
-    
-    if (transform?.crop) {
-      sourceX = transform.crop.x;
-      sourceY = transform.crop.y;
-      sourceWidth = transform.crop.width;
-      sourceHeight = transform.crop.height;
-    }
+    postMessage({ type: 'progress', progress: 60 } as WorkerResponse);
 
-    // Calculate dimensions based on cropped size
-    const dimensions = calculateDimensions(
-      sourceWidth,
-      sourceHeight,
-      options.maxWidth,
-      options.maxHeight,
-      options.maintainAspectRatio
-    );
-    postMessage({ type: 'progress', progress: 50 } as WorkerResponse);
-
-    // Apply rotation if needed - swap dimensions for 90/270 degree rotations
-    const rotation = transform?.rotation || 0;
-    const flipH = transform?.flipHorizontal || false;
-    const flipV = transform?.flipVertical || false;
-    const filters = transform?.filters;
+    // Handle JPEG + Circle Crop: Fill background (no alpha support)
+    const outputFormat = options.outputFormat || 'webp';
+    let finalCanvas = processedCanvas;
     
-    // For 90 or 270 degree rotation, swap width and height
-    const needsDimensionSwap = rotation === 90 || rotation === 270;
-    const canvasWidth = needsDimensionSwap ? dimensions.height : dimensions.width;
-    const canvasHeight = needsDimensionSwap ? dimensions.width : dimensions.height;
-
-    // Create canvas using OffscreenCanvas if available
-    const canvas = new OffscreenCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext('2d', { willReadFrequently: filters !== undefined });
-    
-    if (!ctx) {
-      throw new Error('Could not get canvas context');
-    }
-
-    // Draw image with high quality and transformations
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    
-    // Save context state
-    ctx.save();
-    
-    // Apply transformations in the correct order
-    // 1. Translate to center
-    ctx.translate(canvasWidth / 2, canvasHeight / 2);
-    
-    // 2. Apply rotation
-    if (rotation !== 0) {
-      ctx.rotate((rotation * Math.PI) / 180);
-    }
-    
-    // 3. Apply flips
-    const scaleX = flipH ? -1 : 1;
-    const scaleY = flipV ? -1 : 1;
-    ctx.scale(scaleX, scaleY);
-    
-    // 4. Draw image centered (accounting for rotation dimension swap)
-    const drawWidth = needsDimensionSwap ? dimensions.height : dimensions.width;
-    const drawHeight = needsDimensionSwap ? dimensions.width : dimensions.height;
-    
-    // Draw with crop applied via source parameters
-    ctx.drawImage(
-      img, 
-      sourceX, sourceY, sourceWidth, sourceHeight,
-      -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight
-    );
-    
-    // Restore context
-    ctx.restore();
-    
-    // Apply filters if specified
-    if (filters) {
-      const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-      const data = imageData.data;
+    if (outputFormat === 'jpeg' && options.transform?.crop?.shape === 'circle') {
+      const jpegCanvas = new OffscreenCanvas(processedCanvas.width, processedCanvas.height);
+      const jpegCtx = jpegCanvas.getContext('2d', { alpha: false });
+      if (!jpegCtx) throw new Error('Could not get JPEG canvas context');
       
-      // Apply grayscale filter
-      if (filters.grayscale) {
-        for (let i = 0; i < data.length; i += 4) {
-          const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-          data[i] = gray;
-          data[i + 1] = gray;
-          data[i + 2] = gray;
+      // Fill with white background
+      jpegCtx.fillStyle = '#FFFFFF';
+      jpegCtx.fillRect(0, 0, jpegCanvas.width, jpegCanvas.height);
+      
+      // Draw the processed canvas (with transparent circle) on top
+      jpegCtx.drawImage(processedCanvas, 0, 0);
+      
+      finalCanvas = jpegCanvas;
+    }
+
+    // Apply resize if needed (maintaining aspect ratio)
+    let outputCanvas = finalCanvas;
+    if (options.maxWidth || options.maxHeight) {
+      const dimensions = calculateDimensions(
+        finalCanvas.width,
+        finalCanvas.height,
+        options.maxWidth,
+        options.maxHeight,
+        options.maintainAspectRatio
+      );
+
+      if (dimensions.width !== finalCanvas.width || dimensions.height !== finalCanvas.height) {
+        const resizedCanvas = new OffscreenCanvas(dimensions.width, dimensions.height);
+        const resizedCtx = resizedCanvas.getContext('2d', { alpha: outputFormat !== 'jpeg' });
+        if (!resizedCtx) throw new Error('Could not get resize canvas context');
+
+        if (outputFormat === 'jpeg') {
+          resizedCtx.fillStyle = '#FFFFFF';
+          resizedCtx.fillRect(0, 0, dimensions.width, dimensions.height);
         }
+
+        resizedCtx.imageSmoothingEnabled = true;
+        resizedCtx.imageSmoothingQuality = 'high';
+        resizedCtx.drawImage(finalCanvas, 0, 0, dimensions.width, dimensions.height);
+
+        outputCanvas = resizedCanvas;
       }
-      // Apply sepia filter (mutually exclusive with grayscale)
-      else if (filters.sepia) {
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          
-          data[i] = Math.min(255, 0.393 * r + 0.769 * g + 0.189 * b);
-          data[i + 1] = Math.min(255, 0.349 * r + 0.686 * g + 0.168 * b);
-          data[i + 2] = Math.min(255, 0.272 * r + 0.534 * g + 0.131 * b);
-        }
-      }
-      
-      // Apply brightness, contrast, saturation
-      const brightness = filters.brightness / 100;
-      const contrast = filters.contrast / 100;
-      const saturation = filters.saturation / 100;
-      
-      if (brightness !== 1 || contrast !== 1 || saturation !== 1) {
-        for (let i = 0; i < data.length; i += 4) {
-          let r = data[i];
-          let g = data[i + 1];
-          let b = data[i + 2];
-          
-          // Brightness
-          r *= brightness;
-          g *= brightness;
-          b *= brightness;
-          
-          // Contrast
-          r = ((r / 255 - 0.5) * contrast + 0.5) * 255;
-          g = ((g / 255 - 0.5) * contrast + 0.5) * 255;
-          b = ((b / 255 - 0.5) * contrast + 0.5) * 255;
-          
-          // Saturation
-          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-          r = gray + (r - gray) * saturation;
-          g = gray + (g - gray) * saturation;
-          b = gray + (b - gray) * saturation;
-          
-          // Clamp values
-          data[i] = Math.max(0, Math.min(255, r));
-          data[i + 1] = Math.max(0, Math.min(255, g));
-          data[i + 2] = Math.max(0, Math.min(255, b));
-        }
-      }
-      
-      ctx.putImageData(imageData, 0, 0);
     }
-    
-    // Apply text overlay if specified
-    if (transform?.textOverlay) {
-      const overlay = transform.textOverlay;
-      
-      // Text coordinates are already stored relative to the cropped/transformed image
-      // No adjustment needed - they're positioned correctly by TextOverlayTool
-      const textX = overlay.x;
-      const textY = overlay.y;
-      
-      // Calculate scale factor if canvas was resized
-      const scaleFactor = canvasWidth / sourceWidth;
-      
-      ctx.save();
-      ctx.font = `${overlay.fontSize * scaleFactor}px ${overlay.fontFamily}`;
-      ctx.fillStyle = overlay.color;
-      ctx.globalAlpha = overlay.opacity;
-      ctx.textBaseline = 'top';
-      ctx.fillText(overlay.text, textX * scaleFactor, textY * scaleFactor);
-      ctx.restore();
-    }
-    
-    postMessage({ type: 'progress', progress: 70 } as WorkerResponse);
+
+    postMessage({ type: 'progress', progress: 80 } as WorkerResponse);
 
     // Get output format settings
-    const outputFormat = options.outputFormat || 'webp';
     const mimeType = getMimeType(outputFormat);
     const extension = getExtension(outputFormat);
     
@@ -230,11 +293,11 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
                     options.lossless ? 1 : options.quality / 100;
 
     // Convert to selected format
-    const outputBlob = await canvas.convertToBlob({
+    const outputBlob = await outputCanvas.convertToBlob({
       type: mimeType,
       quality,
     });
-    postMessage({ type: 'progress', progress: 90 } as WorkerResponse);
+    postMessage({ type: 'progress', progress: 95 } as WorkerResponse);
 
     // Generate filename
     const originalName = filename.replace(/\.[^/.]+$/, '');
@@ -249,7 +312,10 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       originalSize,
       convertedSize,
       reduction,
-      dimensions,
+      dimensions: {
+        width: outputCanvas.width,
+        height: outputCanvas.height,
+      },
       filename: outputFilename,
     };
 
