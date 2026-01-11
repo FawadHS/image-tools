@@ -9,6 +9,7 @@ export interface ImageTransform {
     y: number;
     width: number;
     height: number;
+    shape?: 'rectangle' | 'circle'; // Shape of crop (default: rectangle)
   };
   filters?: {
     brightness: number; // 0-200, default 100

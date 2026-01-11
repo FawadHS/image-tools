@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Fixture Generator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-top: 0;
+      color: #2563eb;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 10px 10px 10px 0;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    canvas {
+      border: 2px solid #e5e7eb;
+      margin: 20px 0;
+      display: block;
+    }
+    .info {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 12px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    .code {
+      background: #1f2937;
+      color: #e5e7eb;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Test Fixture Generator</h1>
+    <p>Generate solid color test images for E2E testing.</p>
+
+    <div class="info">
+      <strong>Purpose:</strong> Create deterministic test images for validating circle crop, alpha transparency, and format conversion.
+    </div>
+
+    <h2>Generate Test Images</h2>
+    <button onclick="generateImage('red', 500, 500)">Red 500×500 PNG</button>
+    <button onclick="generateImage('blue', 500, 500)">Blue 500×500 PNG</button>
+    <button onclick="generateImage('green', 500, 500)">Green 500×500 PNG</button>
+    <button onclick="generateImage('red', 1000, 800)">Red 1000×800 PNG</button>
+    <button onclick="generateImage('blue', 1000, 800)">Blue 1000×800 PNG</button>
+
+    <h2>Preview</h2>
+    <canvas id="preview"></canvas>
+
+    <h2>Generated Hash (SHA-256)</h2>
+    <div class="code" id="hash">Generate an image to see hash...</div>
+
+    <div class="info">
+      <strong>Instructions:</strong>
+      <ol>
+        <li>Click a button to generate test image</li>
+        <li>Image will download automatically</li>
+        <li>Move downloaded image to <code>tests/fixtures/images/</code></li>
+        <li>Use SHA-256 hash for golden-image tests</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    const colorMap = {
+      red: '#FF0000',
+      blue: '#0000FF',
+      green: '#00FF00',
+      black: '#000000',
+      white: '#FFFFFF',
+    };
+
+    async function generateImage(color, width, height) {
+      const canvas = document.getElementById('preview');
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = colorMap[color];
+      ctx.fillRect(0, 0, width, height);
+
+      // Add text marker for easy identification
+      ctx.fillStyle = color === 'white' ? '#000000' : '#FFFFFF';
+      ctx.font = `${Math.floor(height / 10)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${color} ${width}×${height}`, width / 2, height / 2);
+
+      // Generate SHA-256 hash
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const arrayBuffer = await blob.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      document.getElementById('hash').textContent = hashHex;
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `${color}-${width}x${height}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      console.log(`Generated: ${color}-${width}x${height}.png`);
+      console.log(`SHA-256: ${hashHex}`);
+    }
+  </script>
+</body>
+</html>

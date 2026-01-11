@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Crop, Square, Circle, Lock, Unlock, Check, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
+import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
 
 type CropShape = 'rectangle' | 'circle';
 type AspectRatioPreset = 'free' | '1:1' | '16:9' | '4:3' | '3:2';
@@ -22,8 +23,9 @@ export const CropTool = () => {
   const [cropArea, setCropArea] = useState<CropArea | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
-  const [originalImageSrc, setOriginalImageSrc] = useState<string>('');
+  
+  // Current transformed image (EXIF-normalized + rotation/flip/filters applied, NO crop)
+  const [transformedImage, setTransformedImage] = useState<HTMLImageElement | null>(null);
   const [lastTransformState, setLastTransformState] = useState<string>('');
   
   // Get the active file
@@ -41,95 +43,84 @@ export const CropTool = () => {
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(previewCrop) !== JSON.stringify(committedCrop);
 
-  // Load the image with rotation/flip applied (from ImageEditor)
-  // CropTool must work on the TRANSFORMED image, not the original
+  // Load the TRANSFORMED image (rotation/flip/filters applied, but NO crop)
+  // This is the base image that CropTool works on
   useEffect(() => {
     if (state.files.length === 0 || !activeFile) return;
 
-    // Check if we need to reload - compare both src and transforms
-    const currentSrc = activeFile.preview;
     const currentTransformState = JSON.stringify({
+      src: activeFile.preview,
       rotation: activeFile.transform?.rotation,
       flipHorizontal: activeFile.transform?.flipHorizontal,
       flipVertical: activeFile.transform?.flipVertical,
+      filters: activeFile.transform?.filters,
     });
     
-    if (originalImageSrc === currentSrc && lastTransformState === currentTransformState) return;
+    if (lastTransformState === currentTransformState) return;
 
-    const img = new Image();
-    img.onload = () => {
-      // Apply rotation and flip to create a transformed image
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    // Load the image and apply transforms (EXCEPT crop)
+    const loadTransformedImage = async () => {
+      try {
+        // Load original image with EXIF normalization
+        const response = await fetch(activeFile.preview);
+        const blob = await response.blob();
+        const img = await loadImageWithExif(blob);
 
-      const rotation = activeFile.transform?.rotation || 0;
-      const flipH = activeFile.transform?.flipHorizontal || false;
-      const flipV = activeFile.transform?.flipVertical || false;
+        // Apply rotation/flip/filters (but NOT crop) using unified pipeline
+        const transformWithoutCrop = activeFile.transform ? {
+          ...activeFile.transform,
+          crop: undefined, // Explicitly remove crop
+        } : undefined;
 
-      // Calculate canvas size based on rotation
-      if (rotation === 90 || rotation === 270) {
-        canvas.width = img.height;
-        canvas.height = img.width;
-      } else {
-        canvas.width = img.width;
-        canvas.height = img.height;
-      }
-
-      ctx.save();
-      
-      // Apply transforms
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      
-      const scaleX = flipH ? -1 : 1;
-      const scaleY = flipV ? -1 : 1;
-      ctx.scale(scaleX, scaleY);
-      
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      ctx.restore();
-
-      // Convert canvas to image
-      const transformedImg = new Image();
-      transformedImg.onload = () => {
-        setCurrentImage(transformedImg);
-        setOriginalImageSrc(currentSrc);
-        setLastTransformState(currentTransformState);
+        const canvas = renderEditsToCanvas(img, transformWithoutCrop, false);
         
-        // Initialize crop area to full transformed image or committed crop
-        const initialCrop = committedCrop || {
-          x: 0,
-          y: 0,
-          width: transformedImg.width,
-          height: transformedImg.height,
+        // Convert to image for display
+        const transformedImg = new Image();
+        transformedImg.onload = () => {
+          setTransformedImage(transformedImg);
+          setLastTransformState(currentTransformState);
+          
+          // Initialize crop area to committed crop or full image
+          const initialCrop = committedCrop || {
+            x: 0,
+            y: 0,
+            width: transformedImg.naturalWidth,
+            height: transformedImg.naturalHeight,
+          };
+          setCropArea(initialCrop);
+          if (!committedCrop) setPreviewCrop(initialCrop);
         };
-        setCropArea(initialCrop);
-        setPreviewCrop(initialCrop);
-      };
-      transformedImg.src = canvas.toDataURL();
+        transformedImg.src = canvas.toDataURL();
+      } catch (error) {
+        console.error('Failed to load transformed image:', error);
+        toast.error('Failed to load image');
+      }
     };
-    img.src = currentSrc;
-  }, [activeFile, committedCrop, originalImageSrc, lastTransformState]);
 
-  // Draw canvas preview
+    loadTransformedImage();
+  }, [activeFile, committedCrop, lastTransformState, state.files.length]);
+
+  // Draw canvas preview with crop overlay
   useEffect(() => {
-    if (!canvasRef.current || !currentImage || !cropArea) return;
+    if (!canvasRef.current || !transformedImage || !cropArea) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Scale to fit container - use smaller max dimensions to ensure it fits
+    // Scale to fit container
     const maxWidth = 450;
     const maxHeight = 300;
-    const scale = Math.min(maxWidth / currentImage.width, maxHeight / currentImage.height, 1);
+    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
+    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
+    const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight, 1);
 
-    canvas.width = Math.floor(currentImage.width * scale);
-    canvas.height = Math.floor(currentImage.height * scale);
+    canvas.width = Math.floor(imgWidth * scale);
+    canvas.height = Math.floor(imgHeight * scale);
 
-    // Draw full image
+    // Draw full transformed image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(transformedImage, 0, 0, canvas.width, canvas.height);
 
     // Draw crop overlay
     const scaledCrop = {
@@ -158,18 +149,18 @@ export const CropTool = () => {
       ctx.clip();
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(transformedImage, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
     // Draw crop border
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 2;
     if (cropShape === 'circle') {
-      const centerX = scaledCrop.x + scaledCrop.width / 2;
-      const centerY = scaledCrop.y + scaledCrop.height / 2;
-      const radius = Math.min(scaledCrop.width, scaledCrop.height) / 2;
+      const centerX2 = scaledCrop.x + scaledCrop.width / 2;
+      const centerY2 = scaledCrop.y + scaledCrop.height / 2;
+      const radius2 = Math.min(scaledCrop.width, scaledCrop.height) / 2;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.arc(centerX2, centerY2, radius2, 0, Math.PI * 2);
       ctx.stroke();
     } else {
       ctx.strokeRect(scaledCrop.x, scaledCrop.y, scaledCrop.width, scaledCrop.height);
@@ -187,7 +178,7 @@ export const CropTool = () => {
     handles.forEach((handle) => {
       ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
     });
-  }, [currentImage, cropArea, cropShape]);
+  }, [transformedImage, cropArea, cropShape]);
 
   const getAspectRatioValue = (): number | null => {
     switch (aspectRatio) {
@@ -200,28 +191,42 @@ export const CropTool = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !currentImage) return;
+    if (!canvasRef.current || !transformedImage) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / currentImage.width;
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
+    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
+    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
+    
+    // Use separate scales for X and Y to handle non-uniform scaling
+    const scaleX = canvas.width / imgWidth;
+    const scaleY = canvas.height / imgHeight;
+    
+    // Convert click coordinates to natural pixel space
+    const x = (e.clientX - rect.left) / scaleX;
+    const y = (e.clientY - rect.top) / scaleY;
 
     setIsDragging(true);
     setDragStart({ x, y });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !dragStart || !currentImage) return;
+    if (!isDragging || !dragStart || !transformedImage) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / currentImage.width;
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
+    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
+    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
+    
+    // Use separate scales for X and Y to handle non-uniform scaling
+    const scaleX = canvas.width / imgWidth;
+    const scaleY = canvas.height / imgHeight;
+    
+    // Convert mouse coordinates to natural pixel space
+    const x = (e.clientX - rect.left) / scaleX;
+    const y = (e.clientY - rect.top) / scaleY;
 
     let width = Math.abs(x - dragStart.x);
     let height = Math.abs(y - dragStart.y);
@@ -236,17 +241,17 @@ export const CropTool = () => {
       }
     }
 
-    // Calculate crop area with boundaries
+    // Calculate crop area in natural pixel coordinates
     const cropX = Math.max(0, Math.min(dragStart.x, x));
     const cropY = Math.max(0, Math.min(dragStart.y, y));
-    const cropWidth = Math.min(width, currentImage.width - cropX);
-    const cropHeight = Math.min(height, currentImage.height - cropY);
+    const cropWidth = Math.min(width, imgWidth - cropX);
+    const cropHeight = Math.min(height, imgHeight - cropY);
 
     const newCrop = {
-      x: cropX,
-      y: cropY,
-      width: cropWidth,
-      height: cropHeight,
+      x: Math.round(cropX),
+      y: Math.round(cropY),
+      width: Math.round(cropWidth),
+      height: Math.round(cropHeight),
     };
     setCropArea(newCrop);
     setPreviewCrop(newCrop);
@@ -258,25 +263,29 @@ export const CropTool = () => {
   };
   
   const discardCrop = () => {
-    const revertCrop = committedCrop || (currentImage ? {
+    const imgWidth = transformedImage?.naturalWidth || transformedImage?.width || 0;
+    const imgHeight = transformedImage?.naturalHeight || transformedImage?.height || 0;
+    
+    const revertCrop = committedCrop || {
       x: 0,
       y: 0,
-      width: currentImage.width,
-      height: currentImage.height,
-    } : null);
+      width: imgWidth,
+      height: imgHeight,
+    };
     setCropArea(revertCrop);
     setPreviewCrop(revertCrop);
   };
 
   const applyCrop = () => {
-    if (!previewCrop || !currentImage || !activeFile) return;
+    if (!previewCrop || !transformedImage || !activeFile) return;
 
     if (previewCrop.width <= 0 || previewCrop.height <= 0) {
       toast.error('Invalid crop area');
       return;
     }
 
-    // Save crop to active file - coordinates are relative to the transformed image
+    // Save crop to active file - coordinates are in natural pixel space
+    // of the transformed image (after rotation/flip/filters, before crop)
     const currentTransform = activeFile.transform || {
       rotation: 0 as const,
       flipHorizontal: false,
@@ -290,46 +299,14 @@ export const CropTool = () => {
         updates: {
           transform: {
             ...currentTransform,
-            crop: previewCrop,
+            crop: {
+              ...previewCrop,
+              shape: cropShape, // Store the crop shape (rectangle or circle)
+            },
           },
         },
       },
     });
-
-    // Create a cropped version of the image to show as preview
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = previewCrop.width;
-    tempCanvas.height = previewCrop.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    if (tempCtx) {
-      tempCtx.drawImage(
-        currentImage,
-        previewCrop.x,
-        previewCrop.y,
-        previewCrop.width,
-        previewCrop.height,
-        0,
-        0,
-        previewCrop.width,
-        previewCrop.height
-      );
-      
-      const croppedImg = new Image();
-      croppedImg.onload = () => {
-        setCurrentImage(croppedImg);
-        // Reset crop area to show the full cropped image
-        const fullCrop = {
-          x: 0,
-          y: 0,
-          width: croppedImg.width,
-          height: croppedImg.height,
-        };
-        setCropArea(fullCrop);
-        setPreviewCrop(fullCrop);
-      };
-      croppedImg.src = tempCanvas.toDataURL();
-    }
 
     toast.success('Crop applied', { duration: 2000 });
   };
@@ -356,22 +333,17 @@ export const CropTool = () => {
       },
     });
 
-    // Reload the original image
-    if (activeFile.preview) {
-      const img = new Image();
-      img.onload = () => {
-        setCurrentImage(img);
-        const fullCrop = {
-          x: 0,
-          y: 0,
-          width: img.width,
-          height: img.height,
-        };
-        setCropArea(fullCrop);
-        setPreviewCrop(fullCrop);
-      };
-      img.src = activeFile.preview;
-    }
+    const imgWidth = transformedImage?.naturalWidth || transformedImage?.width || 0;
+    const imgHeight = transformedImage?.naturalHeight || transformedImage?.height || 0;
+    
+    const fullCrop = {
+      x: 0,
+      y: 0,
+      width: imgWidth,
+      height: imgHeight,
+    };
+    setCropArea(fullCrop);
+    setPreviewCrop(fullCrop);
 
     toast.success('Crop reset', { duration: 2000 });
   };

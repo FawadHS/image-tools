@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Type, Plus, Trash2, Move, Check, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
+import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
 
 interface TextOverlayConfig {
   text: string;
@@ -16,12 +17,12 @@ interface TextOverlayConfig {
 export const TextOverlayTool = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
+  // Processed image (EXIF-normalized + rotation/flip/filters/crop applied)
+  const [processedImage, setProcessedImage] = useState<HTMLImageElement | null>(null);
   const [overlays, setOverlays] = useState<TextOverlayConfig[]>([]);
   const [selectedOverlay, setSelectedOverlay] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [lastLoadedSrc, setLastLoadedSrc] = useState<string>('');
-  const [lastCropState, setLastCropState] = useState<string>('');
+  const [lastTransformState, setLastTransformState] = useState<string>('');
 
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
@@ -42,14 +43,13 @@ export const TextOverlayTool = () => {
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
 
-  // Load image with ALL transforms applied (rotation, flip, filters, crop)
-  // Text overlay works on the fully transformed image
+  // Load fully processed image (rotation + flip + filters + crop)
+  // This is the SAME image that will be exported
   useEffect(() => {
     if (state.files.length === 0 || !activeFile) return;
 
-    // Check if we need to reload by comparing src and all transform states
-    const currentSrc = activeFile.preview;
     const currentTransformState = JSON.stringify({
+      src: activeFile.preview,
       rotation: activeFile.transform?.rotation,
       flipHorizontal: activeFile.transform?.flipHorizontal,
       flipVertical: activeFile.transform?.flipVertical,
@@ -57,120 +57,57 @@ export const TextOverlayTool = () => {
       crop: activeFile.transform?.crop,
     });
     
-    if (lastLoadedSrc === currentSrc && lastCropState === currentTransformState) {
-      return; // No change, skip reload
-    }
+    if (lastTransformState === currentTransformState) return;
 
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    // Load image and apply ALL transforms using unified pipeline
+    const loadProcessedImage = async () => {
+      try {
+        // Load original image with EXIF normalization
+        const response = await fetch(activeFile.preview);
+        const blob = await response.blob();
+        const img = await loadImageWithExif(blob);
 
-      // Step 1: Apply rotation and flip
-      const rotation = activeFile.transform?.rotation || 0;
-      const flipH = activeFile.transform?.flipHorizontal || false;
-      const flipV = activeFile.transform?.flipVertical || false;
-
-      // Calculate canvas size based on rotation
-      if (rotation === 90 || rotation === 270) {
-        canvas.width = img.height;
-        canvas.height = img.width;
-      } else {
-        canvas.width = img.width;
-        canvas.height = img.height;
-      }
-
-      ctx.save();
-      
-      // Apply rotation and flip
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      
-      const scaleX = flipH ? -1 : 1;
-      const scaleY = flipV ? -1 : 1;
-      ctx.scale(scaleX, scaleY);
-
-      // Apply filters
-      const filters = activeFile.transform?.filters;
-      if (filters) {
-        const filterArray: string[] = [];
-        if (filters.brightness !== 100) filterArray.push(`brightness(${filters.brightness}%)`);
-        if (filters.contrast !== 100) filterArray.push(`contrast(${filters.contrast}%)`);
-        if (filters.saturation !== 100) filterArray.push(`saturate(${filters.saturation}%)`);
-        if (filters.grayscale) filterArray.push('grayscale(100%)');
-        if (filters.sepia) filterArray.push('sepia(100%)');
-        if (filterArray.length > 0) {
-          ctx.filter = filterArray.join(' ');
-        }
-      }
-      
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      ctx.restore();
-
-      // Step 2: Apply crop if exists
-      if (activeFile.transform?.crop) {
-        const crop = activeFile.transform.crop;
-        const croppedCanvas = document.createElement('canvas');
-        croppedCanvas.width = crop.width;
-        croppedCanvas.height = crop.height;
-        const croppedCtx = croppedCanvas.getContext('2d');
+        // Use unified render pipeline (WITHOUT text overlay)
+        // This produces the EXACT same canvas that will be exported
+        const canvas = renderEditsToCanvas(img, activeFile.transform, false);
         
-        if (croppedCtx) {
-          croppedCtx.drawImage(
-            canvas,
-            crop.x,
-            crop.y,
-            crop.width,
-            crop.height,
-            0,
-            0,
-            crop.width,
-            crop.height
-          );
-          
-          const transformedImg = new Image();
-          transformedImg.onload = () => {
-            setCurrentImage(transformedImg);
-            setLastLoadedSrc(currentSrc);
-            setLastCropState(currentTransformState);
-          };
-          transformedImg.src = croppedCanvas.toDataURL();
-          return;
-        }
+        // Convert to image for display
+        const processedImg = new Image();
+        processedImg.onload = () => {
+          setProcessedImage(processedImg);
+          setLastTransformState(currentTransformState);
+        };
+        processedImg.src = canvas.toDataURL();
+      } catch (error) {
+        console.error('Failed to load processed image:', error);
+        toast.error('Failed to load image');
       }
-
-      // No crop, use transformed image
-      const transformedImg = new Image();
-      transformedImg.onload = () => {
-        setCurrentImage(transformedImg);
-        setLastLoadedSrc(currentSrc);
-        setLastCropState(currentTransformState);
-      };
-      transformedImg.src = canvas.toDataURL();
     };
-    img.src = currentSrc;
-  }, [activeFile, lastLoadedSrc, lastCropState]);
+
+    loadProcessedImage();
+  }, [activeFile, lastTransformState, state.files.length]);
 
   // Draw canvas preview
   useEffect(() => {
-    if (!canvasRef.current || !currentImage) return;
+    if (!canvasRef.current || !processedImage) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Scale to fit container - use smaller max dimensions to ensure it fits
+    // Scale to fit container
     const maxWidth = 450;
     const maxHeight = 300;
-    const scale = Math.min(maxWidth / currentImage.width, maxHeight / currentImage.height, 1);
+    const imgWidth = processedImage.naturalWidth || processedImage.width;
+    const imgHeight = processedImage.naturalHeight || processedImage.height;
+    const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight, 1);
 
-    canvas.width = Math.floor(currentImage.width * scale);
-    canvas.height = Math.floor(currentImage.height * scale);
+    canvas.width = Math.floor(imgWidth * scale);
+    canvas.height = Math.floor(imgHeight * scale);
 
-    // Draw image
+    // Draw processed image (already has all transforms)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(processedImage, 0, 0, canvas.width, canvas.height);
 
     // Draw text overlays
     overlays.forEach((overlay, index) => {
@@ -196,19 +133,22 @@ export const TextOverlayTool = () => {
       }
       ctx.restore();
     });
-  }, [currentImage, overlays, selectedOverlay]);
+  }, [processedImage, overlays, selectedOverlay]);
 
   const addTextOverlay = () => {
-    if (!currentImage) {
+    if (!processedImage) {
       toast.error('Image not loaded');
       return;
     }
 
-    // Add text in center of CURRENT image (which may be cropped)
+    const imgWidth = processedImage.naturalWidth || processedImage.width;
+    const imgHeight = processedImage.naturalHeight || processedImage.height;
+
+    // Add text in center of processed image
     const newOverlay: TextOverlayConfig = {
       text: 'Sample Text',
-      x: Math.max(0, currentImage.width / 2 - 50),
-      y: Math.max(0, currentImage.height / 2 - 20),
+      x: Math.max(0, imgWidth / 2 - 50),
+      y: Math.max(0, imgHeight / 2 - 20),
       fontSize: 40,
       fontFamily: 'Arial',
       color: '#ffffff',
@@ -233,11 +173,14 @@ export const TextOverlayTool = () => {
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !currentImage) return;
+    if (!canvasRef.current || !processedImage) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / currentImage.width;
+    const imgWidth = processedImage.naturalWidth || processedImage.width;
+    const scale = canvas.width / imgWidth;
+    
+    // Convert click coordinates to natural pixel space
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
 
@@ -262,17 +205,21 @@ export const TextOverlayTool = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || selectedOverlay === null || !canvasRef.current || !currentImage) return;
+    if (!isDragging || selectedOverlay === null || !canvasRef.current || !processedImage) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / currentImage.width;
+    const imgWidth = processedImage.naturalWidth || processedImage.width;
+    const imgHeight = processedImage.naturalHeight || processedImage.height;
+    const scale = canvas.width / imgWidth;
+    
+    // Convert mouse coordinates to natural pixel space
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
 
     // Keep within bounds
-    const boundedX = Math.max(0, Math.min(x, currentImage.width - 50));
-    const boundedY = Math.max(0, Math.min(y, currentImage.height - 20));
+    const boundedX = Math.max(0, Math.min(x, imgWidth - 50));
+    const boundedY = Math.max(0, Math.min(y, imgHeight - 20));
 
     updateOverlay(selectedOverlay, { x: boundedX, y: boundedY });
   };

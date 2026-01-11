@@ -1,6 +1,7 @@
 import heic2any from 'heic2any';
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
+import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
 
 /**
  * Check if Web Workers are supported in the current browser
@@ -71,29 +72,15 @@ export const convertHeicToBlob = async (file: File): Promise<Blob> => {
 };
 
 /**
- * Load an image from a blob into an HTMLImageElement
+ * Load an image from a blob into an HTMLImageElement with EXIF normalization
  * Automatically revokes object URL after loading
  * @param blob - The image blob to load
- * @returns Promise resolving to loaded image element
+ * @returns Promise resolving to loaded and EXIF-normalized image element
  * @throws {Error} If image fails to load
  */
 const loadImage = async (blob: Blob): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(blob);
-    
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
-    
-    img.src = url;
-  });
+  // Use the unified EXIF-aware loader
+  return loadImageWithExif(blob);
 };
 
 /**
@@ -102,7 +89,8 @@ const loadImage = async (blob: Blob): Promise<HTMLImageElement> => {
 export const calculateDimensions = calcDimensions;
 
 /**
- * Convert image to selected output format using Canvas API
+ * Convert image to selected output format using unified render pipeline
+ * This ensures preview and export are IDENTICAL
  */
 export const convertImage = async (
   file: File,
@@ -116,160 +104,158 @@ export const convertImage = async (
     blob = await convertHeicToBlob(file);
   }
 
-  // Load the image
+  // Load the image with EXIF normalization (Problem 6 fix)
   const img = await loadImage(blob);
 
-  // Calculate dimensions
-  const dimensions = calculateDimensions(
-    img.width,
-    img.height,
-    options.maxWidth,
-    options.maxHeight,
-    options.maintainAspectRatio
-  );
+  // Use the UNIFIED render pipeline to get final canvas
+  // This applies: rotation → flip → filters → crop → text overlay
+  // in the correct order (Problem 5 fix)
+  const processedCanvas = renderEditsToCanvas(img, options.transform, true);
 
-  // Create canvas and draw image
-  const canvas = document.createElement('canvas');
-  
-  // Apply crop if specified
-  let sourceX = 0;
-  let sourceY = 0;
-  let sourceWidth = img.width;
-  let sourceHeight = img.height;
-  
-  if (options.transform?.crop) {
-    sourceX = options.transform.crop.x;
-    sourceY = options.transform.crop.y;
-    sourceWidth = options.transform.crop.width;
-    sourceHeight = options.transform.crop.height;
+  // Handle JPEG + Circle Crop: Fill background (no alpha support)
+  // This must happen AFTER renderEditsToCanvas which already applied the circular clip
+  const outputFormat = options.outputFormat || 'webp';
+  if (outputFormat === 'jpeg' && options.transform?.crop?.shape === 'circle') {
+    // JPEG doesn't support transparency, so we need to fill the background
+    // The circular clip has already been applied by renderEditsToCanvas,
+    // leaving transparent pixels outside the circle. We need to composite
+    // onto a white (or configured) background.
+    const jpegCanvas = document.createElement('canvas');
+    jpegCanvas.width = processedCanvas.width;
+    jpegCanvas.height = processedCanvas.height;
+    const jpegCtx = jpegCanvas.getContext('2d', { alpha: false });
+    if (!jpegCtx) throw new Error('Could not get JPEG canvas context');
     
-    // Recalculate dimensions based on cropped size
-    const croppedDimensions = calculateDimensions(
-      sourceWidth,
-      sourceHeight,
+    // Fill with white background (configurable via options in future)
+    jpegCtx.fillStyle = '#FFFFFF';
+    jpegCtx.fillRect(0, 0, jpegCanvas.width, jpegCanvas.height);
+    
+    // Draw the processed canvas (with transparent circle) on top
+    jpegCtx.drawImage(processedCanvas, 0, 0);
+    
+    // Use the JPEG canvas for export instead
+    const finalWidth = jpegCanvas.width;
+    const finalHeight = jpegCanvas.height;
+    
+    // Apply resize if needed (maintaining aspect ratio)
+    let outputCanvas = jpegCanvas;
+    if (options.maxWidth || options.maxHeight) {
+      const dimensions = calculateDimensions(
+        finalWidth,
+        finalHeight,
+        options.maxWidth,
+        options.maxHeight,
+        options.maintainAspectRatio
+      );
+
+      // Only create new canvas if dimensions changed
+      if (dimensions.width !== finalWidth || dimensions.height !== finalHeight) {
+        outputCanvas = document.createElement('canvas');
+        outputCanvas.width = dimensions.width;
+        outputCanvas.height = dimensions.height;
+        
+        const ctx = outputCanvas.getContext('2d', { alpha: false });
+        if (!ctx) throw new Error('Could not get output canvas context');
+        
+        // Fill background for JPEG
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+        
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(jpegCanvas, 0, 0, dimensions.width, dimensions.height);
+      }
+    }
+    
+    // Continue with JPEG export using outputCanvas
+    const mimeType = getMimeType(outputFormat);
+    const extension = getExtension(outputFormat);
+    const quality = options.lossless ? 1 : options.quality / 100;
+
+    const outputBlob = await new Promise<Blob>((resolve, reject) => {
+      outputCanvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error(`Failed to create ${outputFormat.toUpperCase()} blob`));
+          }
+        },
+        mimeType,
+        quality
+      );
+    });
+
+    // Generate filename
+    const originalName = file.name.replace(/\\.[^/.]+$/, '');
+    const prefix = options.namePrefix || '';
+    const suffix = options.nameSuffix || '';
+    const timestamp = options.addTimestamp ? `_${new Date().toISOString().split('T')[0]}` : '';
+    const dimensionStr = options.addDimensions ? `_${outputCanvas.width}x${outputCanvas.height}` : '';
+    
+    const filename = `${prefix}${originalName}${suffix}${timestamp}${dimensionStr}${extension}`;
+
+    // Calculate reduction percentage
+    const convertedSize = outputBlob.size;
+    const reduction = Math.round(((originalSize - convertedSize) / originalSize) * 100);
+
+    return {
+      blob: outputBlob,
+      originalSize,
+      convertedSize,
+      reduction,
+      dimensions: { width: outputCanvas.width, height: outputCanvas.height },
+      filename,
+    };
+  }
+
+  // Standard path (non-JPEG or non-circle crop)
+  const finalWidth = processedCanvas.width;
+  const finalHeight = processedCanvas.height;
+
+  // Apply resize if needed (maintaining aspect ratio)
+  let outputCanvas = processedCanvas;
+  if (options.maxWidth || options.maxHeight) {
+    const dimensions = calculateDimensions(
+      finalWidth,
+      finalHeight,
       options.maxWidth,
       options.maxHeight,
       options.maintainAspectRatio
     );
-    canvas.width = croppedDimensions.width;
-    canvas.height = croppedDimensions.height;
-  } else {
-    canvas.width = dimensions.width;
-    canvas.height = dimensions.height;
-  }
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    throw new Error('Could not get canvas context');
-  }
-
-  // Apply transformations
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-
-  // Save context for transformations
-  ctx.save();
-
-  // Apply rotation if specified
-  if (options.transform?.rotation) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    ctx.translate(centerX, centerY);
-    ctx.rotate((options.transform.rotation * Math.PI) / 180);
-    ctx.translate(-centerX, -centerY);
-  }
-
-  // Apply flip transformations
-  if (options.transform?.flipHorizontal || options.transform?.flipVertical) {
-    const scaleX = options.transform.flipHorizontal ? -1 : 1;
-    const scaleY = options.transform.flipVertical ? -1 : 1;
-    const translateX = options.transform.flipHorizontal ? canvas.width : 0;
-    const translateY = options.transform.flipVertical ? canvas.height : 0;
-    ctx.translate(translateX, translateY);
-    ctx.scale(scaleX, scaleY);
-  }
-
-  // Draw the image (with crop applied via source parameters)
-  ctx.drawImage(
-    img,
-    sourceX,
-    sourceY,
-    sourceWidth,
-    sourceHeight,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-  ctx.restore();
-
-  // Apply filters if specified
-  if (options.transform?.filters) {
-    const filters = options.transform.filters;
-    const filterArray: string[] = [];
-
-    if (filters.brightness !== 100) {
-      filterArray.push(`brightness(${filters.brightness}%)`);
+    // Only create new canvas if dimensions changed
+    if (dimensions.width !== finalWidth || dimensions.height !== finalHeight) {
+      outputCanvas = document.createElement('canvas');
+      outputCanvas.width = dimensions.width;
+      outputCanvas.height = dimensions.height;
+      
+      const ctx = outputCanvas.getContext('2d', { alpha: true });
+      if (!ctx) throw new Error('Could not get output canvas context');
+      
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(processedCanvas, 0, 0, dimensions.width, dimensions.height);
     }
-    if (filters.contrast !== 100) {
-      filterArray.push(`contrast(${filters.contrast}%)`);
-    }
-    if (filters.saturation !== 100) {
-      filterArray.push(`saturate(${filters.saturation}%)`);
-    }
-    if (filters.grayscale) {
-      filterArray.push('grayscale(100%)');
-    }
-    if (filters.sepia) {
-      filterArray.push('sepia(100%)');
-    }
-
-    if (filterArray.length > 0) {
-      ctx.filter = filterArray.join(' ');
-      ctx.drawImage(canvas, 0, 0);
-      ctx.filter = 'none';
-    }
-  }
-
-  // Apply text overlay if specified
-  if (options.transform?.textOverlay) {
-    const overlay = options.transform.textOverlay;
-    
-    // Text coordinates are already stored relative to the cropped/transformed image
-    // No adjustment needed - they're positioned correctly by TextOverlayTool
-    const textX = overlay.x;
-    const textY = overlay.y;
-    
-    // Calculate scale factor if canvas was resized
-    const scaleFactor = canvas.width / sourceWidth;
-    
-    ctx.save();
-    ctx.font = `${overlay.fontSize * scaleFactor}px ${overlay.fontFamily}`;
-    ctx.fillStyle = overlay.color;
-    ctx.globalAlpha = overlay.opacity;
-    ctx.textBaseline = 'top';
-    ctx.fillText(overlay.text, textX * scaleFactor, textY * scaleFactor);
-    ctx.restore();
   }
 
   // Get output format settings
-  const outputFormat = options.outputFormat || 'webp';
-  const mimeType = getMimeType(outputFormat);
-  const extension = getExtension(outputFormat);
+  const finalOutputFormat = options.outputFormat || 'webp';
+  const mimeType = getMimeType(finalOutputFormat);
+  const extension = getExtension(finalOutputFormat);
   
   // PNG is always lossless, so quality doesn't apply
-  const quality = outputFormat === 'png' ? undefined : 
+  const quality = finalOutputFormat === 'png' ? undefined : 
                   options.lossless ? 1 : options.quality / 100;
 
   // Convert to selected format
   const outputBlob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
+    outputCanvas.toBlob(
       (blob) => {
         if (blob) {
           resolve(blob);
         } else {
-          reject(new Error(`Failed to create ${outputFormat.toUpperCase()} blob`));
+          reject(new Error(`Failed to create ${finalOutputFormat.toUpperCase()} blob`));
         }
       },
       mimeType,
@@ -282,7 +268,7 @@ export const convertImage = async (
   const prefix = options.namePrefix || '';
   const suffix = options.nameSuffix || '';
   const timestamp = options.addTimestamp ? `_${new Date().toISOString().split('T')[0]}` : '';
-  const dimensionStr = options.addDimensions ? `_${dimensions.width}x${dimensions.height}` : '';
+  const dimensionStr = options.addDimensions ? `_${outputCanvas.width}x${outputCanvas.height}` : '';
   
   const filename = `${prefix}${originalName}${suffix}${timestamp}${dimensionStr}${extension}`;
 
@@ -295,7 +281,7 @@ export const convertImage = async (
     originalSize,
     convertedSize,
     reduction,
-    dimensions,
+    dimensions: { width: outputCanvas.width, height: outputCanvas.height },
     filename,
   };
 };
