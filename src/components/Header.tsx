@@ -54,10 +54,14 @@ export const Header: React.FC = () => {
               href="https://www.npmjs.com/package/@fawadhs/image-tools"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               aria-label="View on NPM"
             >
-              <span className="text-base font-bold text-red-600 dark:text-red-400">N</span>
+              <img 
+                src="https://raw.githubusercontent.com/npm/logos/cc343d8c50139f645d165aedfe4d375240599fd1/npm%20square/n.svg"
+                alt="NPM"
+                className="w-5 h-5"
+              />
             </a>
             <a
               href="https://github.com/FawadHS/image-tools"
