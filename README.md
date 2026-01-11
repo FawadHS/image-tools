@@ -139,18 +139,34 @@ Image Tools can be easily integrated into existing admin panels, CMS, or e-comme
 > - Test in your specific environment before production use
 > - For localhost development, use `http://localhost:5173` (Vite dev server)
 
-**Option 2: NPM Package (Coming Soon)**
+**Option 2: NPM Package** 📦 (Recommended for React Projects)
 ```bash
 npm install @fawadhs/image-tools
 ```
 
 ```typescript
 import { ImageTools } from '@fawadhs/image-tools';
+import '@fawadhs/image-tools/styles';
 
 function AdminPage() {
-  return <ImageTools theme="dark" maxFiles={50} />;
+  const handleComplete = (files) => {
+    console.log('Converted:', files);
+    // Upload to server, etc.
+  };
+
+  return (
+    <ImageTools 
+      theme="dark" 
+      maxFiles={50}
+      defaultFormat="webp"
+      onConversionComplete={handleComplete}
+    />
+  );
 }
 ```
+
+> **Features**: Full TypeScript support, callbacks for conversion events, theme customization, all editing tools included.
+> See [NPM Usage Guide](docs/NPM_USAGE.md) for detailed examples.
 
 **Option 3: Self-Hosted** ⭐ (Best for Production)
 ```bash

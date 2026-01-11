@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-01-12
+
+### Added
+- **NPM Package** - Image Tools is now available as a React component library:
+  - Published to NPM as `@fawadhs/image-tools`
+  - Full TypeScript support with type definitions
+  - ES Module and UMD builds for maximum compatibility
+  - Peer dependencies: React 18+
+  - Props: theme, maxFiles, defaultFormat, defaultQuality, callbacks
+  - Import: `import { ImageTools } from '@fawadhs/image-tools'`
+  - Styles: `import '@fawadhs/image-tools/styles'`
+- **Library Build System**:
+  - Vite library mode configuration for optimized bundle
+  - Separate build output (dist-lib) with TypeScript declarations
+  - Automated prepare script for NPM publishing
+  - .npmignore for clean package distribution
+- **Usage Examples**:
+  - Next.js App Router and Pages Router examples
+  - Remix integration guide
+  - WordPress/PHP integration example
+  - Comprehensive NPM usage documentation
+
+### Enhanced
+- Externalized React dependencies for library build (smaller bundle)
+- Added onConversionComplete and onFilesSelected callbacks
+- Theme support with 'light', 'dark', and 'system' modes
+- Package includes all necessary CSS and TypeScript types
+
+### Technical
+- Library entry point: `src/lib/index.ts`
+- Wrapper component with context providers
+- ES and UMD module formats
+- Source maps for debugging
+- Package size: ~1.9 MB (gzipped: ~415 KB)
+
 ## [2.5.1] - 2026-01-11
 
 ### Enhanced

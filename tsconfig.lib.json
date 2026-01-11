@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist-lib",
+    "declaration": true,
+    "declarationDir": "./dist-lib",
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "composite": false,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo"
+  },
+  "include": [
+    "src/lib/**/*",
+    "src/types/**/*",
+    "src/context/**/*",
+    "src/utils/**/*",
+    "src/pages/**/*",
+    "src/components/**/*"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "src/main.tsx",
+    "tests/**/*"
+  ]
+}

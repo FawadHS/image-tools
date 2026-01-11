@@ -1,11 +1,64 @@
 {
-  "name": "heic-to-webp",
-  "private": true,
-  "version": "2.5.1",
+  "name": "@fawadhs/image-tools",
+  "version": "2.6.0",
+  "description": "Privacy-first image conversion and editing React component. Convert HEIC, JPEG, PNG to WebP with crop, rotate, filters, and text overlay tools.",
+  "author": "Fawad Hussain <fawad@fawadhs.dev>",
+  "license": "MIT",
+  "homepage": "https://tools.fawadhs.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FawadHS/image-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FawadHS/image-tools/issues"
+  },
+  "keywords": [
+    "react",
+    "image",
+    "conversion",
+    "heic",
+    "webp",
+    "jpeg",
+    "png",
+    "avif",
+    "image-editor",
+    "crop",
+    "rotate",
+    "filters",
+    "watermark",
+    "component",
+    "privacy-first",
+    "client-side"
+  ],
+  "main": "./dist-lib/image-tools.umd.js",
+  "module": "./dist-lib/image-tools.es.js",
+  "types": "./dist-lib/src/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist-lib/src/lib/index.d.ts",
+        "default": "./dist-lib/image-tools.es.js"
+      },
+      "require": {
+        "types": "./dist-lib/src/lib/index.d.ts",
+        "default": "./dist-lib/image-tools.umd.js"
+      }
+    },
+    "./styles": "./dist-lib/image-tools.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist-lib",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:lib": "vite build --mode lib && tsc --project tsconfig.lib.json && node scripts/prepare-npm.js",
+    "pack:test": "npm pack --pack-destination ./test-package",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "jest",
@@ -13,7 +66,12 @@
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "npm test && npm run test:e2e"
+    "test:all": "npm test && npm run test:e2e",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "dependencies": {
     "heic2any": "^0.0.4",
