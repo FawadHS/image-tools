@@ -12,7 +12,7 @@ interface CommunityStats {
 }
 
 // Project launch date (adjust to your actual launch date)
-const LAUNCH_DATE = new Date('2024-01-01');
+const LAUNCH_DATE = new Date('2026-01-02');
 
 // Base stats - starting from realistic early adoption numbers
 const BASE_USERS = 850;
