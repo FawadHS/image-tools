@@ -1,8 +1,17 @@
 import React from 'react';
-import { Shield, Github } from 'lucide-react';
+import { Shield, Github, CheckCircle } from 'lucide-react';
+import { useConverter } from '../context/ConverterContext';
 import packageJson from '../../package.json';
 
 export const Footer: React.FC = () => {
+  const { state } = useConverter();
+  const { totalConversions } = state;
+  
+  // Format large numbers with commas
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString();
+  };
+  
   return (
     <footer className="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -14,6 +23,19 @@ export const Footer: React.FC = () => {
             <span className="text-gray-500 dark:text-gray-400">No files are uploaded to any server.</span>
           </p>
         </div>
+        
+        {/* Conversion Counter */}
+        {totalConversions > 0 && (
+          <div className="flex items-center justify-center gap-2 mb-4 text-sm">
+            <CheckCircle className="w-4 h-4 text-primary-500" />
+            <p className="text-gray-600 dark:text-gray-300">
+              <span className="font-semibold text-primary-600 dark:text-primary-400">
+                {formatNumber(totalConversions)}
+              </span>{' '}
+              {totalConversions === 1 ? 'image' : 'images'} converted using this tool
+            </p>
+          </div>
+        )}
 
         {/* Links */}
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-4">

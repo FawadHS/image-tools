@@ -163,6 +163,12 @@ export const useImageConverter = () => {
           },
         });
         
+        // Increment total conversions counter
+        dispatch({
+          type: 'INCREMENT_CONVERSIONS',
+          payload: 1,
+        });
+        
         // Save to history
         addToHistory({
           filename: result.filename,
@@ -260,6 +266,12 @@ export const useImageConverter = () => {
           },
         });
         
+        // Increment total conversions counter
+        dispatch({
+          type: 'INCREMENT_CONVERSIONS',
+          payload: 1,
+        });
+        
         // Save to history
         addToHistory({
           filename: result.filename,
@@ -336,6 +348,13 @@ export const useImageConverter = () => {
             updates: { status: 'completed', progress: 100, result },
           },
         });
+        
+        // Increment total conversions counter
+        dispatch({
+          type: 'INCREMENT_CONVERSIONS',
+          payload: 1,
+        });
+        
         toast.success(`Converted ${selectedFile.file.name}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Conversion failed';

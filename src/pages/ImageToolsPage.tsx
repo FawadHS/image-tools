@@ -10,8 +10,13 @@ import { ActionBar } from '../components/ActionBar';
 import { HistoryPanel } from '../components/HistoryPanel';
 import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
+import { ReviewForm } from '../components/ReviewForm';
+import { useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 
 export const ImageToolsPage = () => {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  
   return (
     <>
       <SEO
@@ -31,6 +36,13 @@ export const ImageToolsPage = () => {
               <FileList />
               <ActionBar />
               <HistoryPanel />
+              
+              {/* Review Form Section */}
+              {showReviewForm && (
+                <div className="mt-6">
+                  <ReviewForm onClose={() => setShowReviewForm(false)} />
+                </div>
+              )}
             </div>
 
             {/* Right Column - Settings */}
@@ -46,6 +58,20 @@ export const ImageToolsPage = () => {
         </main>
 
         <Footer />
+        
+        {/* Floating Review Button */}
+        {!showReviewForm && (
+          <button
+            onClick={() => setShowReviewForm(true)}
+            className="fixed bottom-6 right-6 p-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all z-40 group"
+            aria-label="Leave a review"
+          >
+            <MessageSquare className="w-6 h-6" />
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Leave a Review
+            </span>
+          </button>
+        )}
       </div>
     </ConverterProvider>
     </>

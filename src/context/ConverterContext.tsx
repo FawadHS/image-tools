@@ -7,6 +7,7 @@ interface ConverterState {
   activeFileId: string | null;
   options: ConvertOptions;
   isConverting: boolean;
+  totalConversions: number;
 }
 
 type ConverterAction =
@@ -18,7 +19,8 @@ type ConverterAction =
   | { type: 'SET_PRESET'; payload: PresetType }
   | { type: 'SET_OUTPUT_FORMAT'; payload: OutputFormat }
   | { type: 'SET_CONVERTING'; payload: boolean }
-  | { type: 'SET_ACTIVE_FILE'; payload: string | null };
+  | { type: 'SET_ACTIVE_FILE'; payload: string | null }
+  | { type: 'INCREMENT_CONVERSIONS'; payload: number };
 
 const initialOptions: ConvertOptions = {
   quality: DEFAULT_QUALITY,
@@ -29,11 +31,31 @@ const initialOptions: ConvertOptions = {
   outputFormat: 'webp',
 };
 
+// Load total conversions from localStorage
+const loadTotalConversions = (): number => {
+  try {
+    const stored = localStorage.getItem('image-tools-total-conversions');
+    return stored ? parseInt(stored, 10) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+// Save total conversions to localStorage
+const saveTotalConversions = (count: number): void => {
+  try {
+    localStorage.setItem('image-tools-total-conversions', count.toString());
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
 const initialState: ConverterState = {
   files: [],
   activeFileId: null,
   options: initialOptions,
   isConverting: false,
+  totalConversions: loadTotalConversions(),
 };
 
 const converterReducer = (state: ConverterState, action: ConverterAction): ConverterState => {
@@ -104,6 +126,14 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
       return {
         ...state,
         activeFileId: action.payload,
+      };
+
+    case 'INCREMENT_CONVERSIONS':
+      const newCount = state.totalConversions + action.payload;
+      saveTotalConversions(newCount);
+      return {
+        ...state,
+        totalConversions: newCount,
       };
 
     default:
