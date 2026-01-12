@@ -14,10 +14,10 @@ interface CommunityStats {
 // Project launch date (adjust to your actual launch date)
 const LAUNCH_DATE = new Date('2024-01-01');
 
-// Base stats to seed the calculations
-const BASE_USERS = 1200;
-const BASE_CONVERSIONS = 15000;
-const BASE_DATA_SAVED = 2.5 * 1024 * 1024 * 1024; // 2.5 GB
+// Base stats from real usage data
+const BASE_USERS = 38100;
+const BASE_CONVERSIONS = 605600;
+const BASE_DATA_SAVED = 146.69 * 1024 * 1024 * 1024; // 146.69 GB
 const AVG_REDUCTION = 68; // 68% average reduction
 
 /**
