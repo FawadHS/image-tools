@@ -11,6 +11,7 @@ import { HistoryPanel } from '../components/HistoryPanel';
 import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
 import { ReviewForm } from '../components/ReviewForm';
+import { ReviewsList } from '../components/ReviewsList';
 import { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 
@@ -43,6 +44,11 @@ export const ImageToolsPage = () => {
                   <ReviewForm onClose={() => setShowReviewForm(false)} />
                 </div>
               )}
+              
+              {/* Reviews Display Section */}
+              <div className="mt-8">
+                <ReviewsList />
+              </div>
             </div>
 
             {/* Right Column - Settings */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, Send, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { saveReview } from '../utils/reviews';
 
 interface ReviewFormProps {
   onClose?: () => void;
@@ -35,8 +36,16 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ onClose }) => {
     setIsSubmitting(true);
     
     try {
-      // Simulate submission (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save review to localStorage
+      saveReview({
+        rating,
+        name: name.trim(),
+        email: email.trim() || undefined,
+        review: review.trim(),
+      });
+      
+      // Dispatch custom event to notify ReviewsList
+      window.dispatchEvent(new Event('reviewAdded'));
       
       toast.success('Thank you for your review!');
       

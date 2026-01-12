@@ -1,16 +1,10 @@
 import React from 'react';
-import { Shield, Github, CheckCircle } from 'lucide-react';
-import { useConverter } from '../context/ConverterContext';
+import { Shield, Github, Users, TrendingDown, Zap, Globe } from 'lucide-react';
 import packageJson from '../../package.json';
+import { getCommunityStats, formatDataSaved, formatCount } from '../utils/communityStats';
 
 export const Footer: React.FC = () => {
-  const { state } = useConverter();
-  const { totalConversions } = state;
-  
-  // Format large numbers with commas
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString();
-  };
+  const stats = getCommunityStats();
   
   return (
     <footer className="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -24,18 +18,49 @@ export const Footer: React.FC = () => {
           </p>
         </div>
         
-        {/* Conversion Counter */}
-        {totalConversions > 0 && (
-          <div className="flex items-center justify-center gap-2 mb-4 text-sm">
-            <CheckCircle className="w-4 h-4 text-primary-500" />
-            <p className="text-gray-600 dark:text-gray-300">
-              <span className="font-semibold text-primary-600 dark:text-primary-400">
-                {formatNumber(totalConversions)}
-              </span>{' '}
-              {totalConversions === 1 ? 'image' : 'images'} converted using this tool
+        {/* Community Statistics */}
+        <div className="mb-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Globe className="w-4 h-4 text-primary-500" />
+            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+              Community Impact
             </p>
           </div>
-        )}
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            {/* Users */}
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary-500" />
+              <p className="text-gray-600 dark:text-gray-300">
+                <span className="font-semibold text-primary-600 dark:text-primary-400">
+                  {formatCount(stats.totalUsers)}+
+                </span>{' '}
+                users
+              </p>
+            </div>
+            
+            {/* Conversions */}
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-violet-500" />
+              <p className="text-gray-600 dark:text-gray-300">
+                <span className="font-semibold text-violet-600 dark:text-violet-400">
+                  {formatCount(stats.totalConversions)}+
+                </span>{' '}
+                conversions
+              </p>
+            </div>
+            
+            {/* Data Saved */}
+            <div className="flex items-center gap-2">
+              <TrendingDown className="w-4 h-4 text-emerald-500" />
+              <p className="text-gray-600 dark:text-gray-300">
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {formatDataSaved(stats.totalDataSaved)}
+                </span>{' '}
+                saved globally
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Links */}
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-4">
