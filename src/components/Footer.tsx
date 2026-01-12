@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Github, Users, TrendingDown, Zap, Globe } from 'lucide-react';
+import { Shield, Github, Users, TrendingDown, Zap, Globe, Bug } from 'lucide-react';
 import packageJson from '../../package.json';
 import { getCommunityStats, formatDataSaved, formatCount } from '../utils/communityStats';
 
@@ -104,6 +104,16 @@ export const Footer: React.FC = () => {
               className="w-4 h-4"
             />
             NPM Package
+          </a>
+          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <a
+            href="https://github.com/FawadHS/image-tools/issues/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+          >
+            <Bug className="w-4 h-4" />
+            Report a Bug
           </a>
         </div>
 
