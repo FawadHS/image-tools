@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.5] - 2026-01-12
+
+### Fixed
+- **Routing** - Fixed React Router basename configuration for subdirectory deployment
+  - Added `basename="/image-tools"` to Router to match Vite's base path
+  - Removed unused ToolsIndex route for cleaner routing
+  - Fixed navigation from platform to Image Tools subdirectory
+  
+### Added
+- **Deployment** - Added automated deployment script (deploy.sh)
+  - Automatic build and SCP deployment to production server
+  - Auto-fixes file permissions (755) for nginx accessibility
+  - Prevents asset 404 errors caused by incorrect permissions
+
+### Changed
+- Updated frontend links to include trailing slash (/image-tools/)
+- Improved nginx redirect to preserve full URL scheme
+
 ## [2.6.4] - 2026-01-12
 
 ### Changed

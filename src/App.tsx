@@ -5,7 +5,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy load pages for better code splitting
-const ToolsIndex = lazy(() => import('./pages/ToolsIndex').then(m => ({ default: m.ToolsIndex })));
 const ImageToolsPage = lazy(() => import('./pages/ImageToolsPage').then(m => ({ default: m.ImageToolsPage })));
 
 // Simple loading fallback
@@ -23,11 +22,10 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <ThemeProvider>
-          <Router>
+          <Router basename="/image-tools">
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                <Route path="/" element={<ToolsIndex />} />
-                <Route path="/image-tools" element={<ImageToolsPage />} />
+                <Route path="/" element={<ImageToolsPage />} />
               </Routes>
             </Suspense>
           </Router>

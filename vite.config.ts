@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
 
   // Standard application build
   return {
-    base: '/',
+    base: '/image-tools/',
     plugins: [react()],
     worker: {
       format: 'es',
