@@ -1,14 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Image, Github, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { SEO } from '../components/SEO';
 
 export const ToolsIndex = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col">
-      {/* Theme Toggle Button - Fixed Position */}
-      <button
+    <>
+      <SEO
+        title="Tools by FawadHS - Privacy-First Web Utilities"
+        description="Free privacy-first web tools. Image converter, HEIC to WebP, batch processing, crop, rotate, filters. All processing happens in your browser."
+        canonicalPath="/"
+      />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col">
+        {/* Theme Toggle Button - Fixed Position */}
+        <button
         onClick={toggleTheme}
         className="fixed top-6 right-6 p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all shadow-lg z-50"
         aria-label="Toggle theme"
@@ -20,7 +27,7 @@ export const ToolsIndex = () => {
         )}
       </button>
 
-      <div className="max-w-3xl mx-auto px-6 py-16 flex-1">
+      <main className="max-w-3xl mx-auto px-6 py-16 flex-1">
         {/* Header */}
         <header className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-primary-100 dark:bg-primary-900 rounded-2xl">
@@ -98,20 +105,8 @@ export const ToolsIndex = () => {
             No uploads. No tracking. No data collection.
           </p>
         </div>
+      </main>
       </div>
-
-      {/* Footer */}
-      <footer className="text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 py-8">
-        <p>
-          Built by{' '}
-          <a
-            href="https://fawadhs.dev"
-            className="text-primary-600 dark:text-primary-400 hover:underline"
-          >
-            Fawad Hussain
-          </a>
-        </p>
-      </footer>
-    </div>
+    </>
   );
 };

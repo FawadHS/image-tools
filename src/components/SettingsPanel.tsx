@@ -197,18 +197,24 @@ export const SettingsPanel: React.FC = () => {
         {resizePreset === 'custom' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
+              <label htmlFor="custom-width" className="sr-only">Custom width in pixels</label>
               <input
+                id="custom-width"
                 type="number"
                 placeholder="Width"
+                aria-label="Custom width in pixels"
                 value={options.maxWidth || ''}
                 onChange={(e) => handleDimensionChange('maxWidth', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <div>
+              <label htmlFor="custom-height" className="sr-only">Custom height in pixels</label>
               <input
+                id="custom-height"
                 type="number"
                 placeholder="Height"
+                aria-label="Custom height in pixels"
                 value={options.maxHeight || ''}
                 onChange={(e) => handleDimensionChange('maxHeight', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"

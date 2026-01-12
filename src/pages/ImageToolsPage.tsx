@@ -9,11 +9,18 @@ import { FileList } from '../components/FileList';
 import { ActionBar } from '../components/ActionBar';
 import { HistoryPanel } from '../components/HistoryPanel';
 import { Footer } from '../components/Footer';
+import { SEO } from '../components/SEO';
 
 export const ImageToolsPage = () => {
   return (
-    <ConverterProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <>
+      <SEO
+        title="Image Tools - Convert HEIC, JPEG, PNG to WebP, AVIF | Privacy-First Image Editor"
+        description="Free online image converter and editor with crop, rotate, filters, and text overlay. Convert HEIC, JPEG, PNG, GIF to WebP, AVIF. Batch processing, e-commerce presets. All processing in browser - no uploads."
+        canonicalPath="/image-tools"
+      />
+      <ConverterProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header />
 
         <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -41,5 +48,6 @@ export const ImageToolsPage = () => {
         <Footer />
       </div>
     </ConverterProvider>
+    </>
   );
 };

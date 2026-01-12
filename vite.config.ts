@@ -58,5 +58,30 @@ export default defineConfig(({ mode }) => {
     worker: {
       format: 'es',
     },
+    build: {
+      target: 'es2020',
+      cssCodeSplit: true,
+      sourcemap: true,
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true
+        }
+      },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['lucide-react', 'react-hot-toast'],
+            utils: ['heic2any', 'jszip']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom']
+    }
   }
 })

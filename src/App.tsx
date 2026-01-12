@@ -1,20 +1,38 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ToolsIndex } from './pages/ToolsIndex';
-import { ImageToolsPage } from './pages/ImageToolsPage';
+
+// Lazy load pages for better code splitting
+const ToolsIndex = lazy(() => import('./pages/ToolsIndex').then(m => ({ default: m.ToolsIndex })));
+const ImageToolsPage = lazy(() => import('./pages/ImageToolsPage').then(m => ({ default: m.ImageToolsPage })));
+
+// Simple loading fallback
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="text-center">
+      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<ToolsIndex />} />
-            <Route path="/image-tools" element={<ImageToolsPage />} />
-          </Routes>
-        </Router>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <Router>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<ToolsIndex />} />
+                <Route path="/image-tools" element={<ImageToolsPage />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </ThemeProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }

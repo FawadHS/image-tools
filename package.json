@@ -1,6 +1,6 @@
 {
   "name": "@fawadhs/image-tools",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Privacy-first image conversion and editing React component. Convert HEIC, JPEG, PNG to WebP with crop, rotate, filters, and text overlay tools.",
   "author": "Fawad Hussain <fawad@fawadhs.dev>",
   "license": "MIT",
@@ -77,9 +77,10 @@
     "heic2any": "^0.0.4",
     "jszip": "^3.10.1",
     "lucide-react": "^0.294.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "react-dropzone": "^14.2.3",
+    "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^7.12.0"
   },
@@ -102,6 +103,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "terser": "^5.44.1",
     "ts-jest": "^29.4.6",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
