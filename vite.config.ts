@@ -71,6 +71,10 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         output: {
+          // Add prefix to prevent collision with main landing page assets
+          entryFileNames: 'assets/image-tools-[name]-[hash].js',
+          chunkFileNames: 'assets/image-tools-[name]-[hash].js',
+          assetFileNames: 'assets/image-tools-[name]-[hash].[ext]',
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             ui: ['lucide-react', 'react-hot-toast'],

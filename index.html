@@ -39,8 +39,8 @@
     <!-- Sitemap & Robots -->
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/image-tools/manifest.json" />
+    <link rel="apple-touch-icon" href="/image-tools/favicon.svg" />
     <title>Image Tools - Free HEIC to WebP Converter & Image Editor | Privacy-First</title>
     
     <!-- JSON-LD Structured Data -->
@@ -121,7 +121,31 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Initial loading indicator shown before React loads -->
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #111827; color: #9ca3af;">
+        <div style="text-align: center;">
+          <div style="display: inline-block; width: 48px; height: 48px; border: 3px solid #374151; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <p style="margin-top: 16px; font-size: 14px;">Loading Image Tools...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Unregister old service worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('Service Worker unregistered');
+          }
+        });
+      }
+    </script>
   </body>
 </html>

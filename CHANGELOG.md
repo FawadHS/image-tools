@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.6] - 2026-01-13
+
+### Fixed
+- **Critical: Blank Screen Issue** - Fixed blank screen on initial load caused by asset naming conflicts
+  - Added `image-tools-` prefix to all built assets to prevent collision with main platform assets
+  - Configured unique asset naming in Vite build output (entryFileNames, chunkFileNames, assetFileNames)
+  - Fixed Cloudflare caching issues by implementing stronger no-cache headers for HTML files
+  - Fixed React DOM mounting race condition by adding DOMContentLoaded check
+  
+### Added
+- **Loading Indicator** - Added inline HTML/CSS loading spinner visible before React loads
+  - Shows "Loading Image Tools..." message with animated spinner
+  - Provides immediate visual feedback instead of blank screen
+  - Pure HTML/CSS implementation (no JavaScript required)
+
+### Changed
+- **Nginx Configuration** - Updated cache headers to prevent Cloudflare from caching HTML
+  - Added `Pragma: no-cache` and `Expires: 0` headers for HTML files
+  - Configured `always` flag to ensure headers are sent even with 304 responses
+  - Improved cache control for subdirectory location block
+
+### Removed
+- **Service Worker** - Removed sw.js from public folder
+  - Service worker was causing caching issues
+  - Already had unregister script in index.html
+  - Prevents stale content being served
+
 ## [2.6.5] - 2026-01-12
 
 ### Fixed

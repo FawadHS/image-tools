@@ -7,6 +7,9 @@ DEST="/var/www/tools.fawadhs.dev/image-tools"
 echo "Building Image Tools..."
 npm run build
 
+echo "Removing service worker from build..."
+rm -f dist/sw.js
+
 echo "Deploying to server..."
 ssh $SERVER "mkdir -p $DEST"
 scp -r dist/* $SERVER:$DEST/
