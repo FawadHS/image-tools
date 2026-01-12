@@ -17,6 +17,7 @@ test-package/
 *.swp
 *.swo
 .DS_Store
+*.code-workspace
 
 # Environment
 .env

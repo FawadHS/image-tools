@@ -1,0 +1,190 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Image Tools",
+  "applicationCategory": "MultimediaApplication",
+  "applicationSubCategory": "Image Converter and Editor",
+  "description": "Privacy-first image conversion and editing tool that runs entirely in the browser. Convert HEIC, JPEG, PNG, GIF, BMP, TIFF, and WebP to optimized WebP, JPEG, PNG, or AVIF formats. Features include batch processing, crop tool, rotation, filters, text overlays, and comparison slider. Perfect for e-commerce product photography, online store listings, marketplace images, and professional product catalogs.",
+  "url": "https://tools.fawadhs.dev",
+  "operatingSystem": "Web Browser (Chrome, Firefox, Safari, Edge)",
+  "softwareVersion": "2.6.0",
+  "datePublished": "2024-01-01",
+  "dateModified": "2026-01-12",
+  "author": {
+    "@type": "Person",
+    "name": "Fawad Hussain",
+    "email": "fawad@fawadhs.dev"
+  },
+  "license": "https://opensource.org/licenses/MIT",
+  "codeRepository": "https://github.com/FawadHS/image-tools",
+  "programmingLanguage": [
+    {
+      "@type": "ComputerLanguage",
+      "name": "TypeScript",
+      "version": "5.0"
+    },
+    {
+      "@type": "ComputerLanguage",
+      "name": "React",
+      "version": "18"
+    }
+  ],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Privacy-first: All processing happens in browser, no server uploads",
+    "Image format conversion: HEIC, JPEG, PNG, GIF, BMP, TIFF, WebP to WebP, JPEG, PNG, AVIF",
+    "Batch processing: Convert up to 50 images simultaneously",
+    "E-commerce presets: Product images (1200px, 85 quality), thumbnails (400px, 70 quality), hero banners (1920px, 90 quality)",
+    "E-commerce optimization: Perfectly sized images for Shopify, WooCommerce, Amazon, eBay, Etsy listings",
+    "Product photography tools: Professional crop ratios, consistent sizing, watermark protection",
+    "Marketplace-ready exports: Optimized file sizes with high quality for fast-loading store pages",
+    "Bulk product image processing: Convert entire catalogs with consistent settings",
+    "Crop tool with rectangle and circle shapes, aspect ratio presets (1:1, 16:9, 4:3, 3:2)",
+    "Rotate and flip: 90°/180°/270° rotation, horizontal/vertical flip",
+    "Image filters: Brightness, contrast, saturation, grayscale, sepia",
+    "Text overlay and watermark with custom fonts, colors, and opacity for brand protection",
+    "Before/after comparison slider for quality assurance",
+    "Quality control: Adjustable 1-100 quality slider for file size optimization",
+    "Resize presets: 4K, FHD, HD, Medium, Thumbnail, or Custom dimensions",
+    "Smart file naming: Custom prefixes, suffixes, SKU integration, batch renaming",
+    "Conversion history with statistics tracking",
+    "Advanced file naming with custom prefixes, suffixes, timestamps",
+    "Progressive Web App (PWA) support for offline use",
+    "Dark mode with system preference detection",
+    "Full mobile and tablet touch support for on-the-go product shoots",
+    "WCAG 2.1 Level AA accessibility compliant",
+    "Web Workers for background processing"
+  ],
+  "screenshot": [
+    "https://tools.fawadhs.dev/screenshots/main-interface.png",
+    "https://tools.fawadhs.dev/screenshots/crop-tool.png",
+    "https://tools.fawadhs.dev/screenshots/comparison-slider.png"
+  ],
+  "softwareRequirements": "Modern web browser with JavaScript enabled, Canvas API support",
+  "browserRequirements": "Chrome 90+, Firefox 88+, Safari 14+, Edge 90+",
+  "keywords": [
+    "image converter",
+    "HEIC to JPEG",
+    "HEIC to WebP",
+    "image editor",
+    "privacy-first",
+    "client-side image processing",
+    "batch image conversion",
+    "crop tool",
+    "image filters",
+    "watermark tool",
+    "webp converter",
+    "avif converter",
+    "React component",
+    "product photography",
+    "Shopify images",
+    "WooCommerce images",
+    "Amazon listing images",
+    "eBay product photos",
+    "Etsy shop images",
+    "marketplace images",
+    "product image optimizer",
+    "online store images",
+    "bulk product images",
+    "catalog images",
+    "thumbnail generator",
+    "product watermark",
+    "listing photos",
+    "store banner creator",
+    "product photo editor",
+    "e-commerce photography",
+    "TypeScript",
+    "offline image tool",
+    "PWA",
+    "image optimization",
+    "e-commerce images",
+    "responsive image tool"
+  ],
+  "audience": [
+    {
+      "@type": "Audience",
+      "audienceType": "E-commerce Sellers",
+      "description": "Online store owners, marketplace sellers, and dropshippers who need to optimize product images for Shopify, WooCommerce, Amazon, eBay, Etsy, and other platforms"
+    },
+    {
+      "@type": "Audience",
+      "audienceType": "Product Photographers",
+      "description": "Professional and amateur photographers who shoot products and need consistent, optimized images for client deliverables"
+    },
+    {
+      "@type": "Audience",
+      "audienceType": "Digital Marketers",
+      "description": "Marketing professionals who need to create and optimize images for campaigns, social media, and advertising"
+    },
+    {
+      "@type": "Audience",
+      "audienceType": "Web Developers",
+      "description": "Developers who need to integrate image conversion and editing capabilities into their applications"
+    }
+  ],
+  "typicalAgeRange": "18-65",
+  "inLanguage": "en-US",
+  "applicationUse": [
+    "Optimize product images for online stores and marketplaces",
+    "Create consistent thumbnail images for product catalogs",
+    "Batch process product photography for e-commerce listings",
+    "Add watermarks to protect product images from unauthorized use",
+    "Generate multiple image sizes for responsive e-commerce sites",
+    "Convert HEIC photos from iPhone product shoots to web-compatible formats",
+    "Create hero banners and promotional images for online stores",
+    "Optimize image file sizes to improve store page load times and SEO"
+  ],
+  "isAccessibleForFree": true,
+  "usageInfo": "https://github.com/FawadHS/image-tools/blob/main/README.md",
+  "softwareHelp": {
+    "@type": "CreativeWork",
+    "url": "https://github.com/FawadHS/image-tools/blob/main/docs/README.md"
+  },
+  "discussionUrl": "https://github.com/FawadHS/image-tools/discussions",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "ratingCount": "1",
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "installUrl": "https://tools.fawadhs.dev",
+  "downloadUrl": "https://www.npmjs.com/package/@fawadhs/image-tools",
+  "releaseNotes": "https://github.com/FawadHS/image-tools/blob/main/CHANGELOG.md",
+  "about": {
+    "@type": "Thing",
+    "name": "Image Processing and Conversion",
+    "description": "Modern web-based image processing tool focused on privacy and performance"
+  },
+  "potentialAction": [
+    {
+      "@type": "ConsumeAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://tools.fawadhs.dev",
+        "actionPlatform": [
+          "http://schema.org/DesktopWebPlatform",
+          "http://schema.org/MobileWebPlatform"
+        ]
+      },
+      "name": "Use Image Tools Online"
+    },
+    {
+      "@type": "InstallAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://www.npmjs.com/package/@fawadhs/image-tools",
+        "actionPlatform": "http://schema.org/DesktopWebPlatform"
+      },
+      "name": "Install NPM Package"
+    }
+  ],
+  "sameAs": [
+    "https://github.com/FawadHS/image-tools",
+    "https://www.npmjs.com/package/@fawadhs/image-tools"
+  ]
+}
