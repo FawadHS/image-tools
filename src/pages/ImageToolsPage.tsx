@@ -17,6 +17,7 @@ import { MessageSquare } from 'lucide-react';
 
 export const ImageToolsPage = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showReviews, setShowReviews] = useState(false);
   
   return (
     <>
@@ -38,17 +39,32 @@ export const ImageToolsPage = () => {
               <ActionBar />
               <HistoryPanel />
               
-              {/* Review Form Section */}
-              {showReviewForm && (
-                <div className="mt-6">
-                  <ReviewForm onClose={() => setShowReviewForm(false)} />
+              {/* Review Section - Only shown when opened */}
+              {(showReviewForm || showReviews) && (
+                <div className="mt-6 space-y-6">
+                  {showReviewForm && (
+                    <ReviewForm onClose={() => {
+                      setShowReviewForm(false);
+                      setShowReviews(true); // Show reviews list after submitting
+                    }} />
+                  )}
+                  
+                  {showReviews && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Reviews</h2>
+                        <button
+                          onClick={() => setShowReviews(false)}
+                          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                          Hide
+                        </button>
+                      </div>
+                      <ReviewsList />
+                    </div>
+                  )}
                 </div>
               )}
-              
-              {/* Reviews Display Section */}
-              <div className="mt-8">
-                <ReviewsList />
-              </div>
             </div>
 
             {/* Right Column - Settings */}
@@ -66,7 +82,7 @@ export const ImageToolsPage = () => {
         <Footer />
         
         {/* Floating Review Button */}
-        {!showReviewForm && (
+        {!showReviewForm && !showReviews && (
           <button
             onClick={() => setShowReviewForm(true)}
             className="fixed bottom-6 right-6 p-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all z-40 group"
