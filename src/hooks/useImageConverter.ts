@@ -2,6 +2,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { useConverter } from '../context/ConverterContext';
 import { convertImage, isHeicFile, convertHeicToBlob, isWorkerSupported } from '../utils/converter';
 import { addToHistory } from '../utils/history';
+import { logConversion } from '../lib/conversionApi';
 import { ConvertResult } from '../types';
 import toast from 'react-hot-toast';
 
@@ -167,6 +168,18 @@ export const useImageConverter = () => {
         dispatch({
           type: 'INCREMENT_CONVERSIONS',
           payload: 1,
+        });
+        
+        // Log conversion to backend (if user is authenticated)
+        logConversion({
+          action: 'convert',
+          fileCount: 1,
+          inputSize: result.originalSize,
+          outputSize: result.convertedSize,
+          inputFormat: selectedFile.file.type,
+          outputFormat: options.outputFormat || 'webp',
+        }).catch(() => {
+          // Silent fail - don't disrupt user experience
         });
         
         // Save to history

@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-01-13
+
+### Added
+- **Shared Authentication** - Seamless authentication across main platform and image-tools
+  - Auto-detects login state from main platform (tools.fawadhs.dev)
+  - Reads authentication from both direct storage and Zustand persist
+  - Shows user's first name in header when logged in
+  - Dashboard link replaces login button for authenticated users
+  
+- **Dynamic Navigation** - Context-aware back button
+  - "Back to Dashboard" when arriving from dashboard
+  - "Back to Tools" when arriving from landing page
+  - Uses sessionStorage to remember navigation origin
+  
+- **Conversion Tracking** - Automatic usage analytics for authenticated users
+  - Logs conversion data (file count, sizes, formats) to backend API
+  - Silent failure - never disrupts user experience if API unavailable
+  - Powers dashboard statistics and insights
+  
+- **Zustand Integration** - Added zustand for state management
+  - Enables auth state synchronization with main platform
+  - Lightweight and performant state library
+
+### Fixed
+- **Logo Display** - Fixed broken favicon in header
+  - Corrected path from `/favicon.svg` to `/image-tools/favicon.svg`
+  - Properly includes basename for subdirectory deployment
+  
+- **Auth Detection** - Enhanced token and user retrieval
+  - Checks multiple localStorage keys for compatibility
+  - Reads from Zustand's `auth-storage` persist key
+  - Fallback chain ensures maximum compatibility
+
+### Changed
+- **API Integration** - Added conversionApi.ts for backend communication
+  - Centralized API calls for conversion tracking
+  - Uses production API endpoint (https://api.tools.fawadhs.dev)
+  - Includes authorization headers when user authenticated
+
 ## [2.6.6] - 2026-01-13
 
 ### Fixed

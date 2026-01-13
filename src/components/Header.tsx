@@ -1,10 +1,24 @@
-import React, { useState } from 'react';
-import { Moon, Sun, ArrowLeft, Github, Info, X, LogIn } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Moon, Sun, ArrowLeft, Github, Info, X, LogIn, User } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { getAuthUser, getBackButtonDestination } from '../lib/sharedAuth';
+import type { SharedUser } from '../lib/sharedAuth';
 
 export const Header: React.FC = () => {
   const { isDark, toggle } = useDarkMode();
   const [showInfo, setShowInfo] = useState(false);
+  const [user, setUser] = useState<SharedUser | null>(null);
+  const [backButton, setBackButton] = useState({ label: 'Back to Tools', url: '/' });
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const authUser = getAuthUser();
+    setUser(authUser);
+
+    // Get back button destination
+    const destination = getBackButtonDestination();
+    setBackButton(destination);
+  }, []);
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -16,7 +30,7 @@ export const Header: React.FC = () => {
               aria-label="Back to Tools"
               className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
             >
-              <img src="/favicon.svg" alt="Image Tools" className="w-6 h-6" />
+              <img src="/image-tools/favicon.svg" alt="Image Tools" className="w-6 h-6" />
             </a>
             <div>
               <div className="flex items-center gap-2">
@@ -43,21 +57,32 @@ export const Header: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <a
-              href="https://tools.fawadhs.dev"
+              href={`https://tools.fawadhs.dev${backButton.url}`}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200"
-              aria-label="Back to Tools"
+              aria-label={backButton.label}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Tools</span>
+              <span className="hidden sm:inline">{backButton.label.replace('Back to ', '')}</span>
             </a>
-            <a
-              href="https://tools.fawadhs.dev/login"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 transition-colors text-sm font-medium text-white"
-              aria-label="Login"
-            >
-              <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">Login</span>
-            </a>
+            {user ? (
+              <a
+                href="https://tools.fawadhs.dev/dashboard"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 transition-colors text-sm font-medium text-white"
+                aria-label="Dashboard"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">{user.fullName.split(' ')[0]}</span>
+              </a>
+            ) : (
+              <a
+                href="https://tools.fawadhs.dev/login"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 transition-colors text-sm font-medium text-white"
+                aria-label="Login"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">Login</span>
+              </a>
+            )}
             <a
               href="https://www.npmjs.com/package/@fawadhs/image-tools"
               target="_blank"
