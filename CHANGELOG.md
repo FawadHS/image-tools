@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] - 2026-01-21
+
+### Fixed
+- **iOS 18 HEIC Support** - Replaced outdated heic2any library with heic-to
+  - Fixes "ERR_LIBHEIF format not supported" error for iOS 18 HEIC files
+  - Fixes "Failed to convert HEIC file" error for iPhone 15 Pro/Pro Max images
+  - Now uses libheif 1.20.2 (vs old version in heic2any)
+  - Supports all modern HEIC formats from newer iPhones
+  - Library actively maintained with regular updates
+
+### Changed
+- Updated HEIC conversion library from heic2any@0.0.4 to heic-to@1.3.0
+- Simplified result handling (heic-to returns single Blob instead of array)
+
 ## [2.7.0] - 2026-01-13
 
 ### Added

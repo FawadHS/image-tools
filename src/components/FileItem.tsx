@@ -5,7 +5,7 @@ import { formatFileSize } from '../utils/fileUtils';
 import { isHeicFile } from '../utils/converter';
 import { ComparisonSlider } from './ComparisonSlider';
 import { useConverter } from '../context/ConverterContext';
-import heic2any from 'heic2any';
+import { heicTo } from 'heic-to';
 
 interface FileItemProps {
   file: SelectedFile;
@@ -34,14 +34,13 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
   useEffect(() => {
     // For HEIC files, we need to convert for preview
     if (isHeicFile(file.file)) {
-      heic2any({
+      heicTo({
         blob: file.file,
-        toType: 'image/jpeg',
+        type: 'image/jpeg',
         quality: 0.5,
       })
         .then((result) => {
-          const blob = Array.isArray(result) ? result[0] : result;
-          setPreviewUrl(URL.createObjectURL(blob));
+          setPreviewUrl(URL.createObjectURL(result));
         })
         .catch(() => {
           setPreviewUrl(null);
@@ -62,14 +61,13 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
     // For comparison, we need to show the original file
     // For HEIC files, convert to a viewable format WITHOUT any transformations
     if (isHeicFile(file.file)) {
-      heic2any({
+      heicTo({
         blob: file.file,
-        toType: 'image/jpeg',
+        type: 'image/jpeg',
         quality: 1.0, // High quality for comparison
       })
         .then((result) => {
-          const blob = Array.isArray(result) ? result[0] : result;
-          const url = URL.createObjectURL(blob);
+          const url = URL.createObjectURL(result);
           setOriginalImageUrl(url);
         })
         .catch(() => {

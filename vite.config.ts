@@ -78,7 +78,7 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             ui: ['lucide-react', 'react-hot-toast'],
-            utils: ['heic2any', 'jszip']
+            utils: ['heic-to', 'jszip']
           }
         }
       },

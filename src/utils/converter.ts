@@ -1,4 +1,4 @@
-import heic2any from 'heic2any';
+import { heicTo } from 'heic-to';
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
@@ -52,19 +52,19 @@ export const isHeicFile = (file: File): boolean => {
 
 /**
  * Convert HEIC file to a standard PNG blob
- * Uses heic2any library for conversion
+ * Uses heic-to library for conversion
  * @param file - The HEIC file to convert
  * @returns Promise resolving to PNG blob
  * @throws {Error} If conversion fails
  */
 export const convertHeicToBlob = async (file: File): Promise<Blob> => {
   try {
-    const result = await heic2any({
+    const result = await heicTo({
       blob: file,
-      toType: 'image/png',
+      type: 'image/png',
       quality: 1,
     });
-    return Array.isArray(result) ? result[0] : result;
+    return result;
   } catch (error) {
     console.error('HEIC conversion error:', error);
     throw new Error('Failed to convert HEIC file');
