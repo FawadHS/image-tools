@@ -1,12 +1,15 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Copy } from 'lucide-react';
 import { FileItem } from './FileItem';
 import { useFileSelection } from '../hooks/useFileSelection';
 import { useConverter } from '../context/ConverterContext';
+import { useDuplicateDetection } from '../hooks/useDuplicateDetection';
+import toast from 'react-hot-toast';
 
 export const FileList: React.FC = () => {
   const { files, removeFile, clearFiles, toggleFileSelection, selectAll, deselectAll } = useFileSelection();
-  const { state } = useConverter();
+  const { state, dispatch } = useConverter();
+  const { hasDuplicates, duplicateCount, isDuplicate, getDuplicateIdsToRemove } = useDuplicateDetection(files);
 
   if (files.length === 0) {
     return null;
@@ -14,6 +17,14 @@ export const FileList: React.FC = () => {
 
   const selectedCount = files.filter((f) => f.selected).length;
   const allSelected = selectedCount === files.length;
+
+  const handleRemoveDuplicates = () => {
+    const idsToRemove = getDuplicateIdsToRemove();
+    idsToRemove.forEach((id) => {
+      dispatch({ type: 'REMOVE_FILE', payload: id });
+    });
+    toast.success(`Removed ${idsToRemove.length} duplicate file(s)`);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -29,6 +40,16 @@ export const FileList: React.FC = () => {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {hasDuplicates && (
+            <button
+              onClick={handleRemoveDuplicates}
+              className="flex items-center gap-1 text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium"
+              title={`Remove ${duplicateCount - (files.length - getDuplicateIdsToRemove().length)} duplicate files`}
+            >
+              <Copy className="w-4 h-4" />
+              Remove Duplicates ({getDuplicateIdsToRemove().length})
+            </button>
+          )}
           <button
             onClick={allSelected ? deselectAll : selectAll}
             className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
@@ -53,6 +74,7 @@ export const FileList: React.FC = () => {
             onRemove={removeFile}
             onToggleSelect={toggleFileSelection}
             isActive={file.id === state.activeFileId}
+            isDuplicate={isDuplicate(file.id)}
           />
         ))}
       </div>

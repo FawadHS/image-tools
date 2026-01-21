@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Check, Loader2, ImageIcon, Eye } from 'lucide-react';
+import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy } from 'lucide-react';
 import { SelectedFile } from '../types';
 import { formatFileSize } from '../utils/fileUtils';
 import { ComparisonSlider } from './ComparisonSlider';
@@ -10,9 +10,10 @@ interface FileItemProps {
   onRemove: (id: string) => void;
   onToggleSelect?: (id: string) => void;
   isActive?: boolean;
+  isDuplicate?: boolean;
 }
 
-export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSelect, isActive = false }) => {
+export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSelect, isActive = false, isDuplicate = false }) => {
   const { dispatch } = useConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
   };
 
   const statusBorder = {
-    pending: 'border-gray-200 dark:border-gray-700',
+    pending: isDuplicate ? 'border-amber-400 dark:border-amber-500' : 'border-gray-200 dark:border-gray-700',
     converting: 'border-primary-400 dark:border-primary-500',
     completed: 'border-green-400 dark:border-green-500',
     error: 'border-red-400 dark:border-red-500',
@@ -89,12 +90,21 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
         relative flex items-center gap-3 p-3 bg-white dark:bg-gray-800 
         rounded-lg border-2 ${statusBorder[file.status]}
         transition-all duration-200 cursor-pointer
+        ${isDuplicate && file.status === 'pending' ? 'bg-amber-50 dark:bg-amber-950/20' : ''}
         ${isActive ? 'ring-2 ring-primary-500 dark:ring-primary-400' : 'hover:border-primary-300 dark:hover:border-primary-600'}
       `}
       role="button"
       tabIndex={0}
       aria-label={`Select ${file.file.name} for editing`}
     >
+      {/* Duplicate Badge */}
+      {isDuplicate && file.status === 'pending' && (
+        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full shadow-sm">
+          <Copy className="w-3 h-3" />
+          <span>Duplicate</span>
+        </div>
+      )}
+
       {/* Selection Checkbox */}
       {onToggleSelect && (
         <div onClick={handleCheckboxClick} className="flex-shrink-0">
