@@ -50,6 +50,9 @@ export interface SelectedFile {
   id: string;
   file: File;
   preview: string;
+  // Browser-displayable preview (converted from HEIC if needed)
+  // All UI components should use this for display
+  displayPreview?: string;
   status: 'pending' | 'converting' | 'completed' | 'error';
   progress: number;
   result?: ConvertResult;

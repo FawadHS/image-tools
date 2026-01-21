@@ -3,7 +3,6 @@ import { Crop, Square, Circle, Lock, Unlock, Check, X, Eye } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
-import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 
 type CropShape = 'rectangle' | 'circle';
 type AspectRatioPreset = 'free' | '1:1' | '16:9' | '4:3' | '3:2';
@@ -46,11 +45,12 @@ export const CropTool = () => {
 
   // Load the TRANSFORMED image (rotation/flip/filters applied, but NO crop)
   // This is the base image that CropTool works on
+  // Uses displayPreview which is pre-converted for HEIC files
   useEffect(() => {
-    if (state.files.length === 0 || !activeFile) return;
+    if (state.files.length === 0 || !activeFile || !activeFile.displayPreview) return;
 
     const currentTransformState = JSON.stringify({
-      src: activeFile.preview,
+      src: activeFile.displayPreview,
       rotation: activeFile.transform?.rotation,
       flipHorizontal: activeFile.transform?.flipHorizontal,
       flipVertical: activeFile.transform?.flipVertical,
@@ -62,15 +62,9 @@ export const CropTool = () => {
     // Load the image and apply transforms (EXCEPT crop)
     const loadTransformedImage = async () => {
       try {
-        // Load original image - convert HEIC first if needed
-        const response = await fetch(activeFile.preview);
-        let blob = await response.blob();
-        
-        // Convert HEIC to displayable format
-        if (isHeicFile(activeFile.file)) {
-          blob = await convertHeicToBlob(activeFile.file);
-        }
-        
+        // Load from displayPreview (already converted if HEIC)
+        const response = await fetch(activeFile.displayPreview!);
+        const blob = await response.blob();
         const img = await loadImageWithExif(blob);
 
         // Apply rotation/flip/filters (but NOT crop) using unified pipeline

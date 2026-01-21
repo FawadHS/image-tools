@@ -3,7 +3,6 @@ import { Type, Plus, Trash2, Move, Check, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
-import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 
 interface TextOverlayConfig {
   text: string;
@@ -46,11 +45,12 @@ export const TextOverlayTool = () => {
 
   // Load fully processed image (rotation + flip + filters + crop)
   // This is the SAME image that will be exported
+  // Uses displayPreview which is pre-converted for HEIC files
   useEffect(() => {
-    if (state.files.length === 0 || !activeFile) return;
+    if (state.files.length === 0 || !activeFile || !activeFile.displayPreview) return;
 
     const currentTransformState = JSON.stringify({
-      src: activeFile.preview,
+      src: activeFile.displayPreview,
       rotation: activeFile.transform?.rotation,
       flipHorizontal: activeFile.transform?.flipHorizontal,
       flipVertical: activeFile.transform?.flipVertical,
@@ -63,16 +63,11 @@ export const TextOverlayTool = () => {
     // Load image and apply ALL transforms using unified pipeline
     const loadProcessedImage = async () => {
       try {
-        // Fetch the original file
-        const response = await fetch(activeFile.preview);
-        let blob = await response.blob();
+        // Fetch from displayPreview (already converted if HEIC)
+        const response = await fetch(activeFile.displayPreview!);
+        const blob = await response.blob();
         
-        // Handle HEIC files - convert before processing
-        if (isHeicFile(activeFile.file.name)) {
-          blob = await convertHeicToBlob(blob);
-        }
-        
-        // Load original image with EXIF normalization
+        // Load image with EXIF normalization
         const img = await loadImageWithExif(blob);
 
         // Use unified render pipeline (WITHOUT text overlay)

@@ -4,7 +4,6 @@ import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
 import { CANVAS_PREVIEW_MAX_WIDTH } from '../constants';
 import { renderEditsToCanvas } from '../utils/imageTransform';
-import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 
 /**
  * ImageEditor Component
@@ -14,10 +13,6 @@ import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  // Cache for converted HEIC images (stored as object URL)
-  const [cachedImageSrc, setCachedImageSrc] = useState<string | null>(null);
-  const [cachedFileId, setCachedFileId] = useState<string | null>(null);
   
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
@@ -124,63 +119,17 @@ export const ImageEditor = () => {
 
   const hasAnyEdits = hasTransforms || hasFilters;
 
-  // Convert HEIC only once when file changes (not on every filter change)
-  useEffect(() => {
-    if (!activeFile) return;
-    
-    // If same file is already cached, skip conversion
-    if (cachedFileId === activeFile.id && cachedImageSrc) return;
-    
-    // For non-HEIC files, use preview directly
-    if (!isHeicFile(activeFile.file.name)) {
-      setCachedImageSrc(activeFile.preview);
-      setCachedFileId(activeFile.id);
-      return;
-    }
-    
-    // Convert HEIC once and cache it
-    let cancelled = false;
-    const convertHeic = async () => {
-      try {
-        const response = await fetch(activeFile.preview);
-        const heicBlob = await response.blob();
-        const convertedBlob = await convertHeicToBlob(heicBlob);
-        if (!cancelled) {
-          const objectUrl = URL.createObjectURL(convertedBlob);
-          setCachedImageSrc(objectUrl);
-          setCachedFileId(activeFile.id);
-        }
-      } catch (error) {
-        console.error('Failed to convert HEIC:', error);
-      }
-    };
-    
-    convertHeic();
-    
-    return () => {
-      cancelled = true;
-    };
-  }, [activeFile?.id, activeFile?.preview]);
-
-  // Cleanup cached object URL when component unmounts or file changes
-  useEffect(() => {
-    return () => {
-      if (cachedImageSrc && cachedImageSrc.startsWith('blob:') && cachedFileId !== activeFile?.id) {
-        URL.revokeObjectURL(cachedImageSrc);
-      }
-    };
-  }, [cachedImageSrc, cachedFileId, activeFile?.id]);
-
   // Draw preview on canvas using unified render pipeline
+  // Uses displayPreview which is pre-converted for HEIC files
   useEffect(() => {
-    if (!canvasRef.current || state.files.length === 0 || !activeFile || !cachedImageSrc) return;
+    if (!canvasRef.current || state.files.length === 0 || !activeFile || !activeFile.displayPreview) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const img = new Image();
-    img.src = cachedImageSrc;
+    img.src = activeFile.displayPreview;
 
     img.onload = () => {
       try {
@@ -217,7 +166,7 @@ export const ImageEditor = () => {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       }
     };
-  }, [previewTransform, activeFile, filters, cachedImageSrc]);
+  }, [previewTransform, activeFile, filters]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">

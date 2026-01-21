@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, Check, Loader2, ImageIcon, Eye } from 'lucide-react';
 import { SelectedFile } from '../types';
 import { formatFileSize } from '../utils/fileUtils';
-import { isHeicFile } from '../utils/converter';
 import { ComparisonSlider } from './ComparisonSlider';
 import { useConverter } from '../context/ConverterContext';
-import { heicTo } from 'heic-to';
 
 interface FileItemProps {
   file: SelectedFile;
@@ -30,63 +28,25 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
     onToggleSelect?.(file.id);
   };
 
-  // Handle preview URL for HEIC files
+  // Use centralized displayPreview (already converted for HEIC files)
+  // This avoids duplicate HEIC conversion - conversion happens once in useHeicConversion hook
   useEffect(() => {
-    // For HEIC files, we need to convert for preview
-    if (isHeicFile(file.file)) {
-      heicTo({
-        blob: file.file,
-        type: 'image/jpeg',
-        quality: 0.5,
-      })
-        .then((result) => {
-          setPreviewUrl(URL.createObjectURL(result));
-        })
-        .catch(() => {
-          setPreviewUrl(null);
-        });
-    } else {
-      setPreviewUrl(file.preview);
-    }
+    setPreviewUrl(file.displayPreview || file.preview);
+  }, [file.displayPreview, file.preview]);
 
-    return () => {
-      if (previewUrl && previewUrl !== file.preview) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [file]);
-
-  // Handle original image URL for comparison (always from original file)
+  // Handle original image URL for comparison
+  // Uses displayPreview which is already converted for HEIC files
   useEffect(() => {
-    // For comparison, we need to show the original file
-    // For HEIC files, convert to a viewable format WITHOUT any transformations
-    if (isHeicFile(file.file)) {
-      heicTo({
-        blob: file.file,
-        type: 'image/jpeg',
-        quality: 1.0, // High quality for comparison
-      })
-        .then((result) => {
-          const url = URL.createObjectURL(result);
-          setOriginalImageUrl(url);
-        })
-        .catch(() => {
-          // Fallback: try to create URL from original file anyway
-          const url = URL.createObjectURL(file.file);
-          setOriginalImageUrl(url);
-        });
+    // Use displayPreview for comparison original (already browser-displayable)
+    if (file.displayPreview) {
+      setOriginalImageUrl(file.displayPreview);
     } else {
-      // For non-HEIC files, use original directly
+      // Fallback for non-HEIC files
       const url = URL.createObjectURL(file.file);
       setOriginalImageUrl(url);
+      return () => URL.revokeObjectURL(url);
     }
-    
-    return () => {
-      if (originalImageUrl) {
-        URL.revokeObjectURL(originalImageUrl);
-      }
-    };
-  }, [file.file]);
+  }, [file.displayPreview, file.file]);
 
   // Handle converted image URL
   useEffect(() => {
