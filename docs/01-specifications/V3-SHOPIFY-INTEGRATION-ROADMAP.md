@@ -3,7 +3,7 @@
 > **Version**: 3.0.0  
 > **Created**: January 21, 2026  
 > **Target Release**: Q2 2026  
-> **Related**: [SHOPIFY-INTEGRATION-SPEC.md](./SHOPIFY-INTEGRATION-SPEC.md)  
+> **Related**: [V3-SHOPIFY-INTEGRATION-SPEC.md](./V3-SHOPIFY-INTEGRATION-SPEC.md)  
 > **Parent Platform**: tools.fawadhs.dev (fawadhs-tools)
 
 ---
