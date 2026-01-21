@@ -36,12 +36,17 @@ export const isFormatSupported = async (format: OutputFormat): Promise<boolean> 
 
 /**
  * Check if a file is in HEIC/HEIF format
- * @param file - The file to check
+ * Accepts either a File object or a filename string
+ * @param fileOrName - The file to check or filename
  * @returns True if the file is HEIC or HEIF
  */
-export const isHeicFile = (file: File): boolean => {
-  const type = file.type.toLowerCase();
-  const name = file.name.toLowerCase();
+export const isHeicFile = (fileOrName: File | string): boolean => {
+  if (typeof fileOrName === 'string') {
+    const name = fileOrName.toLowerCase();
+    return name.endsWith('.heic') || name.endsWith('.heif');
+  }
+  const type = fileOrName.type.toLowerCase();
+  const name = fileOrName.name.toLowerCase();
   return (
     type === 'image/heic' ||
     type === 'image/heif' ||
@@ -53,11 +58,11 @@ export const isHeicFile = (file: File): boolean => {
 /**
  * Convert HEIC file to a standard PNG blob
  * Uses heic-to library for conversion
- * @param file - The HEIC file to convert
+ * @param file - The HEIC file or blob to convert
  * @returns Promise resolving to PNG blob
  * @throws {Error} If conversion fails
  */
-export const convertHeicToBlob = async (file: File): Promise<Blob> => {
+export const convertHeicToBlob = async (file: File | Blob): Promise<Blob> => {
   try {
     const result = await heicTo({
       blob: file,

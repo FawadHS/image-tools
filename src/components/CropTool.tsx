@@ -3,6 +3,7 @@ import { Crop, Square, Circle, Lock, Unlock, Check, X, Eye } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
+import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 
 type CropShape = 'rectangle' | 'circle';
 type AspectRatioPreset = 'free' | '1:1' | '16:9' | '4:3' | '3:2';
@@ -61,9 +62,15 @@ export const CropTool = () => {
     // Load the image and apply transforms (EXCEPT crop)
     const loadTransformedImage = async () => {
       try {
-        // Load original image with EXIF normalization
+        // Load original image - convert HEIC first if needed
         const response = await fetch(activeFile.preview);
-        const blob = await response.blob();
+        let blob = await response.blob();
+        
+        // Convert HEIC to displayable format
+        if (isHeicFile(activeFile.file)) {
+          blob = await convertHeicToBlob(activeFile.file);
+        }
+        
         const img = await loadImageWithExif(blob);
 
         // Apply rotation/flip/filters (but NOT crop) using unified pipeline

@@ -3,6 +3,7 @@ import { Type, Plus, Trash2, Move, Check, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
+import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 
 interface TextOverlayConfig {
   text: string;
@@ -62,9 +63,16 @@ export const TextOverlayTool = () => {
     // Load image and apply ALL transforms using unified pipeline
     const loadProcessedImage = async () => {
       try {
-        // Load original image with EXIF normalization
+        // Fetch the original file
         const response = await fetch(activeFile.preview);
-        const blob = await response.blob();
+        let blob = await response.blob();
+        
+        // Handle HEIC files - convert before processing
+        if (isHeicFile(activeFile.file.name)) {
+          blob = await convertHeicToBlob(blob);
+        }
+        
+        // Load original image with EXIF normalization
         const img = await loadImageWithExif(blob);
 
         // Use unified render pipeline (WITHOUT text overlay)
