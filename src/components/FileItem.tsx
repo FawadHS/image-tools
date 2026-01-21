@@ -31,8 +31,13 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
   // Use centralized displayPreview (already converted for HEIC files)
   // This avoids duplicate HEIC conversion - conversion happens once in useHeicConversion hook
   useEffect(() => {
-    setPreviewUrl(file.displayPreview || file.preview);
-  }, [file.displayPreview, file.preview]);
+    // Only set previewUrl when displayPreview is available
+    if (file.displayPreview) {
+      setPreviewUrl(file.displayPreview);
+    } else {
+      setPreviewUrl(null); // Will show loading state
+    }
+  }, [file.displayPreview]);
 
   // Handle original image URL for comparison
   // Uses displayPreview which is already converted for HEIC files
@@ -111,6 +116,11 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
             alt={file.file.name}
             className="w-full h-full object-cover"
           />
+        ) : !file.displayPreview ? (
+          // Loading state - HEIC conversion in progress
+          <div className="w-full h-full flex items-center justify-center">
+            <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <ImageIcon className="w-6 h-6 text-gray-400" />

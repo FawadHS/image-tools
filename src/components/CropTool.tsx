@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Crop, Square, Circle, Lock, Unlock, Check, X, Eye } from 'lucide-react';
+import { Crop, Square, Circle, Lock, Unlock, Check, X, Eye, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConverter } from '../context/ConverterContext';
 import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform';
@@ -461,20 +461,34 @@ export const CropTool = () => {
           <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
         </div>
-        <div className="flex justify-center items-center max-h-[300px] overflow-hidden">
-        <canvas
-          ref={canvasRef}
-          data-testid="crop-canvas"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
-          className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
-        />
+        <div className="flex justify-center items-center max-h-[300px] min-h-[200px] overflow-hidden">
+          {!activeFile?.displayPreview ? (
+            // Loading state - HEIC conversion in progress
+            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+              <span className="text-sm">Converting image...</span>
+            </div>
+          ) : !transformedImage ? (
+            // Loading state - applying transforms
+            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+              <span className="text-sm">Processing...</span>
+            </div>
+          ) : (
+            <canvas
+              ref={canvasRef}
+              data-testid="crop-canvas"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
+              className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
+            />
+          )}
         </div>
       </div>
 

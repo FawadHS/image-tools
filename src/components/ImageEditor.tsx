@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye } from 'lucide-react';
+import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye, Loader2 } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
 import { CANVAS_PREVIEW_MAX_WIDTH } from '../constants';
@@ -199,11 +199,19 @@ export const ImageEditor = () => {
               </span>
             )}
           </div>
-          <div className="flex justify-center">
-            <canvas
-              ref={canvasRef}
-              className="max-w-full h-auto rounded-lg shadow-sm max-h-[300px]"
-            />
+          <div className="flex justify-center items-center min-h-[200px]">
+            {!activeFile?.displayPreview ? (
+              // Loading state - HEIC conversion in progress
+              <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                <span className="text-sm">Converting image...</span>
+              </div>
+            ) : (
+              <canvas
+                ref={canvasRef}
+                className="max-w-full h-auto rounded-lg shadow-sm max-h-[300px]"
+              />
+            )}
           </div>
         </div>
       )}
