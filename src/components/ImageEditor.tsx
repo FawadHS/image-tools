@@ -15,6 +15,10 @@ export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  // Cache for converted HEIC images (stored as object URL)
+  const [cachedImageSrc, setCachedImageSrc] = useState<string | null>(null);
+  const [cachedFileId, setCachedFileId] = useState<string | null>(null);
+  
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
   
@@ -120,81 +124,100 @@ export const ImageEditor = () => {
 
   const hasAnyEdits = hasTransforms || hasFilters;
 
+  // Convert HEIC only once when file changes (not on every filter change)
+  useEffect(() => {
+    if (!activeFile) return;
+    
+    // If same file is already cached, skip conversion
+    if (cachedFileId === activeFile.id && cachedImageSrc) return;
+    
+    // For non-HEIC files, use preview directly
+    if (!isHeicFile(activeFile.file.name)) {
+      setCachedImageSrc(activeFile.preview);
+      setCachedFileId(activeFile.id);
+      return;
+    }
+    
+    // Convert HEIC once and cache it
+    let cancelled = false;
+    const convertHeic = async () => {
+      try {
+        const response = await fetch(activeFile.preview);
+        const heicBlob = await response.blob();
+        const convertedBlob = await convertHeicToBlob(heicBlob);
+        if (!cancelled) {
+          const objectUrl = URL.createObjectURL(convertedBlob);
+          setCachedImageSrc(objectUrl);
+          setCachedFileId(activeFile.id);
+        }
+      } catch (error) {
+        console.error('Failed to convert HEIC:', error);
+      }
+    };
+    
+    convertHeic();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [activeFile?.id, activeFile?.preview]);
+
+  // Cleanup cached object URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (cachedImageSrc && cachedImageSrc.startsWith('blob:') && cachedFileId !== activeFile?.id) {
+        URL.revokeObjectURL(cachedImageSrc);
+      }
+    };
+  }, [cachedImageSrc, cachedFileId, activeFile?.id]);
+
   // Draw preview on canvas using unified render pipeline
   useEffect(() => {
-    if (!canvasRef.current || state.files.length === 0 || !activeFile) return;
+    if (!canvasRef.current || state.files.length === 0 || !activeFile || !cachedImageSrc) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let objectUrl: string | null = null;
+    const img = new Image();
+    img.src = cachedImageSrc;
 
-    const loadAndRenderImage = async () => {
-      const img = new Image();
-      
-      // Handle HEIC files - browsers can't display them natively
-      if (isHeicFile(activeFile.file.name)) {
-        try {
-          const response = await fetch(activeFile.preview);
-          const heicBlob = await response.blob();
-          const convertedBlob = await convertHeicToBlob(heicBlob);
-          objectUrl = URL.createObjectURL(convertedBlob);
-          img.src = objectUrl;
-        } catch (error) {
-          console.error('Failed to convert HEIC for preview:', error);
-          return;
-        }
-      } else {
-        img.src = activeFile.preview;
-      }
-
-      img.onload = () => {
-        try {
-          // Use the unified render pipeline to properly apply ALL transformations
-          // including crop, which is stored in activeFile.transform
-          const fullTransform: ImageTransform = {
-            ...previewTransform,
-            // CRITICAL: Include the crop from the committed state
-            // Crop should not be modified in the editor, only rotation/flip/filters
-            crop: activeFile.transform?.crop,
-            textOverlay: activeFile.transform?.textOverlay,
-          };
-          
-          // Render using the unified pipeline (without text overlay for editing preview)
-          const renderedCanvas = renderEditsToCanvas(img, fullTransform, false);
-          
-          // Scale for display if needed
-          const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / renderedCanvas.width);
-          canvas.width = renderedCanvas.width * scale;
-          canvas.height = renderedCanvas.height * scale;
-          
-          // Clear and draw the rendered result
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(renderedCanvas, 0, 0, canvas.width, canvas.height);
-        } catch (error) {
-          console.error('Failed to render preview:', error);
-          // Fallback to simple rendering
-          const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / img.width);
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        }
-      };
-    };
-
-    loadAndRenderImage();
-
-    // Cleanup object URL on unmount or re-render
-    return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+    img.onload = () => {
+      try {
+        // Use the unified render pipeline to properly apply ALL transformations
+        // including crop, which is stored in activeFile.transform
+        const fullTransform: ImageTransform = {
+          ...previewTransform,
+          // CRITICAL: Include the crop from the committed state
+          // Crop should not be modified in the editor, only rotation/flip/filters
+          crop: activeFile.transform?.crop,
+          textOverlay: activeFile.transform?.textOverlay,
+        };
+        
+        // Render using the unified pipeline (without text overlay for editing preview)
+        const renderedCanvas = renderEditsToCanvas(img, fullTransform, false);
+        
+        // Scale for display if needed
+        const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / renderedCanvas.width);
+        canvas.width = renderedCanvas.width * scale;
+        canvas.height = renderedCanvas.height * scale;
+        
+        // Clear and draw the rendered result
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(renderedCanvas, 0, 0, canvas.width, canvas.height);
+      } catch (error) {
+        console.error('Failed to render preview:', error);
+        // Fallback to simple rendering
+        const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       }
     };
-  }, [previewTransform, activeFile, filters]);
+  }, [previewTransform, activeFile, filters, cachedImageSrc]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
