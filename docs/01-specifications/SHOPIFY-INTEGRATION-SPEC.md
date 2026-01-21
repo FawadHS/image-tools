@@ -1,9 +1,10 @@
-# Image Tools v3.0 - Shopify Integration Specification
+# Image Tools V3 - Shopify Integration Specification
 
 > **Version**: 3.0.0 (Shopify Integration)  
 > **Created**: January 21, 2026  
 > **Status**: Planning Phase  
-> **Related**: tools.fawadhs.dev/image-tools
+> **Related**: tools.fawadhs.dev/image-tools  
+> **Parent Platform**: fawadhs-tools (tools.fawadhs.dev)
 
 ---
 
@@ -11,61 +12,217 @@
 
 Image Tools v3.0 extends the existing privacy-first image processing platform with native Shopify integration, enabling merchants to directly optimize, upload, and manage product images within their stores. This version positions the tool as a **Shopify-first image operations & visual consistency platform**.
 
+**Critical Integration Point**: This feature integrates with the broader **fawadhs-tools** platform at tools.fawadhs.dev, leveraging:
+- Existing Fastify backend at `api.tools.fawadhs.dev`
+- User authentication system (JWT-based)
+- Subscription tiers (Free → Pro → Business)
+- Dashboard and usage tracking
+- PostgreSQL + Redis infrastructure
+
 ### Key Value Propositions
 1. **Direct Shopify Integration** - Upload optimized images directly to Shopify stores
 2. **SKU-Based Bulk Operations** - Map images to products via filename parsing
 3. **Visual Consistency** - Background removal + uniform padding for professional grids
 4. **SEO Automation** - Auto-generated filenames and alt text
 5. **Future-Proof** - GraphQL-only API compliance (2025+ ready)
+6. **Platform Integration** - Seamless with tools.fawadhs.dev subscriptions
 
 ---
 
 ## Part 1: Architecture Overview
 
-### 1.1 System Architecture
+### 1.1 System Architecture (Integrated with fawadhs-tools)
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Image Tools v3.0 Architecture                    │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   ┌─────────────┐    ┌──────────────────┐    ┌────────────────────┐   │
-│   │   Frontend  │────│  Backend (New)   │────│   Shopify Admin    │   │
-│   │   React SPA │    │  Fastify API     │    │   GraphQL API      │   │
-│   └─────────────┘    └──────────────────┘    └────────────────────┘   │
-│          │                    │                        │               │
-│          │                    │                        │               │
-│   ┌──────▼──────┐    ┌───────▼────────┐    ┌─────────▼─────────┐     │
-│   │  Existing   │    │   New Backend   │    │  Shopify Store    │     │
-│   │  Processing │    │   Services      │    │                   │     │
-│   │  Engine     │    │                 │    │  - Products       │     │
-│   │             │    │  - OAuth Flow   │    │  - Media/Files    │     │
-│   │  - Convert  │    │  - Upload Mgr   │    │  - Theme Assets   │     │
-│   │  - Crop     │    │  - SKU Mapper   │    │  - Metafields     │     │
-│   │  - Filters  │    │  - SEO Engine   │    │                   │     │
-│   │  - Overlay  │    │  - Job Queue    │    │                   │     │
-│   └─────────────┘    └─────────────────┘    └───────────────────┘     │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    tools.fawadhs.dev Platform Architecture                       │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   ┌──────────────────────────────────────────────────────────────────────────┐  │
+│   │                         FRONTEND (React SPA)                              │  │
+│   │                         tools.fawadhs.dev                                 │  │
+│   ├──────────────────────────────────────────────────────────────────────────┤  │
+│   │  /                  │  /dashboard        │  /image-tools    │  /account  │  │
+│   │  Landing            │  User Dashboard    │  Image Converter │  Settings  │  │
+│   │  Pricing            │  Usage Stats       │  + Shopify Panel │  Billing   │  │
+│   │  Auth Pages         │  Subscription      │  + Media Audit   │  Profile   │  │
+│   └──────────────────────────────────────────────────────────────────────────┘  │
+│                                      │                                           │
+│                                      ▼                                           │
+│   ┌──────────────────────────────────────────────────────────────────────────┐  │
+│   │                    EXISTING BACKEND (api.tools.fawadhs.dev)               │  │
+│   │                           Fastify + PostgreSQL + Redis                    │  │
+│   ├──────────────────────────────────────────────────────────────────────────┤  │
+│   │                                                                           │  │
+│   │  EXISTING MODULES          │     NEW SHOPIFY MODULE                       │  │
+│   │  ┌─────────────────────┐  │     ┌─────────────────────────────────────┐  │  │
+│   │  │  auth/              │  │     │  shopify/                           │  │  │
+│   │  │  - register         │  │     │  - shopify.routes.ts                │  │  │
+│   │  │  - login            │  │     │  - shopify.service.ts               │  │  │
+│   │  │  - jwt tokens       │  │     │  - shopify-oauth.service.ts         │  │  │
+│   │  ├─────────────────────┤  │     │  - shopify-upload.service.ts        │  │  │
+│   │  │  subscription/      │  │     │  - shopify-sku.service.ts           │  │  │
+│   │  │  - Stripe           │  │     │  - shopify-audit.service.ts         │  │  │
+│   │  │  - Plans            │  │     └─────────────────────────────────────┘  │  │
+│   │  │  - Discounts        │  │                     │                         │  │
+│   │  ├─────────────────────┤  │                     ▼                         │  │
+│   │  │  usage/             │◄─┼─────────────────────┤                         │  │
+│   │  │  - Track uploads    │  │     NEW PRISMA MODELS                        │  │
+│   │  │  - Statistics       │  │     ┌─────────────────────────────────────┐  │  │
+│   │  ├─────────────────────┤  │     │  ShopifyConnection                  │  │  │
+│   │  │  admin/             │  │     │  ShopifyUploadJob                   │  │  │
+│   │  │  - User management  │  │     │  ShopifyUploadFile                  │  │  │
+│   │  │  - Platform stats   │  │     │  ShopifyAudit                       │  │  │
+│   │  │  - Discounts        │  │     └─────────────────────────────────────┘  │  │
+│   │  └─────────────────────┘  │                                               │  │
+│   │                            │                                               │  │
+│   └──────────────────────────────────────────────────────────────────────────┘  │
+│                                      │                                           │
+│                                      ▼                                           │
+│   ┌──────────────────────────────────────────────────────────────────────────┐  │
+│   │                          EXTERNAL SERVICES                                │  │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │  │
+│   │  │   Shopify    │  │    Stripe    │  │    Resend    │  │  AI Service  │  │  │
+│   │  │ GraphQL API  │  │   Payments   │  │    Email     │  │ (Bg Removal) │  │  │
+│   │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │  │
+│   └──────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 Technology Stack
+### 1.2 Technology Stack (Leveraging Existing Infrastructure)
 
 | Layer | Technology | Notes |
 |-------|------------|-------|
-| **Frontend** | React 18 + TypeScript | Existing Image Tools codebase |
-| **State** | React Context + useReducer | Existing pattern |
-| **Backend** | Fastify + TypeScript | New service for Shopify integration |
-| **Database** | PostgreSQL | Store connections, job history |
-| **Queue** | BullMQ + Redis | Background job processing |
-| **AI Services** | External API | Background removal (Phase 2) |
-| **Shopify API** | GraphQL Admin API | OAuth 2.0 + App Bridge |
+| **Frontend** | React 18 + TypeScript | Existing tools.fawadhs.dev frontend |
+| **State** | Zustand + React Context | Existing auth store pattern |
+| **Backend** | Fastify + TypeScript | **EXISTING** api.tools.fawadhs.dev |
+| **Database** | PostgreSQL 16 | **EXISTING** Docker container |
+| **Cache/Queue** | Redis 7 | **EXISTING** Docker container |
+| **ORM** | Prisma 5.22 | **EXISTING** - add new models |
+| **Auth** | JWT (access + refresh) | **EXISTING** auth module |
+| **Payments** | Stripe SDK | **EXISTING** subscription module |
+| **Email** | Resend | **EXISTING** for notifications |
+| **AI Services** | External API | NEW - Background removal |
+| **Shopify API** | GraphQL Admin API | NEW - OAuth 2.0 |
 
-### 1.3 Deployment Architecture
+### 1.3 Deployment Architecture (Single Server)
 
 ```
-tools.fawadhs.dev/image-tools     → Frontend (existing)
-api.tools.fawadhs.dev/shopify     → Shopify Backend (new)
+Server: 142.132.168.16 (Hetzner CPX11)
+├── Nginx (reverse proxy + SSL)
+│
+├── tools.fawadhs.dev              → Frontend SPA (static files)
+│   └── /image-tools              → Image Tools (existing + Shopify UI)
+│
+├── api.tools.fawadhs.dev          → Fastify Backend
+│   ├── /api/auth/*               → Auth module (existing)
+│   ├── /api/user/*               → User module (existing)
+│   ├── /api/subscription/*       → Subscription module (existing)
+│   ├── /api/usage/*              → Usage tracking (existing)
+│   ├── /api/admin/*              → Admin panel (existing)
+│   └── /api/shopify/*            → Shopify module (NEW)
+│
+├── PostgreSQL (Docker, 127.0.0.1:5432)
+├── Redis (Docker, 127.0.0.1:6379)
+└── PM2 (process manager)
+```
+
+**Key Benefit**: No new infrastructure needed. Shopify module adds to existing backend.
+
+---
+
+## Part 1.5: Integration with fawadhs-tools Platform
+
+### 1.5.1 Subscription Tier Integration
+
+Shopify features are gated by subscription tier:
+
+| Feature | Free | Pro ($9/mo) | Business ($29/mo) |
+|---------|------|-------------|-------------------|
+| Local conversion | ✅ Unlimited | ✅ Unlimited | ✅ Unlimited |
+| Shopify connection | ❌ | ✅ 1 store | ✅ 5 stores |
+| Direct upload | ❌ | ✅ 500/mo | ✅ Unlimited |
+| SKU mapping | ❌ | ✅ Basic | ✅ Advanced + regex |
+| SEO automation | ❌ | ✅ Templates | ✅ + AI alt text |
+| Background removal | ❌ | ❌ | ✅ 100/mo |
+| Media audit | ❌ | ❌ | ✅ |
+| Priority processing | ❌ | ❌ | ✅ |
+
+### 1.5.2 Dashboard Integration
+
+Add Shopify status to existing Dashboard:
+
+```tsx
+// DashboardPage.tsx additions
+<Card title="Shopify Connections">
+  {shopifyConnections.length > 0 ? (
+    <div className="space-y-2">
+      {shopifyConnections.map(conn => (
+        <div key={conn.id} className="flex justify-between">
+          <span>{conn.shopDomain}</span>
+          <Badge variant={conn.status === 'active' ? 'success' : 'warning'}>
+            {conn.status}
+          </Badge>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <EmptyState 
+      icon={Store}
+      title="No Shopify stores connected"
+      action={<Link to="/image-tools?tab=shopify">Connect Store</Link>}
+    />
+  )}
+</Card>
+
+<StatCard 
+  title="Shopify Uploads (This Month)"
+  value={shopifyStats.uploadsThisMonth}
+  limit={subscriptionLimits.shopifyUploads}
+  icon={Upload}
+/>
+```
+
+### 1.5.3 Usage Tracking Integration
+
+Leverage existing `UsageLog` model for Shopify operations:
+
+```typescript
+// Usage log entries for Shopify
+await prisma.usageLog.create({
+  data: {
+    userId: user.id,
+    toolName: 'shopify-uploader',
+    action: 'bulk-upload',
+    fileCount: files.length,
+    inputSize: totalInputSize,
+    outputSize: totalOutputSize,
+    metadata: {
+      shopDomain: connection.shopDomain,
+      jobId: job.id,
+      skuMatches: matchedCount,
+    }
+  }
+});
+```
+
+### 1.5.4 Admin Panel Integration
+
+Add Shopify statistics to admin dashboard:
+
+```
+/admin/dashboard
+├── Platform Stats (existing)
+│   ├── Total Users
+│   ├── Active Subscriptions
+│   └── Revenue
+│
+└── Shopify Stats (NEW)
+    ├── Connected Stores
+    ├── Total Uploads (24h / 7d / 30d)
+    ├── Popular Upload Patterns
+    └── Error Rate
 ```
 
 ---
@@ -321,61 +478,117 @@ interface BackgroundRemovalConfig {
 
 ---
 
-## Part 4: Data Models
+## Part 4: Data Models (Prisma - Extends Existing Schema)
 
-### 4.1 Database Schema (New Tables)
+### 4.1 New Prisma Models (Add to existing schema.prisma)
 
-```sql
--- Shopify store connections
-CREATE TABLE shopify_connections (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
-  shop_domain VARCHAR(255) NOT NULL UNIQUE,
-  access_token_encrypted TEXT NOT NULL,
-  scopes TEXT[],
-  installed_at TIMESTAMP DEFAULT NOW(),
-  last_sync_at TIMESTAMP,
-  status VARCHAR(20) DEFAULT 'active'
-);
+```prisma
+// ==================== SHOPIFY INTEGRATION ====================
 
--- Upload jobs
-CREATE TABLE shopify_upload_jobs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  connection_id UUID REFERENCES shopify_connections(id),
-  status VARCHAR(20) DEFAULT 'pending',
-  total_files INTEGER,
-  processed_files INTEGER DEFAULT 0,
-  failed_files INTEGER DEFAULT 0,
-  config JSONB,
-  results JSONB,
-  created_at TIMESTAMP DEFAULT NOW(),
-  completed_at TIMESTAMP
-);
+model ShopifyConnection {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  shopDomain          String    @unique @map("shop_domain") @db.VarChar(255)
+  accessTokenEncrypted String   @map("access_token_encrypted") @db.Text
+  scopes              String[]
+  shopName            String?   @map("shop_name") @db.VarChar(255)
+  shopEmail           String?   @map("shop_email") @db.VarChar(255)
+  installedAt         DateTime  @default(now()) @map("installed_at")
+  lastSyncAt          DateTime? @map("last_sync_at")
+  status              String    @default("active") @db.VarChar(20) // active, disconnected, expired
 
--- Upload job files
-CREATE TABLE shopify_upload_files (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id UUID REFERENCES shopify_upload_jobs(id),
-  original_filename VARCHAR(255),
-  processed_filename VARCHAR(255),
-  shopify_file_id VARCHAR(255),
-  shopify_product_id VARCHAR(255),
-  status VARCHAR(20) DEFAULT 'pending',
-  error_message TEXT,
-  metadata JSONB
-);
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploadJobs ShopifyUploadJob[]
+  audits     ShopifyAudit[]
 
--- Audit reports
-CREATE TABLE shopify_audits (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  connection_id UUID REFERENCES shopify_connections(id),
-  audit_type VARCHAR(50),
-  results JSONB,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  @@index([userId])
+  @@index([shopDomain])
+  @@map("shopify_connections")
+}
+
+model ShopifyUploadJob {
+  id              String    @id @default(uuid()) @db.Uuid
+  connectionId    String    @map("connection_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  status          String    @default("pending") @db.VarChar(20) // pending, processing, completed, failed
+  totalFiles      Int       @map("total_files")
+  processedFiles  Int       @default(0) @map("processed_files")
+  failedFiles     Int       @default(0) @map("failed_files")
+  config          Json      // UploadJobConfig
+  results         Json?     // Summary results
+  errorMessage    String?   @map("error_message") @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  startedAt       DateTime? @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+
+  connection ShopifyConnection    @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  files      ShopifyUploadFile[]
+
+  @@index([connectionId])
+  @@index([userId])
+  @@index([status])
+  @@map("shopify_upload_jobs")
+}
+
+model ShopifyUploadFile {
+  id                String   @id @default(uuid()) @db.Uuid
+  jobId             String   @map("job_id") @db.Uuid
+  originalFilename  String   @map("original_filename") @db.VarChar(255)
+  processedFilename String?  @map("processed_filename") @db.VarChar(255)
+  shopifyFileId     String?  @map("shopify_file_id") @db.VarChar(255)
+  shopifyProductId  String?  @map("shopify_product_id") @db.VarChar(255)
+  matchedSku        String?  @map("matched_sku") @db.VarChar(100)
+  status            String   @default("pending") @db.VarChar(20) // pending, uploading, attached, failed
+  errorMessage      String?  @map("error_message") @db.Text
+  inputSize         BigInt?  @map("input_size")
+  outputSize        BigInt?  @map("output_size")
+  metadata          Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  job ShopifyUploadJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([status])
+  @@map("shopify_upload_files")
+}
+
+model ShopifyAudit {
+  id            String   @id @default(uuid()) @db.Uuid
+  connectionId  String   @map("connection_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  auditType     String   @map("audit_type") @db.VarChar(50) // media-quality, seo, all
+  status        String   @default("pending") @db.VarChar(20)
+  totalImages   Int?     @map("total_images")
+  criticalCount Int?     @map("critical_count")
+  warningCount  Int?     @map("warning_count")
+  results       Json?    // Detailed audit findings
+  createdAt     DateTime @default(now()) @map("created_at")
+  completedAt   DateTime? @map("completed_at")
+
+  connection ShopifyConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([userId])
+  @@map("shopify_audits")
+}
 ```
 
-### 4.2 TypeScript Interfaces
+### 4.2 Update Existing User Model
+
+Add relation to ShopifyConnection in existing User model:
+
+```prisma
+model User {
+  // ... existing fields ...
+  
+  // Add this relation
+  shopifyConnections ShopifyConnection[]
+  
+  // ... existing relations ...
+}
+```
+
+### 4.3 TypeScript Interfaces
 
 ```typescript
 // Shopify connection state
@@ -420,70 +633,149 @@ interface UploadJob {
 
 ---
 
-## Part 5: API Endpoints (Backend)
+## Part 5: API Endpoints (New Module in Existing Backend)
 
-### 5.1 OAuth Endpoints
+All endpoints require JWT authentication via existing auth middleware.
 
-```
-GET  /api/shopify/auth/install?shop={domain}
-     → Redirect to Shopify OAuth
-
-GET  /api/shopify/auth/callback
-     → Handle OAuth callback, store token
-
-POST /api/shopify/auth/disconnect
-     → Revoke access, remove connection
-
-GET  /api/shopify/connection
-     → Get current connection status
-```
-
-### 5.2 Upload Endpoints
+### 5.1 Module Structure (backend/src/modules/shopify/)
 
 ```
-POST /api/shopify/upload/stage
-     → Create staged upload URLs
-     Body: { files: [{ filename, mimeType, size }] }
-
-POST /api/shopify/upload/complete
-     → Finalize uploads after binary transfer
-     Body: { stagedUrls: [...], config: UploadJobConfig }
-
-POST /api/shopify/upload/bulk
-     → Start bulk upload job
-     Body: { files: File[], config: UploadJobConfig }
-
-GET  /api/shopify/upload/jobs
-     → List upload jobs
-
-GET  /api/shopify/upload/jobs/:id
-     → Get job status and results
+backend/src/modules/shopify/
+├── shopify.routes.ts          # Route definitions
+├── shopify.service.ts         # Main service
+├── shopify.controller.ts      # Request handlers
+├── shopify-oauth.service.ts   # OAuth flow
+├── shopify-graphql.service.ts # GraphQL client
+├── shopify-upload.service.ts  # Upload logic
+├── shopify-sku.service.ts     # SKU parsing & matching
+├── shopify-audit.service.ts   # Media audit
+├── shopify.types.ts           # TypeScript types
+└── shopify.schemas.ts         # Zod validation schemas
 ```
 
-### 5.3 Product Endpoints
+### 5.2 OAuth Endpoints
 
+```typescript
+// shopify.routes.ts
+fastify.get('/api/shopify/auth/install', {
+  preHandler: [fastify.authenticate],  // Requires logged-in user
+  handler: shopifyController.initiateOAuth
+});
+// → Redirects to Shopify OAuth with state containing userId
+
+fastify.get('/api/shopify/auth/callback', {
+  handler: shopifyController.handleCallback
+});
+// → Exchanges code for token, stores encrypted, redirects to dashboard
+
+fastify.post('/api/shopify/auth/disconnect', {
+  preHandler: [fastify.authenticate],
+  handler: shopifyController.disconnect
+});
+// → Revokes token, deletes connection record
+
+fastify.get('/api/shopify/connections', {
+  preHandler: [fastify.authenticate],
+  handler: shopifyController.listConnections
+});
+// → Returns user's Shopify connections with status
 ```
-GET  /api/shopify/products/search?q={query}
-     → Search products by title, SKU, handle
 
-GET  /api/shopify/products/:id/media
-     → Get product media
+### 5.3 Upload Endpoints
 
-POST /api/shopify/products/:id/media
-     → Attach uploaded images to product
+```typescript
+fastify.post('/api/shopify/upload/prepare', {
+  preHandler: [fastify.authenticate, fastify.checkSubscription('pro')],
+  handler: shopifyController.prepareUpload
+});
+// Body: { connectionId, files: [{ filename, mimeType, size }] }
+// Returns: { stagedTargets: [...] }
+
+fastify.post('/api/shopify/upload/start', {
+  preHandler: [fastify.authenticate, fastify.checkSubscription('pro')],
+  handler: shopifyController.startBulkUpload
+});
+// Body: { connectionId, config: UploadJobConfig, fileMetadata: [...] }
+// Returns: { jobId, status }
+
+fastify.get('/api/shopify/upload/jobs', {
+  preHandler: [fastify.authenticate],
+  handler: shopifyController.listJobs
+});
+// Query: ?connectionId=xxx&status=completed&limit=20
+// Returns: { jobs: [...], total, hasMore }
+
+fastify.get('/api/shopify/upload/jobs/:jobId', {
+  preHandler: [fastify.authenticate],
+  handler: shopifyController.getJob
+});
+// Returns: { job, files }
 ```
 
-### 5.4 Audit Endpoints
+### 5.4 Product Endpoints
 
+```typescript
+fastify.get('/api/shopify/products/search', {
+  preHandler: [fastify.authenticate, fastify.checkSubscription('pro')],
+  handler: shopifyController.searchProducts
+});
+// Query: ?connectionId=xxx&q=shirt&field=sku|handle|title
+// Returns: { products: [...], hasMore, cursor }
+
+fastify.post('/api/shopify/products/:productId/media', {
+  preHandler: [fastify.authenticate, fastify.checkSubscription('pro')],
+  handler: shopifyController.attachMedia
+});
+// Body: { connectionId, mediaUrls: [...], positions: [...] }
 ```
-POST /api/shopify/audit/start
-     → Start media quality audit
 
-GET  /api/shopify/audit/:id
-     → Get audit results
+### 5.5 Audit Endpoints
 
-POST /api/shopify/audit/:id/fix
-     → Apply auto-fixes
+```typescript
+fastify.post('/api/shopify/audit/start', {
+  preHandler: [fastify.authenticate, fastify.checkSubscription('business')],
+  handler: shopifyController.startAudit
+});
+// Body: { connectionId, auditType: 'media-quality' | 'seo' | 'all' }
+// Returns: { auditId, status: 'processing' }
+
+fastify.get('/api/shopify/audit/:auditId', {
+  preHandler: [fastify.authenticate],
+  handler: shopifyController.getAudit
+});
+// Returns: { audit, findings: {...} }
+
+fastify.post('/api/shopify/audit/:auditId/fix', {
+  preHandler: [fastify.authenticate, fastify.checkSubscription('business')],
+  handler: shopifyController.applyFixes
+});
+// Body: { fixes: ['missing-alt', 'non-seo-filename'] }
+```
+
+### 5.6 Usage Limit Middleware
+
+```typescript
+// Integrated with existing subscription system
+fastify.decorate('checkShopifyLimits', async (request, reply) => {
+  const user = request.user;
+  const limits = getSubscriptionLimits(user.subscriptionTier);
+  
+  const monthlyUploads = await prisma.usageLog.count({
+    where: {
+      userId: user.id,
+      toolName: 'shopify-uploader',
+      createdAt: { gte: startOfMonth() }
+    }
+  });
+  
+  if (monthlyUploads >= limits.shopifyUploads) {
+    return reply.status(429).send({
+      error: 'UPLOAD_LIMIT_REACHED',
+      message: `Monthly upload limit (${limits.shopifyUploads}) reached`,
+      upgradeUrl: '/pricing'
+    });
+  }
+});
 ```
 
 ---

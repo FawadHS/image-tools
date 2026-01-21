@@ -1,9 +1,28 @@
-# Image Tools v3.0 - Shopify Integration Roadmap
+# Image Tools V3 - Shopify Integration Roadmap
 
 > **Version**: 3.0.0  
 > **Created**: January 21, 2026  
 > **Target Release**: Q2 2026  
-> **Related**: [SHOPIFY-INTEGRATION-SPEC.md](./SHOPIFY-INTEGRATION-SPEC.md)
+> **Related**: [SHOPIFY-INTEGRATION-SPEC.md](./SHOPIFY-INTEGRATION-SPEC.md)  
+> **Parent Platform**: tools.fawadhs.dev (fawadhs-tools)
+
+---
+
+## Integration Strategy
+
+This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform**:
+
+| Component | Approach | Notes |
+|-----------|----------|-------|
+| Backend | Extend existing api.tools.fawadhs.dev | New `/api/shopify/*` module |
+| Frontend | Add to existing Image Tools page | New Shopify panel/tab |
+| Database | Extend existing Prisma schema | New models, same PostgreSQL |
+| Auth | Use existing JWT system | Shopify features require login |
+| Subscriptions | Integrate with existing Stripe | Pro/Business tier gates |
+| Dashboard | Add Shopify widgets | Usage stats, connections |
+| Admin Panel | Add Shopify metrics | Platform-wide stats |
+
+**Key Principle**: No separate services. Everything in the existing infrastructure.
 
 ---
 
@@ -14,7 +33,7 @@
 │                    Image Tools v3.0 Roadmap                             │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  Phase 1: Foundation          Feb 2026       ████████░░░░  60%         │
+│  Phase 1: Foundation          Feb 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 2: Core Upload         Mar 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 3: SKU & Bulk          Apr 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 4: SEO & Audit         May 2026       ░░░░░░░░░░░░   0%         │
@@ -28,50 +47,62 @@
 
 ## Phase 1: Foundation & Infrastructure (4 weeks)
 **Target**: February 2026  
-**Status**: 🚧 In Progress
+**Status**: ⬜ Not Started
 
-### 1.1 Backend Service Setup
+### 1.1 Backend Module Setup (Extend Existing)
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| Create Fastify backend for Shopify | High | Medium | ⬜ Todo | Separate from fawadhs-tools backend |
-| Set up PostgreSQL tables | High | Low | ⬜ Todo | Connections, jobs, files |
-| Configure BullMQ + Redis | High | Medium | ⬜ Todo | Job queue for async processing |
-| Environment configuration | High | Low | ⬜ Todo | Shopify API keys, secrets |
-| Deploy to api.tools.fawadhs.dev/shopify | High | Medium | ⬜ Todo | Nginx config, PM2 |
+| Create `backend/src/modules/shopify/` | High | Low | ⬜ Todo | Follow existing module pattern |
+| Add Prisma models to schema.prisma | High | Low | ⬜ Todo | ShopifyConnection, etc. |
+| Run Prisma migration | High | Low | ⬜ Todo | `npx prisma migrate dev` |
+| Register shopify routes in app.ts | High | Low | ⬜ Todo | Like other modules |
+| Add `@shopify/shopify-api` package | High | Low | ⬜ Todo | Official SDK |
+| Environment variables for Shopify | High | Low | ⬜ Todo | Add to .env |
 
-### 1.2 Shopify App Registration
+### 1.2 Shopify Partner Setup
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| Register Shopify Partner account | High | Low | ⬜ Todo | If not already done |
-| Create development app | High | Low | ⬜ Todo | App name, URLs |
-| Configure OAuth redirect URLs | High | Low | ⬜ Todo | Callback endpoint |
-| Set required scopes | High | Low | ⬜ Todo | write_files, write_products, read_products |
-| Create development store | Medium | Low | ⬜ Todo | For testing |
+| Register Shopify Partner account | High | Low | ⬜ Todo | partners.shopify.com |
+| Create app in Partner Dashboard | High | Low | ⬜ Todo | "Image Tools by fawadhs.dev" |
+| Configure OAuth URLs | High | Low | ⬜ Todo | api.tools.fawadhs.dev/api/shopify |
+| Set required scopes | High | Low | ⬜ Todo | write_files, write_products |
+| Create development store | High | Low | ⬜ Todo | For testing |
+| Get API credentials | High | Low | ⬜ Todo | Client ID, Secret |
 
 ### 1.3 OAuth Implementation
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| Install endpoint `/auth/install` | High | Medium | ⬜ Todo | Generate auth URL |
-| Callback endpoint `/auth/callback` | High | Medium | ⬜ Todo | Exchange code for token |
-| Token encryption utility | High | Medium | ⬜ Todo | AES-256 for storage |
-| Disconnect endpoint | High | Low | ⬜ Todo | Revoke and clean up |
-| Connection status endpoint | High | Low | ⬜ Todo | Check if connected |
+| `shopify-oauth.service.ts` | High | Medium | ⬜ Todo | OAuth flow logic |
+| Install route `/auth/install` | High | Medium | ⬜ Todo | Requires logged-in user |
+| Callback route `/auth/callback` | High | Medium | ⬜ Todo | Exchange code for token |
+| Token encryption utility | High | Medium | ⬜ Todo | AES-256, use existing env.JWT_SECRET |
+| Disconnect endpoint | High | Low | ⬜ Todo | Revoke + delete record |
+| List connections endpoint | High | Low | ⬜ Todo | User's connected stores |
 
-### 1.4 Frontend: Connection UI
+### 1.4 Frontend: Shopify Panel in Image Tools
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| ShopifyContext provider | High | Medium | ⬜ Todo | State management |
-| ShopifyConnect component | High | Medium | ⬜ Todo | OAuth button, status |
-| Connected store display | High | Low | ⬜ Todo | Show shop domain |
-| Disconnect confirmation | Medium | Low | ⬜ Todo | Modal with warning |
-| Connection error handling | Medium | Low | ⬜ Todo | Token expired, etc. |
+| Create ShopifyContext in Image Tools | High | Medium | ⬜ Todo | Connection state |
+| Add "Shopify" tab to ImageToolsPage | High | Low | ⬜ Todo | Tab navigation |
+| ShopifyConnect component | High | Medium | ⬜ Todo | Connect button, status |
+| Connected store card | High | Low | ⬜ Todo | Show shop domain, status |
+| Call fawadhs-tools API | High | Medium | ⬜ Todo | Use existing apiClient |
+| Gate behind login | High | Low | ⬜ Todo | Redirect to /login if not auth |
+
+### 1.5 Dashboard Integration
+| Task | Priority | Complexity | Status | Notes |
+|------|----------|------------|--------|-------|
+| Add Shopify section to DashboardPage | Medium | Low | ⬜ Todo | Connected stores widget |
+| Show Shopify upload stats | Medium | Low | ⬜ Todo | Monthly usage |
+| Link to Image Tools Shopify tab | Medium | Low | ⬜ Todo | Quick action |
 
 ### Phase 1 Deliverables
-- [ ] Backend service running
+- [ ] Shopify module in existing backend
 - [ ] OAuth flow working end-to-end
 - [ ] Can connect/disconnect Shopify store
 - [ ] Connection persisted in database
 - [ ] Frontend shows connection status
+- [ ] Dashboard shows Shopify widget
 
 ---
 
@@ -112,6 +143,14 @@
 | Social media presets | Medium | Low | ⬜ Todo | Instagram, Pinterest, etc. |
 | Export pack feature | Medium | Medium | ⬜ Todo | Multiple sizes at once |
 | Preset preview | Low | Medium | ⬜ Todo | Show output dimensions |
+
+### 2.5 Subscription Integration
+| Task | Priority | Complexity | Status | Notes |
+|------|----------|------------|--------|-------|
+| Gate Shopify features behind Pro tier | High | Low | ⬜ Todo | Use existing middleware |
+| Track uploads in UsageLog | High | Low | ⬜ Todo | toolName: 'shopify-uploader' |
+| Show upload limits in UI | High | Low | ⬜ Todo | "45/500 uploads this month" |
+| Upgrade prompts | Medium | Low | ⬜ Todo | When approaching limit |
 
 ### Phase 2 Deliverables
 - [ ] Can upload single image to Shopify Files
@@ -311,12 +350,60 @@
 | Monitoring setup | High | Medium | ⬜ Todo | Alerts, logging |
 | Launch announcement | Medium | Low | ⬜ Todo | Blog, social |
 
+### 6.5 Platform Integration Final
+| Task | Priority | Complexity | Status | Notes |
+|------|----------|------------|--------|-------|
+| Admin panel: Shopify metrics | High | Medium | ⬜ Todo | Add to /admin/dashboard |
+| Admin: Connected stores list | Medium | Low | ⬜ Todo | View all connections |
+| Admin: Upload job monitoring | Medium | Medium | ⬜ Todo | Failed jobs, alerts |
+| Pricing page: Shopify features | High | Low | ⬜ Todo | Update tier comparison |
+| Landing page: Shopify section | Medium | Medium | ⬜ Todo | Feature highlight |
+
 ### Phase 6 Deliverables
 - [ ] All tests passing
 - [ ] Documentation complete
 - [ ] App Store listing ready
 - [ ] Production deployed
 - [ ] Monitoring active
+- [ ] Admin panel fully integrated
+
+---
+
+## Integration Checklist (fawadhs-tools)
+
+Before launch, verify all platform integrations:
+
+### Backend Integration
+- [ ] Shopify module follows existing module pattern
+- [ ] Prisma models added to existing schema
+- [ ] Routes registered in app.ts
+- [ ] Auth middleware reused
+- [ ] Usage logging integrated with existing UsageLog
+- [ ] Rate limiting configured
+
+### Frontend Integration
+- [ ] Shopify tab in Image Tools page
+- [ ] Uses existing auth state (useAuthStore)
+- [ ] Uses existing API client
+- [ ] Respects subscription tier limits
+- [ ] Dark mode compatible
+
+### Dashboard Integration
+- [ ] Shopify connections widget
+- [ ] Upload statistics card
+- [ ] Quick actions to Image Tools
+
+### Admin Panel Integration
+- [ ] Shopify stats in admin dashboard
+- [ ] Connection management (view/revoke)
+- [ ] Job monitoring
+- [ ] Error tracking
+
+### Subscription Integration
+- [ ] Pro tier gates Shopify connection
+- [ ] Business tier gates advanced features
+- [ ] Upload limits enforced
+- [ ] Upgrade prompts shown
 
 ---
 
