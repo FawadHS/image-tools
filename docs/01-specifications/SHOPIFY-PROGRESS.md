@@ -2,6 +2,7 @@
 
 > **Version**: 3.0.0  
 > **Started**: January 21, 2026  
+> **Last Updated**: January 26, 2026  
 > **Target Completion**: July 2026  
 
 ---
@@ -10,14 +11,36 @@
 
 | Phase | Target | Progress | Status |
 |-------|--------|----------|--------|
-| Phase 1: Foundation | Feb 2026 | 90% | 🔄 In Progress |
+| Phase 1: Foundation | Feb 2026 | 95% | 🔄 Almost Complete |
 | Phase 2: Core Upload | Mar 2026 | 0% | ⬜ Not Started |
 | Phase 3: SKU Mapping | Apr 2026 | 0% | ⬜ Not Started |
 | Phase 4: SEO Automation | May 2026 | 0% | ⬜ Not Started |
 | Phase 5: AI Features | Jun 2026 | 0% | ⬜ Not Started |
 | Phase 6: Launch | Jul 2026 | 0% | ⬜ Not Started |
 
-**Overall**: `15%` Complete
+**Overall**: `18%` Complete
+
+---
+
+## 🐛 Known Issues (Jan 26, 2026)
+
+### Auth Integration Issues
+**Status**: Fixed in fawadhs-tools frontend
+
+The Shopify connect flow requires authenticated users with Pro tier. Several auth-related issues were identified and fixed:
+
+1. **Profile API Response Parsing** - Fixed extraction of `response.data`
+2. **Infinite Loop** - Fixed useEffect dependencies causing API spam
+3. **Rate Limiting** - Fixed by resolving infinite loop issue
+
+### Shopify Partner App Setup
+**Status**: Pending
+
+Cannot test OAuth flow until Shopify Partner account is set up:
+- Register at partners.shopify.com
+- Create app in Partner Dashboard
+- Configure redirect URLs
+- Get API credentials
 
 ---
 
@@ -162,4 +185,4 @@ _Details will be added as we progress through earlier phases._
 
 ---
 
-**Last Updated**: January 21, 2026
+**Last Updated**: January 26, 2026
