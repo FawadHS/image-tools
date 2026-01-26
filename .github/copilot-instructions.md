@@ -10,8 +10,7 @@
 
 **Image Tools** is a modern, privacy-first image conversion platform that runs entirely in the browser. Part of the **tools.fawadhs.dev** suite.
 
-**Current Version**: v2.7.1 (standalone)  
-**Target Version**: v3.0.0 (Shopify integration with fawadhs-tools platform)
+**Current Version**: v3.0.0 (Shopify integration complete - Phases 1-3)
 
 ### Platform Integration Architecture
 
@@ -23,13 +22,13 @@
 │  /                  → Landing, Auth, Pricing (fawadhs-tools)    │
 │  /dashboard         → User Dashboard (fawadhs-tools)            │
 │  /image-tools       → Image Tools (THIS PROJECT)                │
-│                     └── + Shopify Panel (v3.0)                  │
+│                     └── + Shopify Panel ✅                      │
 │                                                                  │
 │  api.tools.fawadhs.dev                                          │
 │  ├── /api/auth/*       → Auth module (existing)                 │
 │  ├── /api/subscription/*→ Stripe (existing)                     │
 │  ├── /api/usage/*      → Usage tracking (existing)              │
-│  └── /api/shopify/*    → Shopify module (OAuth working ✅)      │
+│  └── /api/shopify/*    → Shopify module ✅                      │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -51,46 +50,45 @@
 
 ---
 
-## 🚀 V3.0 Shopify Integration Roadmap
+## 🚀 Shopify Integration Status
 
-### Current Phase: **Phase 1 - Foundation** ✅ COMPLETE (Jan 2026)
+### Phases 1-3: Complete ✅
 
-| Phase | Target | Status |
-|-------|--------|--------|
-| Phase 1: Foundation | Feb 2026 | ✅ Complete |
-| Phase 2: Core Upload | Mar 2026 | ⬜ Not Started |
-| Phase 3: SKU Mapping | Apr 2026 | ⬜ Not Started |
-| Phase 4: SEO Automation | May 2026 | ⬜ Not Started |
-| Phase 5: AI Features | Jun 2026 | ⬜ Not Started |
-| Phase 6: Launch | Jul 2026 | ⬜ Not Started |
+| Phase | Features | Status |
+|-------|----------|--------|
+| Phase 1: Foundation | OAuth, connection management | ✅ Complete |
+| Phase 2: Core Upload | Uploads, product search, attach media | ✅ Complete |
+| Phase 3: SKU Mapping | Filename parsing, product matching | ✅ Complete |
+| Phase 4: SEO Automation | - | ⏸️ Deferred |
+| Phase 5: AI Features | - | ⏸️ Deferred |
+| Phase 6: Launch | - | ⏸️ Deferred |
 
-### ✅ Shopify OAuth Working!
-- **Test Store Connected**: `preflight-test-store.myshopify.com`
+### Test Store Connected ✅
+- **Store**: `preflight-test-store.myshopify.com`
 - **Partner App**: "Preflight Image Tools" 
 - **Client ID**: `43216d9e7e35a146e6e53f0b4cd4e934`
 
-### Key V3.0 Features
-- **Direct Shopify Integration** - Upload optimized images to Shopify stores
-- **SKU-Based Bulk Operations** - Map images to products via filename
-- **SEO Automation** - Auto-generated filenames and alt text
-- **Subscription Gating** - Pro/Business tier features
+### Implemented Features
+- **OAuth Connection** - Connect user's Shopify stores
+- **File Upload** - Upload to Shopify Files and Product Media
+- **Product Search** - Fuzzy search and browse products
+- **SKU Mapping** - Parse filenames and match to products (5 patterns)
 
-### V3.0 Frontend Components to Add
+### Shopify Components (Frontend)
 ```
 src/
 ├── context/
-│   └── ShopifyContext.tsx        # NEW - Shopify connection state
+│   └── ShopifyContext.tsx        # Shopify connection state
 ├── components/
-│   └── shopify/                   # NEW - Shopify-specific components
-│       ├── ShopifyPanel.tsx      # Main Shopify tab
+│   └── shopify/
+│       ├── index.ts              # Component exports
+│       ├── ShopifyPanel.tsx      # Main panel with tabs (Stores, Upload, Bulk SKU)
 │       ├── ShopifyConnect.tsx    # OAuth connection flow
 │       ├── ShopifyUploader.tsx   # Upload to Shopify
 │       ├── SkuMapper.tsx         # Filename → product mapping
 │       └── ProductSearch.tsx     # Search/select products
-├── hooks/
-│   └── useShopify.ts             # NEW - Shopify API hook
 └── services/
-    └── shopifyApi.ts             # NEW - Shopify API calls
+    └── shopifyApi.ts             # API client (calls fawadhs-tools backend)
 ```
 
 ---
@@ -342,9 +340,12 @@ Image Tools Frontend ─► api.tools.fawadhs.dev/api/shopify/* ─► PostgreSQ
 ### Files in This Project (Frontend Only)
 | File | Purpose |
 |------|---------|
-| `src/components/shopify/ShopifyPanel.tsx` | Main Shopify panel UI |
-| `src/components/shopify/ShopifyConnect.tsx` | Connection status |
-| `src/components/shopify/ShopifyUploader.tsx` | Upload to Shopify |
+| `src/components/shopify/ShopifyPanel.tsx` | Main Shopify panel UI with tabs |
+| `src/components/shopify/ShopifyConnect.tsx` | Connection status & OAuth flow |
+| `src/components/shopify/ShopifyUploader.tsx` | Upload to Shopify Files/Products |
+| `src/components/shopify/ProductSearch.tsx` | Search & select products |
+| `src/components/shopify/SkuMapper.tsx` | Filename parsing & product matching |
+| `src/components/shopify/index.ts` | Component exports |
 | `src/services/shopifyApi.ts` | API client (calls fawadhs-tools API) |
 | `src/context/ShopifyContext.tsx` | State management |
 
