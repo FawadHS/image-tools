@@ -106,6 +106,54 @@ export interface ProductSearchResponse {
   hasMore: boolean;
 }
 
+// ==================== SKU Mapping Types ====================
+
+export type PatternType = 'sku-prefix' | 'sku-suffix' | 'handle' | 'sku-anywhere' | 'custom';
+export type SeparatorType = '-' | '_' | '.';
+export type PositionIndicator = 'number' | 'front' | 'back' | 'side' | 'detail' | 'none';
+
+export interface SkuMappingConfig {
+  pattern: PatternType;
+  separator: SeparatorType;
+  customRegex?: string;
+  extractPosition: boolean;
+}
+
+export interface ParsedFilename {
+  originalFilename: string;
+  identifier: string | null;
+  position: number | null;
+  viewAngle: PositionIndicator;
+  extension: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface ProductInfo {
+  id: string;
+  title: string;
+  handle: string;
+  sku: string | null;
+  featuredImage: string | null;
+}
+
+export interface SkuMatchResult {
+  filename: string;
+  parsed: ParsedFilename;
+  matched: boolean;
+  product: ProductInfo | null;
+  matchType: 'sku' | 'handle' | 'manual' | null;
+}
+
+export interface SkuMappingResponse {
+  results: SkuMatchResult[];
+  summary: {
+    total: number;
+    matched: number;
+    unmatched: number;
+    byMatchType: Record<string, number>;
+  };
+}
+
 // ==================== API Methods ====================
 
 export const shopifyApi = {
@@ -270,6 +318,45 @@ export const shopifyApi = {
       method: 'POST',
       body: JSON.stringify({ connectionId, productId, mediaIds: mediaUrls }),
     });
+  },
+
+  // ==================== SKU Mapping Methods ====================
+
+  /**
+   * Parse filenames to extract identifiers (no product matching)
+   */
+  async parseFilenames(
+    filenames: string[],
+    config: SkuMappingConfig
+  ): Promise<{ parsed: ParsedFilename[] }> {
+    return apiRequest('/api/shopify/sku-mapping/parse', {
+      method: 'POST',
+      body: JSON.stringify({ filenames, config }),
+    });
+  },
+
+  /**
+   * Map filenames to products (full SKU matching)
+   */
+  async mapFilesToProducts(
+    connectionId: string,
+    filenames: string[],
+    config: SkuMappingConfig
+  ): Promise<SkuMappingResponse> {
+    return apiRequest('/api/shopify/sku-mapping/match', {
+      method: 'POST',
+      body: JSON.stringify({ connectionId, filenames, config }),
+    });
+  },
+
+  /**
+   * Build product index (get stats)
+   */
+  async buildProductIndex(
+    connectionId: string
+  ): Promise<{ skuCount: number; handleCount: number; productCount: number }> {
+    const params = new URLSearchParams({ connectionId });
+    return apiRequest(`/api/shopify/sku-mapping/index?${params}`);
   },
 };
 
