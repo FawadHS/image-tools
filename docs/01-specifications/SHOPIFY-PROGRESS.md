@@ -40,13 +40,13 @@
 | Phase | Target | Progress | Status |
 |-------|--------|----------|--------|
 | Phase 1: Foundation | Feb 2026 | 100% | ✅ Complete |
-| Phase 2: Core Upload | Mar 2026 | 60% | 🔄 In Progress |
+| Phase 2: Core Upload | Mar 2026 | 75% | 🔄 In Progress |
 | Phase 3: SKU Mapping | Apr 2026 | 0% | ⬜ Not Started |
 | Phase 4: SEO Automation | May 2026 | 0% | ⬜ Not Started |
 | Phase 5: AI Features | Jun 2026 | 0% | ⬜ Not Started |
 | Phase 6: Launch | Jul 2026 | 0% | ⬜ Not Started |
 
-**Overall**: `30%` Complete
+**Overall**: `35%` Complete
 
 ---
 
@@ -192,15 +192,23 @@
 | Complete upload endpoint | ✅ Done | POST /api/shopify/upload/complete |
 | Error handling/retry | 🔄 Partial | Basic error handling |
 
-### 2.2 Frontend Upload UI
+### 2.2 Product Media Attachment
+| Task | Status | Notes |
+|------|--------|-------|
+| `productCreateMedia` mutation | ✅ Done | Attach media to product |
+| Get product endpoint | ✅ Done | GET /api/shopify/products/:id |
+| Attach media endpoint | ✅ Done | POST /api/shopify/products/attach-media |
+| Frontend API methods | ✅ Done | getProduct, attachMediaToProduct |
+
+### 2.3 Frontend Upload UI
 | Task | Status | Notes |
 |------|--------|-------|
 | `ShopifyUploader` component | ✅ Done | Full upload flow |
 | Connection selector | ✅ Done | Multiple stores support |
 | Upload progress indicator | ✅ Done | Real-time progress |
 | Success/failure summary | ✅ Done | Clear messages |
-| Destination selector (Files/Product) | ⬜ Todo | Currently files only |
-| Product search/select | ⬜ Todo | For product media |
+| Destination selector (Files/Product) | ⬜ Todo | UI component needed |
+| Product search/select | ⬜ Todo | UI component needed |
 
 ### 2.3 Shopify Presets
 | Task | Status | Notes |
@@ -227,9 +235,13 @@ _Details will be added as we progress through earlier phases._
 - ✅ Added `/api/shopify/upload/complete` endpoint
 - ✅ Updated frontend `uploadToStaged` to pass filename correctly
 - ✅ Added `completeUpload` API call in ShopifyUploader component
+- ✅ Added `productCreateMedia` mutation for attaching media to products
+- ✅ Added GET `/api/shopify/products/:id` endpoint
+- ✅ Added POST `/api/shopify/products/attach-media` endpoint
+- ✅ Added frontend API methods: `getProduct`, `attachMediaToProduct`
 - ✅ Deployed backend and frontend to production
-- 📋 Phase 2: Core Upload is now 60% complete!
-- 📋 Remaining: Destination selector, Product search/select
+- 📋 Phase 2: Core Upload is now 75% complete!
+- 📋 Remaining: UI for destination selector and product search/select
 
 ### January 26, 2026 (Session 1)
 - ✅ Fixed OAuth HMAC verification - was missing `host` param in signature calc
