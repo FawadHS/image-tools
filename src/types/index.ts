@@ -77,6 +77,10 @@ export type PresetType =
   | 'hero-banner'
   | 'blog-content'
   | 'background'
+  | 'shopify-collection'
+  | 'shopify-product-detail'
+  | 'social-instagram'
+  | 'social-pinterest'
   | 'custom';
 
 export interface Preset {

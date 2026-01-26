@@ -41,6 +41,40 @@ export const presets: Record<PresetType, Preset> = {
     maxWidth: 1920,
     maxHeight: 1080,
   },
+  // Shopify-specific presets (v3.0)
+  'shopify-collection': {
+    id: 'shopify-collection',
+    name: 'Shopify Collection',
+    description: 'Square images for Shopify collection thumbnails',
+    quality: 85,
+    maxWidth: 600,
+    maxHeight: 600,
+  },
+  'shopify-product-detail': {
+    id: 'shopify-product-detail',
+    name: 'Shopify Product Detail',
+    description: 'High-res images for Shopify product pages with zoom',
+    quality: 90,
+    maxWidth: 2048,
+    maxHeight: 2048,
+  },
+  // Social media presets
+  'social-instagram': {
+    id: 'social-instagram',
+    name: 'Instagram Square',
+    description: 'Square images optimized for Instagram posts',
+    quality: 85,
+    maxWidth: 1080,
+    maxHeight: 1080,
+  },
+  'social-pinterest': {
+    id: 'social-pinterest',
+    name: 'Pinterest Pin',
+    description: 'Tall images optimized for Pinterest pins',
+    quality: 85,
+    maxWidth: 1000,
+    maxHeight: 1500,
+  },
   'custom': {
     id: 'custom',
     name: 'Custom',
