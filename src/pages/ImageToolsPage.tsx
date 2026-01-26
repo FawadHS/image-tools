@@ -12,14 +12,30 @@ import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
 import { ReviewForm } from '../components/ReviewForm';
 import { ReviewsList } from '../components/ReviewsList';
+import { ShopifyPanel } from '../components/shopify/ShopifyPanel';
 import { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useHeicConversion } from '../hooks/useHeicConversion';
+
+// Check if user is authenticated (from fawadhs-tools auth store)
+function isUserAuthenticated(): boolean {
+  try {
+    const authStore = localStorage.getItem('auth-storage');
+    if (authStore) {
+      const parsed = JSON.parse(authStore);
+      return !!parsed?.state?.isAuthenticated;
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return false;
+}
 
 // Inner component that uses hooks requiring ConverterProvider context
 const ImageToolsContent = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
+  const isAuthenticated = isUserAuthenticated();
   
   // Auto-convert HEIC files when added
   useHeicConversion();
@@ -72,6 +88,8 @@ const ImageToolsContent = () => {
                 <CropTool />
                 <TextOverlayTool />
                 <SettingsPanel />
+                {/* Shopify Panel - Only show for authenticated users */}
+                {isAuthenticated && <ShopifyPanel />}
               </div>
             </div>
           </div>
