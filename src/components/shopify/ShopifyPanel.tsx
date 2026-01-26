@@ -102,7 +102,8 @@ function getUserTier(): string {
     const authStore = localStorage.getItem('auth-storage');
     if (authStore) {
       const parsed = JSON.parse(authStore);
-      return parsed?.state?.user?.subscriptionTier || 'free';
+      // Try both possible field names (tier for zustand store, subscriptionTier for backup)
+      return parsed?.state?.user?.tier || parsed?.state?.user?.subscriptionTier || 'free';
     }
   } catch {
     // Ignore parse errors
