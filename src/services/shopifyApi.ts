@@ -8,13 +8,22 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://api.tools.fawadhs.dev';
 
 /**
  * Get auth token from localStorage (shared with main platform)
+ * The main fawadhs-tools app stores the token in two places:
+ * 1. Zustand persist store: auth-storage -> state.token
+ * 2. Direct localStorage: 'token'
  */
 function getAuthToken(): string | null {
   try {
+    // First try: Direct 'token' key (set by fawadhs-tools setAuth)
+    const directToken = localStorage.getItem('token');
+    if (directToken) {
+      return directToken;
+    }
+    
+    // Second try: Zustand persist store
     const authStore = localStorage.getItem('auth-storage');
     if (authStore) {
       const parsed = JSON.parse(authStore);
-      // fawadhs-tools stores token as 'token', not 'accessToken'
       return parsed?.state?.token || null;
     }
   } catch {
