@@ -7,6 +7,34 @@
 
 ---
 
+## 🏗️ Architecture Overview
+
+**SINGLE SOURCE OF TRUTH**: All Shopify backend logic is in `fawadhs-tools/backend/src/modules/shopify/`
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Shopify Integration                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  fawadhs-tools/frontend        Image Tools/src                 │
+│  └─ SettingsPage.tsx           └─ components/shopify/          │
+│     (OAuth connection)            (Upload UI)                   │
+│           │                            │                        │
+│           └──────────┬─────────────────┘                        │
+│                      ▼                                          │
+│         api.tools.fawadhs.dev/api/shopify/*                    │
+│         fawadhs-tools/backend/src/modules/shopify/             │
+│                      │                                          │
+│                      ▼                                          │
+│              PostgreSQL (ShopifyConnection table)              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**See**: `fawadhs-tools/docs/04-development/SHOPIFY-ARCHITECTURE.md` for full details.
+
+---
+
 ## 📊 Overall Progress
 
 | Phase | Target | Progress | Status |
@@ -24,23 +52,26 @@
 
 ## 🐛 Known Issues (Jan 26, 2026)
 
-### Auth Integration Issues
-**Status**: Fixed in fawadhs-tools frontend
+### OAuth HMAC Verification Failing
+**Status**: 🔴 Blocking
 
-The Shopify connect flow requires authenticated users with Pro tier. Several auth-related issues were identified and fixed:
+When user completes Shopify OAuth, the callback returns "Invalid OAuth signature".
+Debug logging has been added to investigate.
+
+### Auth Integration Issues
+**Status**: ✅ Fixed
 
 1. **Profile API Response Parsing** - Fixed extraction of `response.data`
 2. **Infinite Loop** - Fixed useEffect dependencies causing API spam
 3. **Rate Limiting** - Fixed by resolving infinite loop issue
 
-### Shopify Partner App Setup
-**Status**: Pending
+### Shopify Partner App
+**Status**: ✅ Created
 
-Cannot test OAuth flow until Shopify Partner account is set up:
-- Register at partners.shopify.com
-- Create app in Partner Dashboard
-- Configure redirect URLs
-- Get API credentials
+- App Name: Preflight Image Tools
+- Client ID: `43216d9e7e35a146e6e53f0b4cd4e934`
+- Redirect URL: `https://api.tools.fawadhs.dev/api/shopify/auth/callback`
+- Scopes: `read_files`, `write_files`, `read_products`, `write_products`
 
 ---
 

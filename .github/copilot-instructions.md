@@ -316,4 +316,49 @@ cd ../fawadhs-tools
 
 ---
 
-**Last Updated**: January 21, 2026 (v3.0.0 Roadmap Start)
+## 🏪 Shopify Integration (CRITICAL)
+
+### Single Source of Truth
+**The Shopify backend is in fawadhs-tools, NOT here.**
+Image Tools only has frontend components that call the shared API.
+
+### Architecture
+```
+Image Tools Frontend ─► api.tools.fawadhs.dev/api/shopify/* ─► PostgreSQL
+                       (fawadhs-tools backend)
+```
+
+### DO NOT:
+- ❌ Create any Shopify backend code in Image Tools
+- ❌ Store Shopify tokens locally
+- ❌ Create duplicate API endpoints
+- ❌ Hardcode API URLs
+
+### Files in This Project (Frontend Only)
+| File | Purpose |
+|------|---------|
+| `src/components/shopify/ShopifyPanel.tsx` | Main Shopify panel UI |
+| `src/components/shopify/ShopifyConnect.tsx` | Connection status |
+| `src/components/shopify/ShopifyUploader.tsx` | Upload to Shopify |
+| `src/services/shopifyApi.ts` | API client (calls fawadhs-tools API) |
+| `src/context/ShopifyContext.tsx` | State management |
+
+### Authentication
+Image Tools reads the auth token from localStorage set by fawadhs-tools:
+```typescript
+// Reads from fawadhs-tools auth storage
+const token = localStorage.getItem('token') 
+           || JSON.parse(localStorage.getItem('auth-storage')).state.token;
+```
+
+### API Base URL
+```typescript
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.tools.fawadhs.dev';
+```
+
+### Related Docs
+- **Backend Architecture**: See `fawadhs-tools/docs/04-development/SHOPIFY-ARCHITECTURE.md`
+
+---
+
+**Last Updated**: January 26, 2026 (v3.0.0 - Shopify Integration)
