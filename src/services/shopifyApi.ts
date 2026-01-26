@@ -214,7 +214,7 @@ export const shopifyApi = {
   },
 
   /**
-   * Search products by query
+   * Search products by query (fuzzy search - matches partial title, SKU, handle)
    */
   async searchProducts(
     connectionId: string,
@@ -227,6 +227,24 @@ export const shopifyApi = {
       limit: limit.toString(),
     });
     return apiRequest(`/api/shopify/products/search?${params}`);
+  },
+
+  /**
+   * List all products with pagination (for browse modal)
+   */
+  async listProducts(
+    connectionId: string,
+    limit: number = 20,
+    cursor?: string
+  ): Promise<ProductSearchResponse & { endCursor: string | null }> {
+    const params = new URLSearchParams({
+      connectionId,
+      limit: limit.toString(),
+    });
+    if (cursor) {
+      params.append('cursor', cursor);
+    }
+    return apiRequest(`/api/shopify/products?${params}`);
   },
 
   /**
