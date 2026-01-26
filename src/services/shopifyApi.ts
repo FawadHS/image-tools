@@ -14,7 +14,8 @@ function getAuthToken(): string | null {
     const authStore = localStorage.getItem('auth-storage');
     if (authStore) {
       const parsed = JSON.parse(authStore);
-      return parsed?.state?.accessToken || null;
+      // fawadhs-tools stores token as 'token', not 'accessToken'
+      return parsed?.state?.token || null;
     }
   } catch {
     // Ignore parse errors
