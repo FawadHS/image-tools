@@ -6,3 +6,4 @@
 export { ShopifyPanel } from './ShopifyPanel';
 export { ShopifyConnect } from './ShopifyConnect';
 export { ShopifyUploader } from './ShopifyUploader';
+export { ProductSearch } from './ProductSearch';

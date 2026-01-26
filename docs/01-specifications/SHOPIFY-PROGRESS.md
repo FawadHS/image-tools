@@ -2,7 +2,7 @@
 
 > **Version**: 3.0.0  
 > **Started**: January 21, 2026  
-> **Last Updated**: January 26, 2026  
+> **Last Updated**: January 26, 2026 (Session 3)  
 > **Target Completion**: July 2026  
 
 ---
@@ -40,13 +40,13 @@
 | Phase | Target | Progress | Status |
 |-------|--------|----------|--------|
 | Phase 1: Foundation | Feb 2026 | 100% | ✅ Complete |
-| Phase 2: Core Upload | Mar 2026 | 75% | 🔄 In Progress |
+| Phase 2: Core Upload | Mar 2026 | 100% | ✅ Complete |
 | Phase 3: SKU Mapping | Apr 2026 | 0% | ⬜ Not Started |
 | Phase 4: SEO Automation | May 2026 | 0% | ⬜ Not Started |
 | Phase 5: AI Features | Jun 2026 | 0% | ⬜ Not Started |
 | Phase 6: Launch | Jul 2026 | 0% | ⬜ Not Started |
 
-**Overall**: `35%` Complete
+**Overall**: `45%` Complete
 
 ---
 
@@ -190,7 +190,7 @@
 | Multipart form upload to staged URL | ✅ Done | Fixed POST method |
 | `fileCreate` mutation | ✅ Done | Backend completeFileUpload |
 | Complete upload endpoint | ✅ Done | POST /api/shopify/upload/complete |
-| Error handling/retry | 🔄 Partial | Basic error handling |
+| Error handling/retry | ✅ Done | Exponential backoff, 2 retries |
 
 ### 2.2 Product Media Attachment
 | Task | Status | Notes |
@@ -207,10 +207,12 @@
 | Connection selector | ✅ Done | Multiple stores support |
 | Upload progress indicator | ✅ Done | Real-time progress |
 | Success/failure summary | ✅ Done | Clear messages |
-| Destination selector (Files/Product) | ⬜ Todo | UI component needed |
-| Product search/select | ⬜ Todo | UI component needed |
+| Destination selector (Files/Product) | ✅ Done | Toggle between Files Library and Product |
+| Product search/select | ✅ Done | ProductSearch component with debounced search |
+| Retry failed uploads | ✅ Done | Manual retry button for failed uploads |
+| Partial success handling | ✅ Done | Shows detailed error info |
 
-### 2.3 Shopify Presets
+### 2.4 Shopify Presets
 | Task | Status | Notes |
 |------|--------|-------|
 | Add Collection Thumbnail preset | ✅ Done | 600×600, 85% |
@@ -227,6 +229,18 @@ _Details will be added as we progress through earlier phases._
 
 ## 📝 Session Log
 
+### January 26, 2026 (Session 3)
+- ✅ Added `ProductSearch` component with debounced search
+- ✅ Added destination selector (Files Library / Product)
+- ✅ Integrated ProductSearch with ShopifyUploader
+- ✅ Added retry logic with exponential backoff (2 retries, 1-2s delays)
+- ✅ Added "Retry Failed" button for partial upload failures
+- ✅ Added partial success state with detailed error display
+- ✅ Updated upload button to show destination context
+- ✅ Export ProductSearch from components/shopify/index.ts
+- ✅ Frontend builds successfully
+- 🎉 **Phase 2: Core Upload is now 100% complete!**
+
 ### January 26, 2026 (Session 2)
 - ✅ Fixed 403 error on staged uploads - was using PUT instead of POST
 - ✅ Changed `httpMethod: 'PUT'` to `httpMethod: 'POST'` in backend
@@ -240,6 +254,7 @@ _Details will be added as we progress through earlier phases._
 - ✅ Added POST `/api/shopify/products/attach-media` endpoint
 - ✅ Added frontend API methods: `getProduct`, `attachMediaToProduct`
 - ✅ Deployed backend and frontend to production
+- ✅ **TESTED: Image upload to Shopify Files library working!** 🎉
 - 📋 Phase 2: Core Upload is now 75% complete!
 - 📋 Remaining: UI for destination selector and product search/select
 
