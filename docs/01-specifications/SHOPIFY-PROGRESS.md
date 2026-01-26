@@ -41,7 +41,7 @@
 |-------|--------|----------|--------|
 | Phase 1: Foundation | Feb 2026 | 100% | ✅ Complete |
 | Phase 2: Core Upload | Mar 2026 | 100% | ✅ Complete |
-| Phase 3: SKU Mapping | Apr 2026 | 0% | ⬜ Not Started |
+| Phase 3: SKU Mapping | Apr 2026 | 0% | 🔄 Starting |
 | Phase 4: SEO Automation | May 2026 | 0% | ⬜ Not Started |
 | Phase 5: AI Features | Jun 2026 | 0% | ⬜ Not Started |
 | Phase 6: Launch | Jul 2026 | 0% | ⬜ Not Started |
@@ -208,7 +208,9 @@
 | Upload progress indicator | ✅ Done | Real-time progress |
 | Success/failure summary | ✅ Done | Clear messages |
 | Destination selector (Files/Product) | ✅ Done | Toggle between Files Library and Product |
-| Product search/select | ✅ Done | ProductSearch component with debounced search |
+| Product search/select | ✅ Done | ProductSearch with fuzzy search |
+| Fuzzy search with wildcards | ✅ Done | title:*query* OR sku:*query* OR handle:*query* |
+| Browse all products modal | ✅ Done | Paginated grid with cursor-based pagination |
 | Retry failed uploads | ✅ Done | Manual retry button for failed uploads |
 | Partial success handling | ✅ Done | Shows detailed error info |
 
@@ -239,6 +241,10 @@ _Details will be added as we progress through earlier phases._
 - ✅ Updated upload button to show destination context
 - ✅ Export ProductSearch from components/shopify/index.ts
 - ✅ Frontend builds successfully
+- ✅ **Improved search with fuzzy matching** (wildcards: title:*query* OR sku:*query* OR handle:*query*)
+- ✅ **Added "Browse All" products modal** with cursor-based pagination
+- ✅ **Added GET /api/shopify/products endpoint** for listing all products
+- ✅ **Added `listProducts` method** to backend service and frontend API
 - 🎉 **Phase 2: Core Upload is now 100% complete!**
 
 ### January 26, 2026 (Session 2)

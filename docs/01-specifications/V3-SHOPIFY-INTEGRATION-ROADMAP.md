@@ -34,8 +34,8 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  Phase 1: Foundation          Feb 2026       ████████████ 100%  ✅     │
-│  Phase 2: Core Upload         Mar 2026       ███████░░░░░  60%  🔄     │
-│  Phase 3: SKU & Bulk          Apr 2026       ░░░░░░░░░░░░   0%         │
+│  Phase 2: Core Upload         Mar 2026       ████████████ 100%  ✅     │
+│  Phase 3: SKU & Bulk          Apr 2026       ░░░░░░░░░░░░   0%  🔄     │
 │  Phase 4: SEO & Audit         May 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 5: AI Features         Jun 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 6: Polish & Launch     Jul 2026       ░░░░░░░░░░░░   0%         │
@@ -108,7 +108,7 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 
 ## Phase 2: Core Upload Functionality (4 weeks)
 **Target**: March 2026  
-**Status**: 🔄 In Progress (60%)
+**Status**: ✅ Complete
 
 ### 2.1 Staged Upload Implementation
 | Task | Priority | Complexity | Status | Notes |
@@ -122,19 +122,21 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 ### 2.2 Product Media Attachment
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| `productUpdate` mutation | High | Medium | ⬜ Todo | Attach media to product |
-| Media ordering | Medium | Low | ⬜ Todo | Position in gallery |
-| Variant image assignment | Medium | Medium | ⬜ Todo | Link to specific variant |
-| Product search endpoint | High | Medium | ✅ Done | Find by title/SKU/handle |
+| `productCreateMedia` mutation | High | Medium | ✅ Done | Attach media to product |
+| Media ordering | Medium | Low | ⬜ Deferred | Position in gallery (Phase 3) |
+| Variant image assignment | Medium | Medium | ⬜ Deferred | Link to specific variant (Phase 3) |
+| Product search endpoint | High | Medium | ✅ Done | Fuzzy search with wildcards |
+| Product list/browse endpoint | High | Medium | ✅ Done | Paginated browse modal |
 
 ### 2.3 Frontend: Upload UI
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
 | ShopifyUploader component | High | Medium | ✅ Done | Main upload panel |
-| Destination selector | High | Low | ⬜ Todo | Files vs Product media |
-| Product search/select | High | Medium | ⬜ Todo | If uploading to product |
+| Destination selector | High | Low | ✅ Done | Files vs Product media toggle |
+| Product search/select | High | Medium | ✅ Done | Fuzzy search + browse modal |
 | Upload progress indicator | High | Medium | ✅ Done | Real-time status |
 | Success/failure summary | High | Low | ✅ Done | Results display |
+| Retry logic | High | Medium | ✅ Done | Exponential backoff, 2 retries |
 
 ### 2.4 Shopify Presets
 | Task | Priority | Complexity | Status | Notes |
@@ -154,10 +156,12 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 
 ### Phase 2 Deliverables
 - [x] Can upload single image to Shopify Files
-- [ ] Can attach image to specific product
+- [x] Can attach image to specific product
 - [x] Upload progress shown in UI
 - [x] Shopify presets available
-- [x] Basic error handling working
+- [x] Error handling with retry logic
+- [x] Fuzzy product search (title, SKU, handle)
+- [x] Browse all products modal with pagination
 
 ---
 
