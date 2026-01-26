@@ -39,24 +39,30 @@
 
 | Phase | Target | Progress | Status |
 |-------|--------|----------|--------|
-| Phase 1: Foundation | Feb 2026 | 95% | 🔄 Almost Complete |
+| Phase 1: Foundation | Feb 2026 | 100% | ✅ Complete |
 | Phase 2: Core Upload | Mar 2026 | 0% | ⬜ Not Started |
 | Phase 3: SKU Mapping | Apr 2026 | 0% | ⬜ Not Started |
 | Phase 4: SEO Automation | May 2026 | 0% | ⬜ Not Started |
 | Phase 5: AI Features | Jun 2026 | 0% | ⬜ Not Started |
 | Phase 6: Launch | Jul 2026 | 0% | ⬜ Not Started |
 
-**Overall**: `18%` Complete
+**Overall**: `20%` Complete
 
 ---
 
-## 🐛 Known Issues (Jan 26, 2026)
+## ✅ Resolved Issues (Jan 26, 2026)
 
-### OAuth HMAC Verification Failing
-**Status**: 🔴 Blocking
+### OAuth HMAC Verification
+**Status**: ✅ Fixed
 
-When user completes Shopify OAuth, the callback returns "Invalid OAuth signature".
-Debug logging has been added to investigate.
+**Problem**: Shopify OAuth callback returned "Invalid OAuth signature".
+
+**Root Cause**: HMAC verification was only including 4 query params (`code`, `shop`, `state`, `timestamp`), but Shopify sends additional params like `host` that must be included in the signature calculation.
+
+**Solution**: 
+- Added `.passthrough()` to Zod schema to accept all query params
+- Modified controller to pass raw query object instead of extracted params
+- Updated service to verify HMAC against ALL callback params
 
 ### Auth Integration Issues
 **Status**: ✅ Fixed
@@ -66,12 +72,13 @@ Debug logging has been added to investigate.
 3. **Rate Limiting** - Fixed by resolving infinite loop issue
 
 ### Shopify Partner App
-**Status**: ✅ Created
+**Status**: ✅ Created & Working
 
 - App Name: Preflight Image Tools
 - Client ID: `43216d9e7e35a146e6e53f0b4cd4e934`
 - Redirect URL: `https://api.tools.fawadhs.dev/api/shopify/auth/callback`
 - Scopes: `read_files`, `write_files`, `read_products`, `write_products`
+- **Test Store Connected**: `preflight-test-store.myshopify.com` ✅
 
 ---
 
@@ -130,12 +137,12 @@ Debug logging has been added to investigate.
 ### 1.3 Shopify Partner Setup
 | Task | Status | Notes |
 |------|--------|-------|
-| Register Shopify Partner account | ⬜ Todo | partners.shopify.com |
-| Create app in Partner Dashboard | ⬜ Todo | |
-| Configure OAuth URLs | ⬜ Todo | |
-| Set required scopes | ⬜ Todo | write_files, write_products, read_products |
-| Create development store | ⬜ Todo | |
-| Get API credentials | ⬜ Todo | |
+| Register Shopify Partner account | ✅ Done | partners.shopify.com |
+| Create app in Partner Dashboard | ✅ Done | "Preflight Image Tools" |
+| Configure OAuth URLs | ✅ Done | api.tools.fawadhs.dev/api/shopify/auth/callback |
+| Set required scopes | ✅ Done | read_files, write_files, read_products, write_products |
+| Create development store | ✅ Done | preflight-test-store.myshopify.com |
+| Get API credentials | ✅ Done | Client ID: 43216d9e7e35a146e6e53f0b4cd4e934 |
 
 ### 1.4 OAuth Implementation
 | Task | Status | Notes |
@@ -196,6 +203,14 @@ _Details will be added as we progress through earlier phases._
 ---
 
 ## 📝 Session Log
+
+### January 26, 2026
+- ✅ Fixed OAuth HMAC verification - was missing `host` param in signature calc
+- ✅ Updated Zod schema with `.passthrough()` to accept all Shopify params
+- ✅ Successfully connected test store: `preflight-test-store.myshopify.com`
+- ✅ Shopify Partner App fully configured and working
+- ✅ Phase 1: Foundation is now 100% complete!
+- 📋 Ready to begin Phase 2: Core Upload
 
 ### January 21, 2026
 - ✅ Reviewed V3 Shopify Integration Spec against existing codebase
