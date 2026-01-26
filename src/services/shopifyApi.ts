@@ -228,6 +228,31 @@ export const shopifyApi = {
     });
     return apiRequest(`/api/shopify/products/search?${params}`);
   },
+
+  /**
+   * Get a single product by ID
+   */
+  async getProduct(
+    connectionId: string,
+    productId: string
+  ): Promise<{ product: ShopifyProduct }> {
+    const params = new URLSearchParams({ connectionId });
+    return apiRequest(`/api/shopify/products/${encodeURIComponent(productId)}?${params}`);
+  },
+
+  /**
+   * Attach media to a product
+   */
+  async attachMediaToProduct(
+    connectionId: string,
+    productId: string,
+    mediaUrls: string[]
+  ): Promise<{ productId: string; mediaCount: number }> {
+    return apiRequest('/api/shopify/products/attach-media', {
+      method: 'POST',
+      body: JSON.stringify({ connectionId, productId, mediaIds: mediaUrls }),
+    });
+  },
 };
 
 export default shopifyApi;
