@@ -165,19 +165,23 @@ export const shopifyApi = {
 
   /**
    * Upload file to staged URL
+   * For POST method, use multipart form-data with all parameters
    */
   async uploadToStaged(
     stagedTarget: StagedUploadTarget,
-    file: Blob
-  ): Promise<void> {
+    file: Blob,
+    filename: string
+  ): Promise<string> {
     // Build FormData with parameters from Shopify
     const formData = new FormData();
     
+    // Add all parameters from Shopify (order matters!)
     for (const param of stagedTarget.parameters) {
       formData.append(param.name, param.value);
     }
     
-    formData.append('file', file);
+    // Add file last with proper filename
+    formData.append('file', file, filename);
 
     const response = await fetch(stagedTarget.url, {
       method: 'POST',
@@ -185,8 +189,28 @@ export const shopifyApi = {
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error('[Shopify Upload] Staged upload failed:', response.status, errorText);
       throw new Error(`Upload failed: ${response.status}`);
     }
+
+    // Return the resourceUrl for completing the upload
+    return stagedTarget.resourceUrl;
+  },
+
+  /**
+   * Complete file upload by creating the file in Shopify
+   */
+  async completeUpload(
+    connectionId: string,
+    resourceUrl: string,
+    filename: string,
+    altText?: string
+  ): Promise<{ fileId: string }> {
+    return apiRequest('/api/shopify/upload/complete', {
+      method: 'POST',
+      body: JSON.stringify({ connectionId, resourceUrl, filename, altText }),
+    });
   },
 
   /**

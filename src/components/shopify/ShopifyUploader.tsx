@@ -73,11 +73,18 @@ export function ShopifyUploader() {
       for (let i = 0; i < completedFiles.length; i++) {
         const file = completedFiles[i];
         const target = stagedTargets[i];
+        const filename = file.result!.filename;
 
         try {
-          await shopifyApi.uploadToStaged(target, file.result!.blob);
+          // Step 1: Upload to staged URL
+          const resourceUrl = await shopifyApi.uploadToStaged(target, file.result!.blob, filename);
+          
+          // Step 2: Complete upload - register in Shopify Files
+          await shopifyApi.completeUpload(activeConnection.id, resourceUrl, filename);
+          
           completed++;
-        } catch {
+        } catch (err) {
+          console.error(`[Shopify Upload] Failed for ${filename}:`, err);
           failed++;
         }
 
@@ -97,6 +104,7 @@ export function ShopifyUploader() {
       }));
 
     } catch (error) {
+      console.error('[Shopify Upload] Batch upload error:', error);
       setUploadProgress(prev => ({
         ...prev,
         status: 'error',
