@@ -6,17 +6,30 @@
 import { ShopifyProvider } from '../../context/ShopifyContext';
 import { ShopifyConnect } from './ShopifyConnect';
 import { ShopifyUploader } from './ShopifyUploader';
+import { SkuMapper } from './SkuMapper';
 import { useShopify } from '../../context/ShopifyContext';
-import { Store, Upload, Crown, ExternalLink } from 'lucide-react';
+import { useConverter } from '../../context/ConverterContext';
+import { Store, Upload, Crown, ExternalLink, FileStack } from 'lucide-react';
 import { useState } from 'react';
+import type { SkuMatchResult } from '../../services/shopifyApi';
+import type { SelectedFile } from '../../types';
 
-type TabType = 'connect' | 'upload';
+type TabType = 'connect' | 'upload' | 'bulk';
 
 function ShopifyPanelContent() {
   const { connections } = useShopify();
+  const { state: converterState } = useConverter();
   const [activeTab, setActiveTab] = useState<TabType>('connect');
+  const [showSkuMapper, setShowSkuMapper] = useState(false);
+  const [skuMappingResults, setSkuMappingResults] = useState<SkuMatchResult[] | null>(null);
 
   const hasActiveConnection = connections.some(c => c.status === 'active');
+  
+  // Get completed files
+  const completedFiles: SelectedFile[] = converterState.files.filter(
+    (f: SelectedFile) => f.status === 'completed' && f.result
+  );
+  const filenames = completedFiles.map((f: SelectedFile) => f.result!.filename);
 
   // Check if user is logged in to the main platform
   const isPlatformAuthenticated = isUserAuthenticated();
@@ -113,12 +126,130 @@ function ShopifyPanelContent() {
             <Upload className="w-4 h-4" />
             Upload
           </button>
+          <button
+            onClick={() => setActiveTab('bulk')}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'bulk'
+                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            <FileStack className="w-4 h-4" />
+            Bulk SKU
+          </button>
         </div>
       )}
 
       {/* Tab Content */}
       {activeTab === 'connect' && <ShopifyConnect />}
       {activeTab === 'upload' && hasActiveConnection && <ShopifyUploader />}
+      {activeTab === 'bulk' && hasActiveConnection && (
+        <div className="space-y-4">
+          {/* Bulk SKU Upload Info */}
+          {!showSkuMapper && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Bulk SKU Upload
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Upload multiple images and automatically match them to products 
+                using SKU or product handle patterns in filenames.
+              </p>
+              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
+                <p>• <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">SKU-12345.jpg</code> → matches product with SKU "12345"</p>
+                <p>• <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">red-sneakers.jpg</code> → matches product handle "red-sneakers"</p>
+                <p>• <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">ABC123_1.jpg</code> → matches SKU with position 1</p>
+              </div>
+              
+              {completedFiles.length > 0 ? (
+                <button
+                  onClick={() => setShowSkuMapper(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <FileStack className="w-4 h-4" />
+                  Start SKU Mapping ({completedFiles.length} files)
+                </button>
+              ) : (
+                <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No converted images available. Convert images first to use SKU mapping.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SKU Mapper */}
+          {showSkuMapper && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div 
+                className="absolute inset-0 bg-black/50" 
+                onClick={() => setShowSkuMapper(false)}
+              />
+              <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+                <SkuMapper
+                  filenames={filenames}
+                  onMappingComplete={(results) => {
+                    setSkuMappingResults(results);
+                    setShowSkuMapper(false);
+                    // TODO: Proceed to upload with mappings
+                    console.log('[ShopifyPanel] SKU mapping complete:', results);
+                  }}
+                  onCancel={() => setShowSkuMapper(false)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Mapping Results (after mapping is complete) */}
+          {skuMappingResults && !showSkuMapper && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Mapping Complete
+                </h4>
+                <button
+                  onClick={() => setSkuMappingResults(null)}
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                    {skuMappingResults.length}
+                  </div>
+                  <div className="text-xs text-gray-500">Total</div>
+                </div>
+                <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {skuMappingResults.filter(r => r.matched).length}
+                  </div>
+                  <div className="text-xs text-green-600 dark:text-green-400">Matched</div>
+                </div>
+                <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                  <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                    {skuMappingResults.filter(r => !r.matched).length}
+                  </div>
+                  <div className="text-xs text-yellow-600 dark:text-yellow-400">Unmatched</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  // TODO: Implement upload with mappings
+                  alert('Bulk upload with mappings coming soon!');
+                }}
+                disabled={skuMappingResults.filter(r => r.matched).length === 0}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                Upload {skuMappingResults.filter(r => r.matched).length} Matched Images
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
