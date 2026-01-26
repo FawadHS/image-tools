@@ -40,17 +40,31 @@
 | Phase | Target | Progress | Status |
 |-------|--------|----------|--------|
 | Phase 1: Foundation | Feb 2026 | 100% | ✅ Complete |
-| Phase 2: Core Upload | Mar 2026 | 0% | ⬜ Not Started |
+| Phase 2: Core Upload | Mar 2026 | 60% | 🔄 In Progress |
 | Phase 3: SKU Mapping | Apr 2026 | 0% | ⬜ Not Started |
 | Phase 4: SEO Automation | May 2026 | 0% | ⬜ Not Started |
 | Phase 5: AI Features | Jun 2026 | 0% | ⬜ Not Started |
 | Phase 6: Launch | Jul 2026 | 0% | ⬜ Not Started |
 
-**Overall**: `20%` Complete
+**Overall**: `30%` Complete
 
 ---
 
 ## ✅ Resolved Issues (Jan 26, 2026)
+
+### Staged Upload 403 Error
+**Status**: ✅ Fixed
+
+**Problem**: Shopify staged upload returned 403 Forbidden error.
+
+**Root Cause**: Backend was using `httpMethod: 'PUT'` and `resource: 'IMAGE'` but frontend was making POST requests with multipart form data.
+
+**Solution**: 
+- Changed `httpMethod: 'PUT'` to `httpMethod: 'POST'` in `callStagedUploadsCreate`
+- Changed `resource: 'IMAGE'` to `resource: 'FILE'`
+- Added `completeFileUpload` method to register staged files in Shopify
+- Added `/api/shopify/upload/complete` endpoint
+- Updated frontend to call complete endpoint after staged upload
 
 ### OAuth HMAC Verification
 **Status**: ✅ Fixed
@@ -172,27 +186,28 @@
 ### 2.1 Staged Upload Implementation
 | Task | Status | Notes |
 |------|--------|-------|
-| `stagedUploadsCreate` mutation | ⬜ Todo | |
-| Binary upload to staged URL | ⬜ Todo | |
-| `fileCreate` mutation | ⬜ Todo | |
-| Status polling | ⬜ Todo | |
-| Error handling/retry | ⬜ Todo | |
+| `stagedUploadsCreate` mutation | ✅ Done | Backend service method |
+| Multipart form upload to staged URL | ✅ Done | Fixed POST method |
+| `fileCreate` mutation | ✅ Done | Backend completeFileUpload |
+| Complete upload endpoint | ✅ Done | POST /api/shopify/upload/complete |
+| Error handling/retry | 🔄 Partial | Basic error handling |
 
 ### 2.2 Frontend Upload UI
 | Task | Status | Notes |
 |------|--------|-------|
-| `ShopifyUploader` component | ⬜ Todo | |
-| Destination selector | ⬜ Todo | |
-| Product search/select | ⬜ Todo | |
-| Upload progress indicator | ⬜ Todo | |
-| Success/failure summary | ⬜ Todo | |
+| `ShopifyUploader` component | ✅ Done | Full upload flow |
+| Connection selector | ✅ Done | Multiple stores support |
+| Upload progress indicator | ✅ Done | Real-time progress |
+| Success/failure summary | ✅ Done | Clear messages |
+| Destination selector (Files/Product) | ⬜ Todo | Currently files only |
+| Product search/select | ⬜ Todo | For product media |
 
 ### 2.3 Shopify Presets
 | Task | Status | Notes |
 |------|--------|-------|
-| Add Collection Thumbnail preset | ⬜ Todo | 600×600, 85% |
-| Add Product Detail preset | ⬜ Todo | 2048×2048, 90% |
-| Add Social Media presets | ⬜ Todo | Various sizes |
+| Add Collection Thumbnail preset | ✅ Done | 600×600, 85% |
+| Add Product Detail preset | ✅ Done | 2048×2048, 90% |
+| Add Social Media presets | ✅ Done | Various sizes |
 
 ---
 
@@ -204,7 +219,19 @@ _Details will be added as we progress through earlier phases._
 
 ## 📝 Session Log
 
-### January 26, 2026
+### January 26, 2026 (Session 2)
+- ✅ Fixed 403 error on staged uploads - was using PUT instead of POST
+- ✅ Changed `httpMethod: 'PUT'` to `httpMethod: 'POST'` in backend
+- ✅ Changed `resource: 'IMAGE'` to `resource: 'FILE'` for compatibility
+- ✅ Added `completeFileUpload` service method with `fileCreate` mutation
+- ✅ Added `/api/shopify/upload/complete` endpoint
+- ✅ Updated frontend `uploadToStaged` to pass filename correctly
+- ✅ Added `completeUpload` API call in ShopifyUploader component
+- ✅ Deployed backend and frontend to production
+- 📋 Phase 2: Core Upload is now 60% complete!
+- 📋 Remaining: Destination selector, Product search/select
+
+### January 26, 2026 (Session 1)
 - ✅ Fixed OAuth HMAC verification - was missing `host` param in signature calc
 - ✅ Updated Zod schema with `.passthrough()` to accept all Shopify params
 - ✅ Successfully connected test store: `preflight-test-store.myshopify.com`

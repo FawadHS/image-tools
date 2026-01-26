@@ -33,8 +33,8 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 │                    Image Tools v3.0 Roadmap                             │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  Phase 1: Foundation          Feb 2026       ░░░░░░░░░░░░   0%         │
-│  Phase 2: Core Upload         Mar 2026       ░░░░░░░░░░░░   0%         │
+│  Phase 1: Foundation          Feb 2026       ████████████ 100%  ✅     │
+│  Phase 2: Core Upload         Mar 2026       ███████░░░░░  60%  🔄     │
 │  Phase 3: SKU & Bulk          Apr 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 4: SEO & Audit         May 2026       ░░░░░░░░░░░░   0%         │
 │  Phase 5: AI Features         Jun 2026       ░░░░░░░░░░░░   0%         │
@@ -47,37 +47,37 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 
 ## Phase 1: Foundation & Infrastructure (4 weeks)
 **Target**: February 2026  
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 
 ### 1.1 Backend Module Setup (Extend Existing)
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| Create `backend/src/modules/shopify/` | High | Low | ⬜ Todo | Follow existing module pattern |
-| Add Prisma models to schema.prisma | High | Low | ⬜ Todo | ShopifyConnection, etc. |
-| Run Prisma migration | High | Low | ⬜ Todo | `npx prisma migrate dev` |
-| Register shopify routes in app.ts | High | Low | ⬜ Todo | Like other modules |
-| Add `@shopify/shopify-api` package | High | Low | ⬜ Todo | Official SDK |
-| Environment variables for Shopify | High | Low | ⬜ Todo | Add to .env |
+| Create `backend/src/modules/shopify/` | High | Low | ✅ Done | Follow existing module pattern |
+| Add Prisma models to schema.prisma | High | Low | ✅ Done | ShopifyConnection, etc. |
+| Run Prisma migration | High | Low | ✅ Done | `npx prisma migrate dev` |
+| Register shopify routes in app.ts | High | Low | ✅ Done | Like other modules |
+| Add `@shopify/shopify-api` package | High | Low | ✅ Done | Official SDK |
+| Environment variables for Shopify | High | Low | ✅ Done | Add to .env |
 
 ### 1.2 Shopify Partner Setup
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| Register Shopify Partner account | High | Low | ⬜ Todo | partners.shopify.com |
-| Create app in Partner Dashboard | High | Low | ⬜ Todo | "Image Tools by fawadhs.dev" |
-| Configure OAuth URLs | High | Low | ⬜ Todo | api.tools.fawadhs.dev/api/shopify |
-| Set required scopes | High | Low | ⬜ Todo | write_files, write_products |
-| Create development store | High | Low | ⬜ Todo | For testing |
-| Get API credentials | High | Low | ⬜ Todo | Client ID, Secret |
+| Register Shopify Partner account | High | Low | ✅ Done | partners.shopify.com |
+| Create app in Partner Dashboard | High | Low | ✅ Done | "Preflight Image Tools" |
+| Configure OAuth URLs | High | Low | ✅ Done | api.tools.fawadhs.dev/api/shopify |
+| Set required scopes | High | Low | ✅ Done | write_files, write_products |
+| Create development store | High | Low | ✅ Done | preflight-test-store |
+| Get API credentials | High | Low | ✅ Done | Client ID, Secret |
 
 ### 1.3 OAuth Implementation
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| `shopify-oauth.service.ts` | High | Medium | ⬜ Todo | OAuth flow logic |
-| Install route `/auth/install` | High | Medium | ⬜ Todo | Requires logged-in user |
-| Callback route `/auth/callback` | High | Medium | ⬜ Todo | Exchange code for token |
-| Token encryption utility | High | Medium | ⬜ Todo | AES-256, use existing env.JWT_SECRET |
-| Disconnect endpoint | High | Low | ⬜ Todo | Revoke + delete record |
-| List connections endpoint | High | Low | ⬜ Todo | User's connected stores |
+| `shopify-oauth.service.ts` | High | Medium | ✅ Done | OAuth flow logic |
+| Install route `/auth/install` | High | Medium | ✅ Done | Requires logged-in user |
+| Callback route `/auth/callback` | High | Medium | ✅ Done | Exchange code for token |
+| Token encryption utility | High | Medium | ✅ Done | AES-256-GCM |
+| Disconnect endpoint | High | Low | ✅ Done | Revoke + delete record |
+| List connections endpoint | High | Low | ✅ Done | User's connected stores |
 
 ### 1.4 Frontend: Shopify Panel in Image Tools
 | Task | Priority | Complexity | Status | Notes |
@@ -97,27 +97,27 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 | Link to Image Tools Shopify tab | Medium | Low | ⬜ Todo | Quick action |
 
 ### Phase 1 Deliverables
-- [ ] Shopify module in existing backend
-- [ ] OAuth flow working end-to-end
-- [ ] Can connect/disconnect Shopify store
-- [ ] Connection persisted in database
-- [ ] Frontend shows connection status
+- [x] Shopify module in existing backend
+- [x] OAuth flow working end-to-end
+- [x] Can connect/disconnect Shopify store
+- [x] Connection persisted in database
+- [x] Frontend shows connection status
 - [ ] Dashboard shows Shopify widget
 
 ---
 
 ## Phase 2: Core Upload Functionality (4 weeks)
 **Target**: March 2026  
-**Status**: ⬜ Not Started
+**Status**: 🔄 In Progress (60%)
 
 ### 2.1 Staged Upload Implementation
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| `stagedUploadsCreate` mutation | High | Medium | ⬜ Todo | Get upload URLs |
-| Binary upload to staged URL | High | Medium | ⬜ Todo | PUT request |
-| `fileCreate` mutation | High | Medium | ⬜ Todo | Register file in Shopify |
-| Status polling | High | Medium | ⬜ Todo | Wait for READY |
-| Error handling | High | Medium | ⬜ Todo | Retry logic |
+| `stagedUploadsCreate` mutation | High | Medium | ✅ Done | Get upload URLs |
+| Multipart form upload to staged URL | High | Medium | ✅ Done | POST request |
+| `fileCreate` mutation | High | Medium | ✅ Done | Register file in Shopify |
+| Complete upload endpoint | High | Medium | ✅ Done | /api/shopify/upload/complete |
+| Error handling | High | Medium | 🔄 Partial | Basic error handling |
 
 ### 2.2 Product Media Attachment
 | Task | Priority | Complexity | Status | Notes |
@@ -125,22 +125,22 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 | `productUpdate` mutation | High | Medium | ⬜ Todo | Attach media to product |
 | Media ordering | Medium | Low | ⬜ Todo | Position in gallery |
 | Variant image assignment | Medium | Medium | ⬜ Todo | Link to specific variant |
-| Product search endpoint | High | Medium | ⬜ Todo | Find by title/SKU/handle |
+| Product search endpoint | High | Medium | ✅ Done | Find by title/SKU/handle |
 
 ### 2.3 Frontend: Upload UI
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| UploadToShopify component | High | Medium | ⬜ Todo | Main upload panel |
+| ShopifyUploader component | High | Medium | ✅ Done | Main upload panel |
 | Destination selector | High | Low | ⬜ Todo | Files vs Product media |
 | Product search/select | High | Medium | ⬜ Todo | If uploading to product |
-| Upload progress indicator | High | Medium | ⬜ Todo | Real-time status |
-| Success/failure summary | High | Low | ⬜ Todo | Results display |
+| Upload progress indicator | High | Medium | ✅ Done | Real-time status |
+| Success/failure summary | High | Low | ✅ Done | Results display |
 
 ### 2.4 Shopify Presets
 | Task | Priority | Complexity | Status | Notes |
 |------|----------|------------|--------|-------|
-| Add Shopify presets to settings | High | Low | ⬜ Todo | Collection, Product, etc. |
-| Social media presets | Medium | Low | ⬜ Todo | Instagram, Pinterest, etc. |
+| Add Shopify presets to settings | High | Low | ✅ Done | Collection, Product, etc. |
+| Social media presets | Medium | Low | ✅ Done | Instagram, Pinterest, etc. |
 | Export pack feature | Medium | Medium | ⬜ Todo | Multiple sizes at once |
 | Preset preview | Low | Medium | ⬜ Todo | Show output dimensions |
 
@@ -153,11 +153,11 @@ This roadmap adds Shopify capabilities to the **existing fawadhs-tools platform*
 | Upgrade prompts | Medium | Low | ⬜ Todo | When approaching limit |
 
 ### Phase 2 Deliverables
-- [ ] Can upload single image to Shopify Files
+- [x] Can upload single image to Shopify Files
 - [ ] Can attach image to specific product
-- [ ] Upload progress shown in UI
-- [ ] Shopify presets available
-- [ ] Basic error handling working
+- [x] Upload progress shown in UI
+- [x] Shopify presets available
+- [x] Basic error handling working
 
 ---
 
