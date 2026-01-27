@@ -1,7 +1,7 @@
 {
-  "name": "Preflight Image Tools - Web Image Converter",
-  "short_name": "Preflight",
-  "description": "Convert images to WebP, JPEG, PNG, or AVIF with quality control. Shopify integration included. Privacy-first, client-side processing.",
+  "name": "Image Preflight - Web Image Converter",
+  "short_name": "Image Preflight",
+  "description": "Convert images to WebP, JPEG, PNG, or AVIF with quality control. Shopify integration included. Part of Preflight Suite.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -35,21 +35,16 @@ export const Header: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Preflight Image Tools
+                  Image Preflight
                 </h1>
-                <span className="text-xs px-2 py-0.5 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full font-medium">
-                  BETA
-                </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                by{' '}
+                part of{' '}
                 <a 
-                  href="https://fawadhs.dev" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                  href="https://tools.fawadhs.dev" 
                   className="text-primary-600 dark:text-primary-400 hover:underline"
                 >
-                  fawadhs.dev
+                  Preflight Suite
                 </a>
               </p>
             </div>
