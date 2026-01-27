@@ -13,9 +13,10 @@ interface ProductSearchProps {
   onSelect: (product: ShopifyProduct) => void;
   selectedProduct: ShopifyProduct | null;
   onClear: () => void;
+  compact?: boolean; // For inline use in per-file mapping
 }
 
-export function ProductSearch({ onSelect, selectedProduct, onClear }: ProductSearchProps) {
+export function ProductSearch({ onSelect, selectedProduct, onClear, compact = false }: ProductSearchProps) {
   const { activeConnection } = useShopify();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ShopifyProduct[]>([]);
@@ -119,8 +120,119 @@ export function ProductSearch({ onSelect, selectedProduct, onClear }: ProductSea
     setShowBrowseModal(false);
   };
 
+  // Helper function to render browse modal (reused by both compact and full mode)
+  const renderBrowseModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50" 
+        onClick={() => setShowBrowseModal(false)}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Select Product
+          </h3>
+          <button
+            onClick={() => setShowBrowseModal(false)}
+            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Product List */}
+        <div className="flex-1 overflow-y-auto p-2">
+          {browseError && (
+            <div className="p-4 text-center">
+              <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+              <p className="text-sm text-red-600 dark:text-red-400">{browseError}</p>
+              <button
+                onClick={() => loadBrowseProducts()}
+                className="mt-2 text-sm text-green-600 hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {!browseError && browseProducts.length === 0 && browseLoading && (
+            <div className="p-8 text-center">
+              <Loader2 className="w-8 h-8 text-green-500 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-gray-500">Loading products...</p>
+            </div>
+          )}
+
+          {!browseError && browseProducts.length === 0 && !browseLoading && (
+            <div className="p-8 text-center">
+              <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">No products in store</p>
+            </div>
+          )}
+
+          {browseProducts.map((product) => (
+            <ProductItem 
+              key={product.id} 
+              product={product} 
+              onSelect={handleSelect}
+              showArrow 
+            />
+          ))}
+
+          {/* Load More */}
+          {browseHasMore && !browseLoading && (
+            <button
+              onClick={() => loadBrowseProducts(browseCursor || undefined)}
+              className="w-full py-3 text-sm text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              Load more products
+            </button>
+          )}
+
+          {browseLoading && browseProducts.length > 0 && (
+            <div className="py-4 text-center">
+              <Loader2 className="w-5 h-5 text-green-500 animate-spin mx-auto" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   // If a product is selected, show it
   if (selectedProduct) {
+    if (compact) {
+      // Compact mode - minimal display
+      return (
+        <div className="flex items-center gap-2 py-1">
+          {selectedProduct.featuredImage ? (
+            <img
+              src={selectedProduct.featuredImage.url}
+              alt={selectedProduct.title}
+              className="w-6 h-6 rounded object-cover"
+            />
+          ) : (
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+              <Package className="w-3 h-3 text-gray-400" />
+            </div>
+          )}
+          <span className="text-xs text-gray-900 dark:text-white truncate flex-1">
+            {selectedProduct.title}
+          </span>
+          <button
+            onClick={onClear}
+            className="p-0.5 text-gray-400 hover:text-red-500"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      );
+    }
+    
+    // Full mode - larger display
     return (
       <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 flex items-center gap-3">
         {selectedProduct.featuredImage ? (
@@ -151,6 +263,66 @@ export function ProductSearch({ onSelect, selectedProduct, onClear }: ProductSea
         >
           <X className="w-4 h-4" />
         </button>
+      </div>
+    );
+  }
+
+  // Compact mode - simplified search UI
+  if (compact) {
+    return (
+      <div className="relative">
+        <div className="flex gap-1">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search product..."
+              className="w-full pl-2 pr-6 py-1 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 animate-spin" />
+            )}
+          </div>
+          <button
+            onClick={openBrowseModal}
+            title="Browse"
+            className="px-1.5 py-1 bg-gray-100 dark:bg-gray-500 hover:bg-gray-200 dark:hover:bg-gray-400 rounded transition-colors"
+          >
+            <Grid className="w-3 h-3 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
+
+        {/* Compact search results */}
+        {showResults && results.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50 max-h-40 overflow-y-auto">
+            {results.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => handleSelect(product)}
+                className="w-full p-2 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+              >
+                {product.featuredImage ? (
+                  <img
+                    src={product.featuredImage.url}
+                    alt={product.title}
+                    className="w-6 h-6 rounded object-cover"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                    <Package className="w-3 h-3 text-gray-400" />
+                  </div>
+                )}
+                <span className="text-xs text-gray-900 dark:text-white truncate">
+                  {product.title}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Browse Modal - reuse existing */}
+        {showBrowseModal && renderBrowseModal()}
       </div>
     );
   }
@@ -234,86 +406,7 @@ export function ProductSearch({ onSelect, selectedProduct, onClear }: ProductSea
       </div>
 
       {/* Browse Modal */}
-      {showBrowseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={() => setShowBrowseModal(false)}
-          />
-          
-          {/* Modal */}
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Select Product
-              </h3>
-              <button
-                onClick={() => setShowBrowseModal(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Product List */}
-            <div className="flex-1 overflow-y-auto p-2">
-              {browseError && (
-                <div className="p-4 text-center">
-                  <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                  <p className="text-sm text-red-600 dark:text-red-400">{browseError}</p>
-                  <button
-                    onClick={() => loadBrowseProducts()}
-                    className="mt-2 text-sm text-green-600 hover:underline"
-                  >
-                    Try again
-                  </button>
-                </div>
-              )}
-
-              {!browseError && browseProducts.length === 0 && browseLoading && (
-                <div className="p-8 text-center">
-                  <Loader2 className="w-8 h-8 text-green-500 animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Loading products...</p>
-                </div>
-              )}
-
-              {!browseError && browseProducts.length === 0 && !browseLoading && (
-                <div className="p-8 text-center">
-                  <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No products in store</p>
-                </div>
-              )}
-
-              {browseProducts.map((product) => (
-                <ProductItem 
-                  key={product.id} 
-                  product={product} 
-                  onSelect={handleSelect}
-                  showArrow 
-                />
-              ))}
-
-              {/* Load More */}
-              {browseHasMore && !browseLoading && (
-                <button
-                  onClick={() => loadBrowseProducts(browseCursor || undefined)}
-                  className="w-full py-3 text-sm text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  Load more products
-                </button>
-              )}
-
-              {browseLoading && browseProducts.length > 0 && (
-                <div className="py-4 text-center">
-                  <Loader2 className="w-5 h-5 text-green-500 animate-spin mx-auto" />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {showBrowseModal && renderBrowseModal()}
     </>
   );
 }

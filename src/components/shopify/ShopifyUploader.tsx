@@ -14,7 +14,10 @@ import {
   ChevronDown,
   FolderOpen,
   Package,
-  RefreshCw
+  RefreshCw,
+  X,
+  Plus,
+  FileStack
 } from 'lucide-react';
 import { useShopify } from '../../context/ShopifyContext';
 import { useConverter } from '../../context/ConverterContext';
@@ -23,7 +26,14 @@ import { ProductSearch } from './ProductSearch';
 import type { SelectedFile } from '../../types';
 
 type UploadStatus = 'idle' | 'uploading' | 'success' | 'error' | 'partial';
-type UploadDestination = 'files' | 'product';
+type UploadDestination = 'files' | 'product' | 'multiple-products';
+
+// Per-file product mapping for multi-product upload
+interface FileProductMapping {
+  fileId: string;
+  filename: string;
+  product: ShopifyProduct | null;
+}
 
 interface FileUploadResult {
   filename: string;
@@ -31,6 +41,7 @@ interface FileUploadResult {
   error?: string;
   fileUrl?: string;
   retries: number;
+  productTitle?: string;
 }
 
 interface UploadProgress {
@@ -59,6 +70,10 @@ export function ShopifyUploader() {
   const [showConnectionSelect, setShowConnectionSelect] = useState(false);
   const [destination, setDestination] = useState<UploadDestination>('files');
   const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | null>(null);
+  
+  // Per-file product mappings for multiple-products mode
+  const [fileProductMappings, setFileProductMappings] = useState<FileProductMapping[]>([]);
+  const [editingFileMapping, setEditingFileMapping] = useState<string | null>(null);
 
   const activeConnections = connections.filter(c => c.status === 'active');
   
@@ -66,6 +81,24 @@ export function ShopifyUploader() {
   const completedFiles: SelectedFile[] = converterState.files.filter(
     (f: SelectedFile) => f.status === 'completed' && f.result
   );
+
+  // Initialize file mappings when switching to multiple-products mode
+  const initializeFileMappings = () => {
+    const mappings: FileProductMapping[] = completedFiles.map(f => ({
+      fileId: f.id,
+      filename: f.result!.filename,
+      product: null,
+    }));
+    setFileProductMappings(mappings);
+  };
+
+  // Update a single file's product mapping
+  const updateFileMapping = (fileId: string, product: ShopifyProduct | null) => {
+    setFileProductMappings(prev => 
+      prev.map(m => m.fileId === fileId ? { ...m, product } : m)
+    );
+    setEditingFileMapping(null);
+  };
 
   /**
    * Sleep helper for retry delays
@@ -125,6 +158,11 @@ export function ShopifyUploader() {
   const handleUpload = async () => {
     if (!activeConnection || completedFiles.length === 0) return;
     if (destination === 'product' && !selectedProduct) return;
+    if (destination === 'multiple-products') {
+      // Must have at least one file mapped to a product
+      const mappedFiles = fileProductMappings.filter(m => m.product !== null);
+      if (mappedFiles.length === 0) return;
+    }
 
     setUploadProgress({
       total: completedFiles.length,
@@ -135,6 +173,109 @@ export function ShopifyUploader() {
     });
 
     const results: FileUploadResult[] = [];
+
+    try {
+      if (destination === 'multiple-products') {
+        // Upload files to their individual products
+        await handleMultipleProductsUpload(results);
+      } else {
+        // Original single product / files library upload
+        await handleSingleDestinationUpload(results);
+      }
+
+    } catch (error) {
+      console.error('[Shopify Upload] Batch upload error:', error);
+      setUploadProgress(prev => ({
+        ...prev,
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Upload failed',
+      }));
+    }
+  };
+
+  /**
+   * Handle uploading to multiple products (one file per product)
+   */
+  const handleMultipleProductsUpload = async (results: FileUploadResult[]) => {
+    const mappedFiles = fileProductMappings.filter(m => m.product !== null);
+    
+    for (const mapping of mappedFiles) {
+      const file = completedFiles.find(f => f.id === mapping.fileId);
+      if (!file || !mapping.product) continue;
+
+      try {
+        // Get staged upload URL for this single file
+        const filesMeta = [{
+          filename: file.result!.filename,
+          mimeType: file.result!.blob.type,
+          fileSize: file.result!.blob.size,
+        }];
+
+        const { stagedTargets } = await shopifyApi.createStagedUploads(
+          activeConnection!.id,
+          filesMeta
+        );
+
+        const result = await uploadSingleFile(file, stagedTargets[0], activeConnection!.id);
+        
+        if (result.success && result.fileUrl) {
+          // Attach to the specific product
+          try {
+            await shopifyApi.attachMediaToProduct(
+              activeConnection!.id,
+              mapping.product.id,
+              [result.fileUrl]
+            );
+            result.productTitle = mapping.product.title;
+          } catch (attachErr) {
+            result.success = false;
+            result.error = `Uploaded but failed to attach: ${attachErr instanceof Error ? attachErr.message : 'Unknown error'}`;
+          }
+        }
+
+        results.push(result);
+        
+        setUploadProgress(prev => ({
+          ...prev,
+          completed: results.filter(r => r.success).length,
+          failed: results.filter(r => !r.success).length,
+          results: [...results],
+        }));
+
+      } catch (err) {
+        results.push({
+          filename: mapping.filename,
+          success: false,
+          error: err instanceof Error ? err.message : 'Upload failed',
+          retries: 0,
+        });
+        
+        setUploadProgress(prev => ({
+          ...prev,
+          failed: prev.failed + 1,
+          results: [...results],
+        }));
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+
+    setUploadProgress(prev => ({
+      ...prev,
+      status: failCount === 0 ? 'success' : (successCount > 0 ? 'partial' : 'error'),
+      message: failCount === 0 
+        ? `Successfully uploaded ${successCount} images to their products!`
+        : `Uploaded ${successCount} images, ${failCount} failed`,
+    }));
+  };
+
+  /**
+   * Handle uploading to single destination (files library or one product)
+   */
+  const handleSingleDestinationUpload = async (results: FileUploadResult[]) => {
+    if (!activeConnection) return;
+    
     const uploadedUrls: string[] = [];
 
     try {
@@ -379,46 +520,147 @@ export function ShopifyUploader() {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
           Upload to
         </label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => {
               setDestination('files');
               setSelectedProduct(null);
+              setFileProductMappings([]);
             }}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-colors ${
+            className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg border-2 transition-colors ${
               destination === 'files'
                 ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
             }`}
           >
             <FolderOpen className="w-4 h-4" />
-            <span className="text-sm font-medium">Files Library</span>
+            <span className="text-xs font-medium">Files</span>
           </button>
           <button
-            onClick={() => setDestination('product')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 transition-colors ${
+            onClick={() => {
+              setDestination('product');
+              setFileProductMappings([]);
+            }}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg border-2 transition-colors ${
               destination === 'product'
                 ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
             }`}
           >
             <Package className="w-4 h-4" />
-            <span className="text-sm font-medium">Product</span>
+            <span className="text-xs font-medium">1 Product</span>
+          </button>
+          <button
+            onClick={() => {
+              setDestination('multiple-products');
+              setSelectedProduct(null);
+              initializeFileMappings();
+            }}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg border-2 transition-colors ${
+              destination === 'multiple-products'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            <FileStack className="w-4 h-4" />
+            <span className="text-xs font-medium">Per File</span>
           </button>
         </div>
       </div>
 
-      {/* Product Search (when product destination selected) */}
+      {/* Product Search (when single product destination selected) */}
       {destination === 'product' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Select Product
+            Select Product (all images go here)
           </label>
           <ProductSearch
             selectedProduct={selectedProduct}
             onSelect={setSelectedProduct}
             onClear={() => setSelectedProduct(null)}
           />
+        </div>
+      )}
+
+      {/* Per-file Product Mapping (when multiple-products selected) */}
+      {destination === 'multiple-products' && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Map each file to a product
+          </label>
+          <div className="max-h-64 overflow-y-auto space-y-2 border border-gray-200 dark:border-gray-600 rounded-lg p-2">
+            {fileProductMappings.map((mapping) => {
+              const file = completedFiles.find(f => f.id === mapping.fileId);
+              if (!file) return null;
+              
+              return (
+                <div
+                  key={mapping.fileId}
+                  className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                >
+                  {/* File thumbnail */}
+                  <div className="w-10 h-10 rounded overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
+                    <img
+                      src={file.displayPreview || file.preview}
+                      alt={mapping.filename}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  {/* File name */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                      {mapping.filename}
+                    </p>
+                    
+                    {/* Product selection */}
+                    {editingFileMapping === mapping.fileId ? (
+                      <div className="mt-1">
+                        <ProductSearch
+                          selectedProduct={mapping.product}
+                          onSelect={(product) => updateFileMapping(mapping.fileId, product)}
+                          onClear={() => updateFileMapping(mapping.fileId, null)}
+                          compact
+                        />
+                      </div>
+                    ) : mapping.product ? (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-xs text-green-600 dark:text-green-400 truncate">
+                          → {mapping.product.title}
+                        </span>
+                        <button
+                          onClick={() => updateFileMapping(mapping.fileId, null)}
+                          className="p-0.5 text-gray-400 hover:text-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setEditingFileMapping(mapping.fileId)}
+                        className="flex items-center gap-1 mt-0.5 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Select product
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Mapping summary */}
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>
+              {fileProductMappings.filter(m => m.product).length} of {fileProductMappings.length} mapped
+            </span>
+            {fileProductMappings.filter(m => !m.product).length > 0 && (
+              <span className="text-amber-500">
+                Unmapped files will be skipped
+              </span>
+            )}
+          </div>
         </div>
       )}
 
@@ -524,17 +766,23 @@ export function ShopifyUploader() {
         {uploadProgress.status === 'idle' && (
           <button
             onClick={handleUpload}
-            disabled={destination === 'product' && !selectedProduct}
+            disabled={
+              (destination === 'product' && !selectedProduct) ||
+              (destination === 'multiple-products' && fileProductMappings.filter(m => m.product).length === 0)
+            }
             className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-              destination === 'product' && !selectedProduct
+              (destination === 'product' && !selectedProduct) ||
+              (destination === 'multiple-products' && fileProductMappings.filter(m => m.product).length === 0)
                 ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
             <Upload className="w-4 h-4" />
             {destination === 'product' && selectedProduct
-              ? `Upload to ${selectedProduct.title}`
-              : `Upload to ${activeConnection.shopName}`}
+              ? `Upload ${completedFiles.length} to ${selectedProduct.title}`
+              : destination === 'multiple-products'
+                ? `Upload ${fileProductMappings.filter(m => m.product).length} to Products`
+                : `Upload to ${activeConnection.shopName}`}
           </button>
         )}
 
@@ -575,8 +823,10 @@ export function ShopifyUploader() {
       {/* Destination note */}
       <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
         {destination === 'product' 
-          ? 'Images will be added to the product\'s media gallery'
-          : 'Images will be uploaded to your Shopify Files library'}
+          ? 'All images will be added to the product\'s media gallery'
+          : destination === 'multiple-products'
+            ? 'Each image will be uploaded to its mapped product'
+            : 'Images will be uploaded to your Shopify Files library'}
       </p>
     </div>
   );
