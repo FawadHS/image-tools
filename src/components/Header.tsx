@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, ArrowLeft, Github, Info, X, LogIn, User } from 'lucide-react';
+import { Moon, Sun, ArrowLeft, Info, X, LogIn, User } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { getAuthUser, getBackButtonDestination } from '../lib/sharedAuth';
 import type { SharedUser } from '../lib/sharedAuth';
@@ -35,13 +35,13 @@ export const Header: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Image Tools
+                  Preflight Image Tools
                 </h1>
                 <span className="text-xs px-2 py-0.5 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full font-medium">
                   BETA
                 </span>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 by{' '}
                 <a 
                   href="https://fawadhs.dev" 
@@ -83,28 +83,6 @@ export const Header: React.FC = () => {
                 <span className="hidden sm:inline">Login</span>
               </a>
             )}
-            <a
-              href="https://www.npmjs.com/package/@fawadhs/image-tools"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              aria-label="View on NPM"
-            >
-              <img 
-                src="https://raw.githubusercontent.com/npm/logos/cc343d8c50139f645d165aedfe4d375240599fd1/npm%20square/n.svg"
-                alt="NPM"
-                className="w-5 h-5"
-              />
-            </a>
-            <a
-              href="https://github.com/FawadHS/image-tools"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              aria-label="View on GitHub"
-            >
-              <Github className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </a>
             <button
               onClick={() => setShowInfo(true)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -132,7 +110,7 @@ export const Header: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowInfo(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How to Use Image Tools</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How to Use Preflight Image Tools</h2>
               <button
                 onClick={() => setShowInfo(false)}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -199,6 +177,23 @@ export const Header: React.FC = () => {
                   <li>• <strong>Thumbnails:</strong> 400px, 70% quality</li>
                   <li>• <strong>Hero Banners:</strong> 1920px, 90% quality</li>
                 </ul>
+              </section>
+
+              {/* Shopify Integration */}
+              <section className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">🏪 Shopify Integration</h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-2">
+                  Connect your Shopify store to streamline product image management:
+                </p>
+                <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                  <li>• <strong>Direct Upload:</strong> Send images straight to Shopify Files or Products</li>
+                  <li>• <strong>SKU Mapping:</strong> Auto-match images to products by filename</li>
+                  <li>• <strong>Bulk Processing:</strong> Process and upload multiple product images at once</li>
+                  <li>• <strong>Optimized Formats:</strong> Auto-convert to Shopify-recommended sizes</li>
+                </ul>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Requires Pro or Business subscription. <a href="https://tools.fawadhs.dev/pricing" className="text-green-600 dark:text-green-400 hover:underline">Upgrade now</a>
+                </p>
               </section>
 
               {/* Tips & Tricks */}

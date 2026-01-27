@@ -1,12 +1,12 @@
 {
-  "name": "Image Tools - Web Image Converter",
-  "short_name": "Image Tools",
-  "description": "Convert images to WebP, JPEG, PNG, or AVIF with quality control. Privacy-first, client-side processing.",
+  "name": "Preflight Image Tools - Web Image Converter",
+  "short_name": "Preflight",
+  "description": "Convert images to WebP, JPEG, PNG, or AVIF with quality control. Shopify integration included. Privacy-first, client-side processing.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0ea5e9",
+  "theme_color": "#2563eb",
   "orientation": "portrait-primary",
   "categories": ["productivity", "utilities", "photo"]
 }
