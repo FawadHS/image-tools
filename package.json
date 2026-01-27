@@ -1,20 +1,21 @@
 {
-  "name": "@fawadhs/image-tools",
-  "version": "2.7.1",
-  "description": "Privacy-first image conversion and editing React component. Convert HEIC, JPEG, PNG to WebP with crop, rotate, filters, and text overlay tools.",
+  "name": "@fawadhs/image-preflight",
+  "version": "3.0.0",
+  "description": "Image Preflight - Privacy-first image conversion and editing React component. Part of Preflight Utility Suite.",
   "author": "Fawad Hussain <fawad@fawadhs.dev>",
   "license": "MIT",
   "homepage": "https://tools.fawadhs.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FawadHS/image-tools.git"
+    "url": "https://github.com/FawadHS/image-preflight.git"
   },
   "bugs": {
-    "url": "https://github.com/FawadHS/image-tools/issues"
+    "url": "https://github.com/FawadHS/image-preflight/issues"
   },
   "keywords": [
     "react",
     "image",
+    "preflight",
     "conversion",
     "heic",
     "webp",
@@ -28,23 +29,24 @@
     "watermark",
     "component",
     "privacy-first",
-    "client-side"
+    "client-side",
+    "shopify"
   ],
-  "main": "./dist-lib/image-tools.umd.js",
-  "module": "./dist-lib/image-tools.es.js",
+  "main": "./dist-lib/image-preflight.umd.js",
+  "module": "./dist-lib/image-preflight.es.js",
   "types": "./dist-lib/src/lib/index.d.ts",
   "exports": {
     ".": {
       "import": {
         "types": "./dist-lib/src/lib/index.d.ts",
-        "default": "./dist-lib/image-tools.es.js"
+        "default": "./dist-lib/image-preflight.es.js"
       },
       "require": {
         "types": "./dist-lib/src/lib/index.d.ts",
-        "default": "./dist-lib/image-tools.umd.js"
+        "default": "./dist-lib/image-preflight.umd.js"
       }
     },
-    "./styles": "./dist-lib/image-tools.css",
+    "./styles": "./dist-lib/image-preflight.css",
     "./package.json": "./package.json"
   },
   "files": [

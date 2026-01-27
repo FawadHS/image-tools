@@ -1,6 +1,6 @@
-## 👋 Welcome to Image Tools!
+## 👋 Welcome to Image Preflight!
 
-Thank you for contributing to Image Tools! We're excited to review your pull request.
+Thank you for contributing to Image Preflight! We're excited to review your pull request.
 
 ## 📋 PR Checklist
 
@@ -63,7 +63,7 @@ Welcome! We're thrilled to have you. Here are some resources:
 - 📚 [Contributing Guide](../CONTRIBUTING.md)
 - 🗺️ [Project Roadmap](../docs/ROADMAP.md)
 - 📖 [Documentation](../docs/SPEC.md)
-- 💬 [Discussions](https://github.com/FawadHS/image-tools/discussions)
+- 💬 [Discussions](https://github.com/FawadHS/image-preflight/discussions)
 
 ## 🤝 Code Review Process
 
@@ -73,6 +73,6 @@ Welcome! We're thrilled to have you. Here are some resources:
 4. **Approval** - Once approved, we'll merge your PR
 5. **Recognition** - You'll be credited in the release notes!
 
-**Questions?** Feel free to ask in the comments below or reach out on [Discussions](https://github.com/FawadHS/image-tools/discussions).
+**Questions?** Feel free to ask in the comments below or reach out on [Discussions](https://github.com/FawadHS/image-preflight/discussions).
 
-Thank you for making Image Tools better! 🚀
+Thank you for making Image Preflight better! 🚀

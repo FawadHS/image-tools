@@ -1,9 +1,9 @@
-# Image Tools
+# Image Preflight
 
-> 🖼️ Modern, privacy-first image conversion & editing tool | Part of [tools.fawadhs.dev](https://tools.fawadhs.dev)
+> 🖼️ Modern, privacy-first image conversion & editing tool | Part of [Preflight Utility Suite](https://tools.fawadhs.dev)
 
-[![NPM Version](https://img.shields.io/npm/v/@fawadhs/image-tools)](https://www.npmjs.com/package/@fawadhs/image-tools)
-[![NPM Downloads](https://img.shields.io/npm/dt/@fawadhs/image-tools)](https://www.npmjs.com/package/@fawadhs/image-tools)
+[![NPM Version](https://img.shields.io/npm/v/@fawadhs/image-preflight)](https://www.npmjs.com/package/@fawadhs/image-preflight)
+[![NPM Downloads](https://img.shields.io/npm/dt/@fawadhs/image-preflight)](https://www.npmjs.com/package/@fawadhs/image-preflight)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
@@ -40,8 +40,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/fawad-Laal/image-tools.git
-cd image-tools
+git clone https://github.com/FawadHS/image-preflight.git
+cd "Image Preflight"
 
 # Install dependencies
 npm install

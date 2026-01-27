@@ -2,7 +2,8 @@
 
 > **Version**: 3.0.0 (Shopify Integration)  
 > **Last Updated**: January 27, 2026  
-> **Parent Platform**: Preflight Utility Suite (tools.fawadhs.dev)
+> **Parent Platform**: Preflight Utility Suite (tools.fawadhs.dev)  
+> **Folder Name**: `Image Preflight/` (renamed from `Image Tools/`)
 
 ---
 
@@ -11,14 +12,22 @@
 ### Brand Hierarchy
 ```
 Preflight Utility Suite          ← Umbrella brand (tools.fawadhs.dev)
-├── Image Preflight              ← THIS PROJECT
+├── Image Preflight              ← THIS PROJECT ✅
 ├── Spreadsheet Preflight        ← Future tool
 ├── Data Preflight               ← Future tool
 └── Document Preflight           ← Future tool
 ```
 
+### Folder Structure
+```
+Fawad-Software-Projects/
+├── Preflight Utility Suite/     ← Platform backend + frontend
+├── Image Preflight/             ← THIS PROJECT (standalone app)
+└── Spreadsheet Preflight/       ← Future tool
+```
+
 ### Naming Rules
-- **This Tool**: `Image Preflight` (NOT "Image Tools" or "Preflight Image Tools")
+- **This Tool**: `Image Preflight` (NOT "Image Tools" - deprecated)
 - **Platform**: `Preflight Utility Suite` or `Preflight Suite`
 - **Subtitle format**: "part of Preflight Suite"
 
@@ -32,9 +41,10 @@ Preflight Utility Suite          ← Umbrella brand (tools.fawadhs.dev)
 | SEO/meta tags | Image Preflight |
 
 ### DO NOT USE (Deprecated):
-- ❌ "Image Tools" (old name)
+- ❌ "Image Tools" (old folder name)
 - ❌ "Preflight Image Tools" (verbose)
 - ❌ "fawadhs.tools" (just domain, not brand)
+- ❌ "fawadhs-tools" (old platform folder name)
 
 ---
 
@@ -52,8 +62,8 @@ Preflight Utility Suite          ← Umbrella brand (tools.fawadhs.dev)
 │                   (tools.fawadhs.dev)                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  /                  → Landing, Auth, Pricing (fawadhs-tools)    │
-│  /dashboard         → User Dashboard (fawadhs-tools)            │
+│  /                  → Landing, Auth, Pricing (Preflight Suite)  │
+│  /dashboard         → User Dashboard (Preflight Suite)          │
 │  /image-tools       → Image Preflight (THIS PROJECT)            │
 │                     └── + Shopify Panel ✅                      │
 │                                                                  │
@@ -79,7 +89,7 @@ Preflight Utility Suite          ← Umbrella brand (tools.fawadhs.dev)
 | **Image Processing** | Canvas API, heic2any | Client-side only |
 | **File Handling** | react-dropzone, JSZip | Batch support |
 | **Icons** | Lucide React | Consistent 20-24px |
-| **Backend API** | fawadhs-tools API | For auth, Shopify features |
+| **Backend API** | Preflight Suite API | For auth, Shopify features |
 
 ---
 
@@ -121,7 +131,7 @@ src/
 │       ├── SkuMapper.tsx         # Filename → product mapping
 │       └── ProductSearch.tsx     # Search/select products
 └── services/
-    └── shopifyApi.ts             # API client (calls fawadhs-tools backend)
+    └── shopifyApi.ts             # API client (calls Preflight Suite backend)
 ```
 
 ---
@@ -254,7 +264,7 @@ interface ShopifyUploadState {
 
 ## 🔌 API Integration (v3.0)
 
-### fawadhs-tools Backend Endpoints
+### Preflight Suite Backend Endpoints
 ```typescript
 // Shopify OAuth
 POST /api/shopify/auth/install     // Start OAuth flow
@@ -274,7 +284,7 @@ GET  /api/shopify/products/:id     // Get product details
 ### API Client Pattern
 ```typescript
 // src/services/shopifyApi.ts
-import { apiClient } from './api';  // From fawadhs-tools
+import { apiClient } from './api';  // From Preflight Suite
 
 export const shopifyApi = {
   connect: (shopDomain: string) => 
@@ -311,9 +321,9 @@ export const shopifyApi = {
 
 ### Current Setup
 - **URL**: tools.fawadhs.dev/image-tools
-- **Hosting**: Hetzner CPX11 (with fawadhs-tools)
+- **Hosting**: Hetzner CPX11 (with Preflight Suite)
 - **Nginx**: Reverse proxy config
-- **Deploy**: `scripts/deploy/deploy-all.ps1` (fawadhs-tools)
+- **Deploy**: `scripts/deploy/deploy-all.ps1` (Preflight Suite)
 
 ### Build Commands
 ```bash
@@ -323,8 +333,8 @@ npm run dev
 # Production build
 npm run build
 
-# Deploy (via fawadhs-tools)
-cd ../fawadhs-tools
+# Deploy (via Preflight Suite)
+cd "../Preflight Utility Suite"
 .\scripts\deploy\deploy-all.ps1 frontend
 ```
 
@@ -355,17 +365,17 @@ cd ../fawadhs-tools
 ## 🏪 Shopify Integration (CRITICAL)
 
 ### Single Source of Truth
-**The Shopify backend is in fawadhs-tools, NOT here.**
-Image Tools only has frontend components that call the shared API.
+**The Shopify backend is in Preflight Utility Suite, NOT here.**
+Image Preflight only has frontend components that call the shared API.
 
 ### Architecture
 ```
-Image Tools Frontend ─► api.tools.fawadhs.dev/api/shopify/* ─► PostgreSQL
-                       (fawadhs-tools backend)
+Image Preflight Frontend ─► api.tools.fawadhs.dev/api/shopify/* ─► PostgreSQL
+                       (Preflight Suite backend)
 ```
 
 ### DO NOT:
-- ❌ Create any Shopify backend code in Image Tools
+- ❌ Create any Shopify backend code in Image Preflight
 - ❌ Store Shopify tokens locally
 - ❌ Create duplicate API endpoints
 - ❌ Hardcode API URLs
@@ -379,13 +389,13 @@ Image Tools Frontend ─► api.tools.fawadhs.dev/api/shopify/* ─► PostgreSQ
 | `src/components/shopify/ProductSearch.tsx` | Search & select products |
 | `src/components/shopify/SkuMapper.tsx` | Filename parsing & product matching |
 | `src/components/shopify/index.ts` | Component exports |
-| `src/services/shopifyApi.ts` | API client (calls fawadhs-tools API) |
+| `src/services/shopifyApi.ts` | API client (calls Preflight Suite API) |
 | `src/context/ShopifyContext.tsx` | State management |
 
 ### Authentication
-Image Tools reads the auth token from localStorage set by fawadhs-tools:
+Image Preflight reads the auth token from localStorage set by Preflight Suite:
 ```typescript
-// Reads from fawadhs-tools auth storage
+// Reads from Preflight Suite auth storage
 const token = localStorage.getItem('token') 
            || JSON.parse(localStorage.getItem('auth-storage')).state.token;
 ```
@@ -396,7 +406,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://api.tools.fawadhs.dev';
 ```
 
 ### Related Docs
-- **Backend Architecture**: See `fawadhs-tools/docs/04-development/SHOPIFY-ARCHITECTURE.md`
+- **Backend Architecture**: See `Preflight Utility Suite/docs/04-development/SHOPIFY-ARCHITECTURE.md`
 
 ---
 
