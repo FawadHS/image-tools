@@ -107,7 +107,7 @@ export const ImageToolsPage = () => {
   return (
     <>
       <SEO
-        title="Image Tools - Convert HEIC, JPEG, PNG to WebP, AVIF | Privacy-First Image Editor"
+        title="Image Preflight - Convert HEIC, JPEG, PNG to WebP, AVIF | Preflight Suite"
         description="Free online image converter and editor with crop, rotate, filters, and text overlay. Convert HEIC, JPEG, PNG, GIF to WebP, AVIF. Batch processing, e-commerce presets. All processing in browser - no uploads."
         canonicalPath="/image-tools"
       />

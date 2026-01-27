@@ -30,7 +30,7 @@ export const Header: React.FC = () => {
               aria-label="Back to Tools"
               className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
             >
-              <img src="/image-tools/favicon.svg" alt="Image Tools" className="w-6 h-6" />
+              <img src="/image-tools/favicon.svg" alt="Image Preflight" className="w-6 h-6" />
             </a>
             <div>
               <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export const Header: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowInfo(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How to Use Preflight Image Tools</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">How to Use Image Preflight</h2>
               <button
                 onClick={() => setShowInfo(false)}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

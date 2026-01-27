@@ -151,7 +151,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ onClose }) => {
             id="review-text"
             value={review}
             onChange={(e) => setReview(e.target.value)}
-            placeholder="Share your thoughts about Image Tools..."
+            placeholder="Share your thoughts about Image Preflight..."
             rows={4}
             className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
             required

@@ -85,7 +85,7 @@ export const ReviewsList: React.FC = () => {
           No Reviews Yet
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Be the first to share your experience with Image Tools!
+          Be the first to share your experience with Image Preflight!
         </p>
       </div>
     );

@@ -1,14 +1,46 @@
-# GitHub Copilot Instructions for Image Tools
+# GitHub Copilot Instructions for Image Preflight
 
 > **Version**: 3.0.0 (Shopify Integration)  
-> **Last Updated**: January 26, 2026  
-> **Parent Platform**: fawadhs-tools (tools.fawadhs.dev)
+> **Last Updated**: January 27, 2026  
+> **Parent Platform**: Preflight Utility Suite (tools.fawadhs.dev)
+
+---
+
+## 🏷️ Branding (CRITICAL)
+
+### Brand Hierarchy
+```
+Preflight Utility Suite          ← Umbrella brand (tools.fawadhs.dev)
+├── Image Preflight              ← THIS PROJECT
+├── Spreadsheet Preflight        ← Future tool
+├── Data Preflight               ← Future tool
+└── Document Preflight           ← Future tool
+```
+
+### Naming Rules
+- **This Tool**: `Image Preflight` (NOT "Image Tools" or "Preflight Image Tools")
+- **Platform**: `Preflight Utility Suite` or `Preflight Suite`
+- **Subtitle format**: "part of Preflight Suite"
+
+### Where Branding Appears
+| Location | Correct Name |
+|----------|--------------|
+| Header title | Image Preflight |
+| Header subtitle | part of Preflight Suite |
+| Page title | Image Preflight - ... \| Preflight Suite |
+| manifest.json | Image Preflight |
+| SEO/meta tags | Image Preflight |
+
+### DO NOT USE (Deprecated):
+- ❌ "Image Tools" (old name)
+- ❌ "Preflight Image Tools" (verbose)
+- ❌ "fawadhs.tools" (just domain, not brand)
 
 ---
 
 ## 🎯 Project Overview
 
-**Image Tools** is a modern, privacy-first image conversion platform that runs entirely in the browser. Part of the **tools.fawadhs.dev** suite.
+**Image Preflight** is a modern, privacy-first image conversion platform that runs entirely in the browser. Part of the **Preflight Utility Suite**.
 
 **Current Version**: v3.0.0 (Shopify integration complete - Phases 1-3)
 
@@ -16,12 +48,13 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                   tools.fawadhs.dev Platform                     │
+│                   Preflight Utility Suite                        │
+│                   (tools.fawadhs.dev)                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  /                  → Landing, Auth, Pricing (fawadhs-tools)    │
 │  /dashboard         → User Dashboard (fawadhs-tools)            │
-│  /image-tools       → Image Tools (THIS PROJECT)                │
+│  /image-tools       → Image Preflight (THIS PROJECT)            │
 │                     └── + Shopify Panel ✅                      │
 │                                                                  │
 │  api.tools.fawadhs.dev                                          │

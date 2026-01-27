@@ -8,7 +8,7 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Image Tools - Free HEIC to WebP Converter & Image Editor | Privacy-First',
+  title = 'Image Preflight - Free HEIC to WebP Converter & Image Editor | Preflight Suite',
   description = 'Free online image converter and editor. Convert HEIC, JPEG, PNG, GIF, BMP, TIFF to WebP, AVIF, PNG, JPEG. Privacy-first with client-side processing, batch conversion, image editing tools, crop, rotate, flip, filters, and text overlay. No uploads, no tracking.',
   canonicalPath = '/',
   ogType = 'website',

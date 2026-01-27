@@ -67,7 +67,7 @@ export const ToolsIndex = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-xl font-semibold">Image Tools</h2>
+                  <h2 className="text-xl font-semibold">Image Preflight</h2>
                   <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 uppercase tracking-wide">
                     Live
                   </span>
