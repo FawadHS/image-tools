@@ -1,58 +1,183 @@
 /**
  * Shopify API Service
  * API client for Shopify integration endpoints
+ * Includes automatic token refresh for seamless authentication
  */
 
 // API base URL - uses same API as fawadhs-tools platform
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.tools.fawadhs.dev';
+const PLATFORM_URL = import.meta.env.VITE_PLATFORM_URL || 'https://tools.fawadhs.dev';
+
+// Track if we're currently refreshing to prevent multiple refresh calls
+let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
 
 /**
- * Get auth token from localStorage (shared with main platform)
- * The main fawadhs-tools app stores the token in two places:
- * 1. Zustand persist store: auth-storage -> state.token
- * 2. Direct localStorage: 'token'
+ * Get tokens from localStorage (shared with main platform)
  */
-function getAuthToken(): string | null {
+function getTokens(): { accessToken: string | null; refreshToken: string | null } {
   try {
-    // First try: Direct 'token' key (set by fawadhs-tools setAuth)
-    const directToken = localStorage.getItem('token');
-    if (directToken) {
-      return directToken;
+    const accessToken = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    // Also try Zustand persist store if direct keys not available
+    if (!accessToken || !refreshToken) {
+      const authStore = localStorage.getItem('auth-storage');
+      if (authStore) {
+        const parsed = JSON.parse(authStore);
+        return {
+          accessToken: accessToken || parsed?.state?.token || null,
+          refreshToken: refreshToken || parsed?.state?.refreshToken || null,
+        };
+      }
     }
     
-    // Second try: Zustand persist store
-    const authStore = localStorage.getItem('auth-storage');
-    if (authStore) {
-      const parsed = JSON.parse(authStore);
-      return parsed?.state?.token || null;
-    }
+    return { accessToken, refreshToken };
   } catch {
-    // Ignore parse errors
+    return { accessToken: null, refreshToken: null };
   }
-  return null;
 }
 
 /**
- * Make authenticated API request
+ * Get auth token (backward compatible)
+ */
+function getAuthToken(): string | null {
+  return getTokens().accessToken;
+}
+
+/**
+ * Update tokens in all storage locations
+ */
+function setTokens(accessToken: string, refreshToken?: string): void {
+  localStorage.setItem('token', accessToken);
+  if (refreshToken) {
+    localStorage.setItem('refreshToken', refreshToken);
+  }
+  
+  // Also update Zustand persist store for sync with main platform
+  try {
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage);
+      if (parsed?.state) {
+        parsed.state.token = accessToken;
+        if (refreshToken) {
+          parsed.state.refreshToken = refreshToken;
+        }
+        localStorage.setItem('auth-storage', JSON.stringify(parsed));
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+}
+
+/**
+ * Clear all auth data
+ */
+function clearAuth(): void {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('auth-storage');
+}
+
+/**
+ * Redirect to platform login
+ */
+function redirectToLogin(): void {
+  const returnUrl = encodeURIComponent(window.location.href);
+  window.location.href = `${PLATFORM_URL}/login?redirect=${returnUrl}`;
+}
+
+/**
+ * Attempt to refresh the access token
+ */
+async function refreshAccessToken(): Promise<string> {
+  // If already refreshing, wait for that to complete
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+  
+  isRefreshing = true;
+  
+  refreshPromise = (async () => {
+    try {
+      const { refreshToken } = getTokens();
+      
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+      
+      const response = await fetch(`${API_URL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+      
+      const data = await response.json();
+      const newAccessToken = data.accessToken;
+      const newRefreshToken = data.refreshToken;
+      
+      if (!newAccessToken) {
+        throw new Error('No access token in refresh response');
+      }
+      
+      setTokens(newAccessToken, newRefreshToken);
+      return newAccessToken;
+      
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+  
+  return refreshPromise;
+}
+
+/**
+ * Make authenticated API request with automatic token refresh
  */
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
-  
-  if (!token) {
-    throw new Error('Not authenticated. Please login first.');
-  }
+  const makeRequest = async () => {
+    const token = getAuthToken();
+    
+    if (!token) {
+      throw new Error('Not authenticated. Please login first.');
+    }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
+    return fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+  };
+
+  let response = await makeRequest();
+
+  // Handle 401 - attempt token refresh
+  if (response.status === 401) {
+    try {
+      await refreshAccessToken();
+      // Retry the request with new token
+      response = await makeRequest();
+    } catch {
+      // Refresh failed - redirect to login
+      clearAuth();
+      redirectToLogin();
+      throw new Error('Session expired. Please login again.');
+    }
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
