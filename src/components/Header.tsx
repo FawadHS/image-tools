@@ -3,6 +3,7 @@ import { Moon, Sun, ArrowLeft, Info, X, LogIn, User } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { getAuthUser, getBackButtonDestination } from '../lib/sharedAuth';
 import type { SharedUser } from '../lib/sharedAuth';
+import { config } from '../config';
 
 export const Header: React.FC = () => {
   const { isDark, toggle } = useDarkMode();
@@ -37,6 +38,9 @@ export const Header: React.FC = () => {
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                   Image Preflight
                 </h1>
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">
+                  v{config.appVersion}
+                </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 part of{' '}

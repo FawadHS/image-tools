@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { readFileSync } from 'fs'
+
+// Read version from package.json
+const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
+const appVersion = packageJson.version
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -55,6 +60,9 @@ export default defineConfig(({ mode }) => {
   return {
     base: '/image-tools/',
     plugins: [react()],
+    define: {
+      __APP_VERSION__: JSON.stringify(appVersion),
+    },
     worker: {
       format: 'es',
     },
