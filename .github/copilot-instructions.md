@@ -89,7 +89,7 @@ Fawad-Software-Projects/
 | **Image Processing** | Canvas API, heic2any | Client-side only |
 | **File Handling** | react-dropzone, JSZip | Batch support |
 | **Icons** | Lucide React | Consistent 20-24px |
-| **Backend API** | Preflight Suite API | For auth, Shopify features |
+| **Backend API** | Preflight Suite API (Prisma 7) | For auth, Shopify features |
 
 ---
 
@@ -371,8 +371,10 @@ Image Preflight only has frontend components that call the shared API.
 ### Architecture
 ```
 Image Preflight Frontend ─► api.tools.fawadhs.dev/api/shopify/* ─► PostgreSQL
-                       (Preflight Suite backend)
+                       (Preflight Suite backend - Prisma 7)
 ```
+
+**Note**: Backend uses Prisma 7 with PrismaPg adapter pattern.
 
 ### DO NOT:
 - ❌ Create any Shopify backend code in Image Preflight
@@ -410,4 +412,4 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://api.tools.fawadhs.dev';
 
 ---
 
-**Last Updated**: January 26, 2026 (v3.0.0 - Shopify Integration)
+**Last Updated**: January 29, 2026 (v3.0.0 - Shopify Integration, Backend Prisma 7)
