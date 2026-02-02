@@ -83,6 +83,15 @@ export const Footer: React.FC = () => {
           </a>
           <span className="text-gray-300 dark:text-gray-600">•</span>
           <a
+            href="https://tools.fawadhs.dev/pricing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          >
+            Pricing
+          </a>
+          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <a
             href="https://github.com/FawadHS/image-tools"
             target="_blank"
             rel="noopener noreferrer"
