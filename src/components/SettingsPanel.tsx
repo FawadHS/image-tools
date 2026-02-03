@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useConverter } from '../context/ConverterContext';
 import { presetList, getPreset } from '../utils/presets';
 import { PresetType, OutputFormat } from '../types';
+import { isFormatSupported } from '../utils/converter';
 
 const OUTPUT_FORMATS: { id: OutputFormat; name: string; description: string }[] = [
   { id: 'webp', name: 'WebP', description: 'Best compression, modern browsers' },
@@ -23,7 +24,45 @@ const RESIZE_PRESETS = [
 export const SettingsPanel: React.FC = () => {
   const { state, dispatch } = useConverter();
   const { options } = state;
-  const [resizePreset, setResizePreset] = React.useState('original');
+  const [resizePreset, setResizePreset] = useState('original');
+  const [formatSupport, setFormatSupport] = useState<Record<OutputFormat, boolean>>({
+    webp: true,
+    jpeg: true,
+    png: true,
+    avif: true,
+  });
+
+  useEffect(() => {
+    const checkSupport = async () => {
+      const [webpSupported, avifSupported] = await Promise.all([
+        isFormatSupported('webp'),
+        isFormatSupported('avif'),
+      ]);
+      setFormatSupport((prev) => ({
+        ...prev,
+        webp: webpSupported,
+        avif: avifSupported,
+      }));
+    };
+    checkSupport().catch(() => {
+      setFormatSupport((prev) => ({
+        ...prev,
+        webp: false,
+        avif: false,
+      }));
+    });
+  }, []);
+
+  const firstSupportedFormat = useMemo(() => {
+    const ordered: OutputFormat[] = ['webp', 'jpeg', 'png', 'avif'];
+    return ordered.find((format) => formatSupport[format]) || 'jpeg';
+  }, [formatSupport]);
+
+  useEffect(() => {
+    if (!formatSupport[options.outputFormat]) {
+      dispatch({ type: 'SET_OUTPUT_FORMAT', payload: firstSupportedFormat });
+    }
+  }, [formatSupport, options.outputFormat, dispatch, firstSupportedFormat]);
 
   const handleOutputFormatChange = (format: OutputFormat) => {
     dispatch({ type: 'SET_OUTPUT_FORMAT', payload: format });
@@ -97,23 +136,34 @@ export const SettingsPanel: React.FC = () => {
           Output Format
         </legend>
         <div className="grid grid-cols-2 gap-2" role="group" aria-label="Select output format">
-          {OUTPUT_FORMATS.map((format) => (
+          {OUTPUT_FORMATS.map((format) => {
+            const isSupported = formatSupport[format.id];
+            return (
             <button
               key={format.id}
               onClick={() => handleOutputFormatChange(format.id)}
               type="button"
               aria-label={`Select ${format.name} format - ${format.description}`}
+              disabled={!isSupported}
               className={`
                 px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
-                ${options.outputFormat === format.id
+                ${options.outputFormat === format.id && isSupported
                   ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                  : isSupported
+                  ? 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                 }
               `}
             >
               {format.name}
+              {!isSupported && (
+                <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
+                  Unsupported
+                </span>
+              )}
             </button>
-          ))}
+          );
+          })}
         </div>
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
           {OUTPUT_FORMATS.find(f => f.id === options.outputFormat)?.description}

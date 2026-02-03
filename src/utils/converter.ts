@@ -103,6 +103,14 @@ export const convertImage = async (
 ): Promise<ConvertResult> => {
   const originalSize = file.size;
   let blob: Blob = file;
+  const outputFormat = options.outputFormat || 'webp';
+
+  if (outputFormat !== 'jpeg' && outputFormat !== 'png') {
+    const supported = await isFormatSupported(outputFormat);
+    if (!supported) {
+      throw new Error(`${outputFormat.toUpperCase()} is not supported in this browser`);
+    }
+  }
 
   // Convert HEIC first if needed
   if (isHeicFile(file)) {
@@ -119,7 +127,6 @@ export const convertImage = async (
 
   // Handle JPEG + Circle Crop: Fill background (no alpha support)
   // This must happen AFTER renderEditsToCanvas which already applied the circular clip
-  const outputFormat = options.outputFormat || 'webp';
   if (outputFormat === 'jpeg' && options.transform?.crop?.shape === 'circle') {
     // JPEG doesn't support transparency, so we need to fill the background
     // The circular clip has already been applied by renderEditsToCanvas,
