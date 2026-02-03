@@ -55,6 +55,10 @@ Phase B: Manual chunking (safe, low-risk)
   - `image-tools-history`: history/stat logic (if bundled)
 - Verify lazy route still works and chunks load in correct order.
 
+Phase B Update (2026-02-03)
+- Manual chunking added for `heic`, `zip`, `dropzone`, `ui`, `vendor`, `editor`, and `shopify`.
+- The heic chunk remains > 1 MB; warning will persist until Phase C (dynamic import).
+
 Phase C: Dynamic imports (targeted)
 - Convert heavy optional features to `import()`:
   - HEIC decode path only when file is HEIC.

@@ -94,10 +94,25 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'assets/image-tools-[name]-[hash].js',
           chunkFileNames: 'assets/image-tools-[name]-[hash].js',
           assetFileNames: 'assets/image-tools-[name]-[hash].[ext]',
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-            ui: ['lucide-react', 'react-hot-toast'],
-            utils: ['heic-to', 'jszip']
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('heic-to')) return 'heic'
+              if (id.includes('jszip')) return 'zip'
+              if (id.includes('react-hot-toast') || id.includes('lucide-react')) return 'ui'
+              if (id.includes('react-dropzone') || id.includes('file-selector')) return 'dropzone'
+              if (
+                id.includes('react') ||
+                id.includes('react-dom') ||
+                id.includes('react-router-dom')
+              ) {
+                return 'vendor'
+              }
+              return 'vendor'
+            }
+
+            if (id.includes('/src/components/shopify/')) return 'shopify'
+            if (id.includes('/src/components/')) return 'editor'
+            return undefined
           }
         }
       },
