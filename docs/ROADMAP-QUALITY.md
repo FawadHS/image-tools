@@ -67,6 +67,7 @@ Phase C: Dynamic imports (targeted)
 
 Phase C Update (2026-02-03)
 - HEIC decode is now lazy-loaded via `import('heic-to')` inside `convertHeicToBlob`.
+- Non-critical UI is lazy-loaded (HistoryPanel, ReviewForm/ReviewsList, ShopifyPanel).
 
 Phase D: Validate
 - Ensure core flow (upload -> preview -> convert -> download) works.

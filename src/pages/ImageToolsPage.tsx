@@ -7,16 +7,25 @@ import { CropTool } from '../components/CropTool';
 import { TextOverlayTool } from '../components/TextOverlayTool';
 import { FileList } from '../components/FileList';
 import { ActionBar } from '../components/ActionBar';
-import { HistoryPanel } from '../components/HistoryPanel';
 import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
-import { ReviewForm } from '../components/ReviewForm';
-import { ReviewsList } from '../components/ReviewsList';
-import { ShopifyPanel } from '../components/shopify/ShopifyPanel';
 import { TierLimitsBanner } from '../components/TierLimitsBanner';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useHeicConversion } from '../hooks/useHeicConversion';
+
+const HistoryPanel = lazy(() =>
+  import('../components/HistoryPanel').then((module) => ({ default: module.HistoryPanel }))
+);
+const ReviewForm = lazy(() =>
+  import('../components/ReviewForm').then((module) => ({ default: module.ReviewForm }))
+);
+const ReviewsList = lazy(() =>
+  import('../components/ReviewsList').then((module) => ({ default: module.ReviewsList }))
+);
+const ShopifyPanel = lazy(() =>
+  import('../components/shopify/ShopifyPanel').then((module) => ({ default: module.ShopifyPanel }))
+);
 
 // Inner component that uses hooks requiring ConverterProvider context
 const ImageToolsContent = () => {
@@ -40,16 +49,20 @@ const ImageToolsContent = () => {
             <DropZone />
             <FileList />
             <ActionBar />
-            <HistoryPanel />
+            <Suspense fallback={null}>
+              <HistoryPanel />
+            </Suspense>
             
             {/* Review Section - Only shown when opened */}
             {(showReviewForm || showReviews) && (
               <div className="mt-6 space-y-6">
                 {showReviewForm && (
-                  <ReviewForm onClose={() => {
-                    setShowReviewForm(false);
-                    setShowReviews(true); // Show reviews list after submitting
-                  }} />
+                  <Suspense fallback={null}>
+                    <ReviewForm onClose={() => {
+                      setShowReviewForm(false);
+                      setShowReviews(true); // Show reviews list after submitting
+                    }} />
+                  </Suspense>
                 )}
                   
                   {showReviews && (
@@ -63,7 +76,9 @@ const ImageToolsContent = () => {
                           Hide
                         </button>
                       </div>
-                      <ReviewsList />
+                      <Suspense fallback={null}>
+                        <ReviewsList />
+                      </Suspense>
                     </div>
                   )}
                 </div>
@@ -78,7 +93,9 @@ const ImageToolsContent = () => {
                 <TextOverlayTool />
                 <SettingsPanel />
                 {/* Shopify Panel - Show for all users with upgrade prompts */}
-                <ShopifyPanel />
+                <Suspense fallback={null}>
+                  <ShopifyPanel />
+                </Suspense>
               </div>
             </div>
           </div>
