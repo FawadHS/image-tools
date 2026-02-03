@@ -27,6 +27,15 @@ export interface ImageTransform {
     color: string;
     opacity: number;
   };
+  textOverlays?: Array<{
+    text: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    fontFamily: string;
+    color: string;
+    opacity: number;
+  }>;
 }
 
 export interface ConvertOptions {

@@ -389,21 +389,29 @@ export const renderEditsToCanvas = (
     ctx.drawImage(transformCanvas, 0, 0);
   }
 
-  // Step 4: Apply text overlay (if exists and requested)
+  // Step 4: Apply text overlay(s) (if exists and requested)
   // Text coordinates are relative to the FINAL canvas (after crop)
-  if (includeTextOverlay && transform?.textOverlay) {
-    const overlay = transform.textOverlay;
-    
-    ctx.save();
-    ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
-    ctx.fillStyle = overlay.color;
-    ctx.globalAlpha = overlay.opacity;
-    ctx.textBaseline = 'top';
-    ctx.fillText(overlay.text, overlay.x, overlay.y);
-    ctx.restore();
-    
-    if (DEBUG_RENDER) {
-      console.log('Text overlay applied:', overlay.text);
+  if (includeTextOverlay) {
+    const overlays = transform?.textOverlays?.length
+      ? transform.textOverlays
+      : transform?.textOverlay
+      ? [transform.textOverlay]
+      : [];
+
+    if (overlays.length > 0) {
+      overlays.forEach((overlay) => {
+        ctx.save();
+        ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+        ctx.fillStyle = overlay.color;
+        ctx.globalAlpha = overlay.opacity;
+        ctx.textBaseline = 'top';
+        ctx.fillText(overlay.text, overlay.x, overlay.y);
+        ctx.restore();
+
+        if (DEBUG_RENDER) {
+          console.log('Text overlay applied:', overlay.text);
+        }
+      });
     }
   }
 

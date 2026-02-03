@@ -14,6 +14,17 @@ interface TextOverlayConfig {
   opacity: number;
 }
 
+const normalizeOverlays = (transform: { textOverlay?: TextOverlayConfig; textOverlays?: TextOverlayConfig[] } | undefined): TextOverlayConfig[] => {
+  if (!transform) return [];
+  if (transform.textOverlays && transform.textOverlays.length > 0) {
+    return transform.textOverlays.map((overlay) => ({ ...overlay }));
+  }
+  if (transform.textOverlay) {
+    return [{ ...transform.textOverlay }];
+  }
+  return [];
+};
+
 export const TextOverlayTool = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -28,21 +39,17 @@ export const TextOverlayTool = () => {
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
 
-  // Track committed overlay from active file
-  const committedOverlay = activeFile?.transform?.textOverlay;
+  // Track committed overlays from active file
+  const committedOverlays = normalizeOverlays(activeFile?.transform);
   
   // Sync overlays with committed state when it changes externally
   // Text coordinates are stored in transformed+cropped space, no adjustment needed
   useEffect(() => {
-    if (committedOverlay) {
-      setOverlays([{ ...committedOverlay }]);
-    } else {
-      setOverlays([]);
-    }
-  }, [JSON.stringify(committedOverlay), activeFile?.id]);
+    setOverlays(committedOverlays);
+  }, [JSON.stringify(committedOverlays), activeFile?.id]);
   
   // Check if preview differs from committed state
-  const hasUnappliedChanges = JSON.stringify(overlays[0]) !== JSON.stringify(committedOverlay);
+  const hasUnappliedChanges = JSON.stringify(overlays) !== JSON.stringify(committedOverlays);
 
   // Load fully processed image (rotation + flip + filters + crop)
   // This is the SAME image that will be exported
@@ -159,16 +166,22 @@ export const TextOverlayTool = () => {
       opacity: 1,
     };
     
-    setOverlays([newOverlay]);
-    setSelectedOverlay(0);
+    setOverlays((prev) => {
+      const next = [...prev, newOverlay];
+      setSelectedOverlay(next.length - 1);
+      return next;
+    });
     toast.success('Text added', { duration: 2000 });
   };
 
   const removeOverlay = (index: number) => {
     setOverlays(overlays.filter((_, i) => i !== index));
-    if (selectedOverlay === index) {
-      setSelectedOverlay(null);
-    }
+    setSelectedOverlay((current) => {
+      if (current === null) return null;
+      if (current === index) return null;
+      if (current > index) return current - 1;
+      return current;
+    });
     toast.success('Text removed', { duration: 2000 });
   };
 
@@ -329,11 +342,7 @@ export const TextOverlayTool = () => {
   };
   
   const discardTextOverlay = () => {
-    if (committedOverlay) {
-      setOverlays([committedOverlay]);
-    } else {
-      setOverlays([]);
-    }
+    setOverlays(committedOverlays);
     setSelectedOverlay(null);
   };
 
@@ -343,16 +352,13 @@ export const TextOverlayTool = () => {
       return;
     }
 
-    if (!overlays[0].text || overlays[0].text.trim() === '') {
+    const hasEmptyText = overlays.some((overlay) => !overlay.text || overlay.text.trim() === '');
+    if (hasEmptyText) {
       toast.error('Text cannot be empty');
       return;
     }
 
     if (!activeFile) return;
-
-    // Store overlay coordinates as-is (they're already in transformed+cropped space)
-    // The text is positioned on the image shown in the preview
-    const savedOverlay = { ...overlays[0] };
 
     const currentTransform = activeFile.transform || {
       rotation: 0 as const,
@@ -367,7 +373,8 @@ export const TextOverlayTool = () => {
         updates: {
           transform: {
             ...currentTransform,
-            textOverlay: savedOverlay,
+            textOverlay: undefined,
+            textOverlays: overlays.map((overlay) => ({ ...overlay })),
           },
         },
       },
@@ -396,6 +403,7 @@ export const TextOverlayTool = () => {
           transform: {
             ...currentTransform,
             textOverlay: undefined,
+            textOverlays: undefined,
           },
         },
       },

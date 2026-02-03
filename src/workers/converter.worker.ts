@@ -176,17 +176,23 @@ const renderEditsToOffscreenCanvas = (
     ctx.drawImage(transformCanvas, 0, 0);
   }
 
-  // Step 4: Apply text overlay (if exists and requested)
-  if (includeTextOverlay && transform?.textOverlay) {
-    const overlay = transform.textOverlay;
-    
-    ctx.save();
-    ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
-    ctx.fillStyle = overlay.color;
-    ctx.globalAlpha = overlay.opacity;
-    ctx.textBaseline = 'top';
-    ctx.fillText(overlay.text, overlay.x, overlay.y);
-    ctx.restore();
+  // Step 4: Apply text overlay(s) (if exists and requested)
+  if (includeTextOverlay) {
+    const overlays = transform?.textOverlays?.length
+      ? transform.textOverlays
+      : transform?.textOverlay
+      ? [transform.textOverlay]
+      : [];
+
+    overlays.forEach((overlay) => {
+      ctx.save();
+      ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+      ctx.fillStyle = overlay.color;
+      ctx.globalAlpha = overlay.opacity;
+      ctx.textBaseline = 'top';
+      ctx.fillText(overlay.text, overlay.x, overlay.y);
+      ctx.restore();
+    });
   }
 
   return canvas;

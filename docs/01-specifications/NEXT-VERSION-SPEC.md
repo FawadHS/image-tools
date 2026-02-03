@@ -29,7 +29,7 @@ Scope: Quality and correctness improvements only (no new major features). All ch
 - If multi-overlay: update `ImageTransform` to store an array; update render pipeline to draw all overlays in order.
 - If single-overlay: restrict UI to one overlay and remove multi-overlay UI affordances.
 - Acceptance: saved overlay state matches UI, survives conversions, and re-opens correctly.
-  - Decision (v4): single overlay only; UI enforces a single overlay and drag behavior is stable.
+  - Decision (v4): multi-overlay support; UI allows multiple overlays and drag behavior is stable.
 
 ### 3) Object URL Cleanup
 - Revoke `displayPreview` URLs on file removal and clear.

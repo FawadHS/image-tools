@@ -141,6 +141,7 @@ export const ImageEditor = () => {
           // Crop should not be modified in the editor, only rotation/flip/filters
           crop: activeFile.transform?.crop,
           textOverlay: activeFile.transform?.textOverlay,
+          textOverlays: activeFile.transform?.textOverlays,
         };
         
         // Render using the unified pipeline (without text overlay for editing preview)
