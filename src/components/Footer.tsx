@@ -72,7 +72,7 @@ export const Footer: React.FC = () => {
           >
             Portfolio
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <span className="text-gray-300 dark:text-gray-600">-</span>
           <a
             href="https://tools.fawadhs.dev"
             target="_blank"
@@ -81,7 +81,7 @@ export const Footer: React.FC = () => {
           >
             More Tools
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <span className="text-gray-300 dark:text-gray-600">-</span>
           <a
             href="https://tools.fawadhs.dev/pricing"
             target="_blank"
@@ -90,7 +90,7 @@ export const Footer: React.FC = () => {
           >
             Pricing
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <span className="text-gray-300 dark:text-gray-600">-</span>
           <a
             href="https://github.com/FawadHS/image-tools"
             target="_blank"
@@ -100,7 +100,7 @@ export const Footer: React.FC = () => {
             <Github className="w-4 h-4" />
             Open Source
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <span className="text-gray-300 dark:text-gray-600">-</span>
           <a
             href="https://www.npmjs.com/package/@fawadhs/image-tools"
             target="_blank"
@@ -114,7 +114,7 @@ export const Footer: React.FC = () => {
             />
             NPM Package
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <span className="text-gray-300 dark:text-gray-600">-</span>
           <a
             href="https://github.com/FawadHS/image-tools/issues/new"
             target="_blank"
@@ -141,7 +141,7 @@ export const Footer: React.FC = () => {
           </p>
           <p className="mt-1">
             © {new Date().getFullYear()} fawadhs.dev — MIT License
-            <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+            <span className="mx-2 text-gray-300 dark:text-gray-600">-</span>
             <span className="font-mono">v{packageJson.version}</span>
           </p>
         </div>

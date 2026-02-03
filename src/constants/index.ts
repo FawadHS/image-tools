@@ -101,7 +101,7 @@ export const PRESETS = {
   'shopify-collection': {
     id: 'shopify-collection' as const,
     name: 'Shopify Collection',
-    description: 'Collection thumbnails (600×600, 85% quality)',
+    description: 'Collection thumbnails (600x600, 85% quality)',
     quality: 85,
     maxWidth: 600,
     maxHeight: 600,
@@ -109,7 +109,7 @@ export const PRESETS = {
   'shopify-product-detail': {
     id: 'shopify-product-detail' as const,
     name: 'Shopify Product Detail',
-    description: 'High-res product images (2048×2048, 90% quality)',
+    description: 'High-res product images (2048x2048, 90% quality)',
     quality: 90,
     maxWidth: 2048,
     maxHeight: 2048,
@@ -118,7 +118,7 @@ export const PRESETS = {
   'social-instagram': {
     id: 'social-instagram' as const,
     name: 'Instagram Square',
-    description: 'Instagram posts (1080×1080, 85% quality)',
+    description: 'Instagram posts (1080x1080, 85% quality)',
     quality: 85,
     maxWidth: 1080,
     maxHeight: 1080,
@@ -126,7 +126,7 @@ export const PRESETS = {
   'social-pinterest': {
     id: 'social-pinterest' as const,
     name: 'Pinterest Pin',
-    description: 'Pinterest pins (1000×1500, 85% quality)',
+    description: 'Pinterest pins (1000x1500, 85% quality)',
     quality: 85,
     maxWidth: 1000,
     maxHeight: 1500,

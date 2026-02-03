@@ -113,7 +113,7 @@ export const convertImage = async (
   const img = await loadImage(blob);
 
   // Use the UNIFIED render pipeline to get final canvas
-  // This applies: rotation → flip → filters → crop → text overlay
+  // This applies: rotation -> flip -> filters -> crop -> text overlay
   // in the correct order (Problem 5 fix)
   const processedCanvas = renderEditsToCanvas(img, options.transform, true);
 

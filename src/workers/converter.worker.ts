@@ -228,7 +228,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     postMessage({ type: 'progress', progress: 30 } as WorkerResponse);
 
     // Use UNIFIED render pipeline to get final canvas
-    // This applies: rotation → flip → filters → crop → text overlay
+    // This applies: rotation -> flip -> filters -> crop -> text overlay
     // in the EXACT same order as main thread renderEditsToCanvas()
     const processedCanvas = renderEditsToOffscreenCanvas(img, options.transform, true);
     

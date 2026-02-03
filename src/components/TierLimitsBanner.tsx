@@ -105,7 +105,7 @@ export function TierLimitsBanner() {
                 Using Free Mode
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {limits.imagesPerConversion} images/batch • {limits.maxFileSizeMB}MB max • No Shopify
+                {limits.imagesPerConversion} images/batch - {limits.maxFileSizeMB}MB max - No Shopify
               </p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function TierLimitsBanner() {
                 Free Plan
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {limits.imagesPerConversion} images/batch • {limits.maxFileSizeMB}MB max • No Shopify
+                {limits.imagesPerConversion} images/batch - {limits.maxFileSizeMB}MB max - No Shopify
               </p>
             </div>
           </div>
@@ -222,7 +222,7 @@ export function TierLimitsBanner() {
               {tier} Plan
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {limits.imagesPerConversion} images/batch • {limits.maxFileSizeMB}MB max • {limits.shopifyStores} Shopify store{limits.shopifyStores !== 1 ? 's' : ''}
+              {limits.imagesPerConversion} images/batch - {limits.maxFileSizeMB}MB max - {limits.shopifyStores} Shopify store{limits.shopifyStores !== 1 ? 's' : ''}
             </p>
           </div>
         </div>

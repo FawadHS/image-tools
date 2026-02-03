@@ -160,7 +160,7 @@ export const Header: React.FC = () => {
                 <h3 className="text-lg font-semibold text-primary-600 dark:text-primary-400 mb-2">🎨 Image Editing Tools</h3>
                 <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                   <li><strong>✂️ Crop:</strong> Rectangle or circle crop with aspect ratio presets (1:1, 16:9, 4:3, 3:2)</li>
-                  <li><strong>🔄 Rotate & Flip:</strong> Rotate 90°/180°/270° or flip horizontally/vertically</li>
+                  <li><strong>🔄 Rotate & Flip:</strong> Rotate 90� deg/180� deg/270� deg or flip horizontally/vertically</li>
                   <li><strong>🎨 Filters:</strong> Adjust brightness, contrast, saturation, or apply grayscale/sepia</li>
                   <li><strong>📝 Text Overlay:</strong> Add watermarks and captions with custom fonts, colors, and opacity</li>
                   <li><strong>📏 Resize:</strong> Custom dimensions with aspect ratio lock</li>
@@ -172,9 +172,9 @@ export const Header: React.FC = () => {
                 <h3 className="text-lg font-semibold text-primary-600 dark:text-primary-400 mb-2">🛍️ E-commerce Presets</h3>
                 <p className="text-gray-700 dark:text-gray-300 mb-2">Quick presets optimized for online selling:</p>
                 <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                  <li>• <strong>Product Images:</strong> 1200px, 85% quality</li>
-                  <li>• <strong>Thumbnails:</strong> 400px, 70% quality</li>
-                  <li>• <strong>Hero Banners:</strong> 1920px, 90% quality</li>
+                  <li>- <strong>Product Images:</strong> 1200px, 85% quality</li>
+                  <li>- <strong>Thumbnails:</strong> 400px, 70% quality</li>
+                  <li>- <strong>Hero Banners:</strong> 1920px, 90% quality</li>
                 </ul>
               </section>
 
@@ -185,10 +185,10 @@ export const Header: React.FC = () => {
                   Connect your Shopify store to streamline product image management:
                 </p>
                 <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                  <li>• <strong>Direct Upload:</strong> Send images straight to Shopify Files or Products</li>
-                  <li>• <strong>SKU Mapping:</strong> Auto-match images to products by filename</li>
-                  <li>• <strong>Bulk Processing:</strong> Process and upload multiple product images at once</li>
-                  <li>• <strong>Optimized Formats:</strong> Auto-convert to Shopify-recommended sizes</li>
+                  <li>- <strong>Direct Upload:</strong> Send images straight to Shopify Files or Products</li>
+                  <li>- <strong>SKU Mapping:</strong> Auto-match images to products by filename</li>
+                  <li>- <strong>Bulk Processing:</strong> Process and upload multiple product images at once</li>
+                  <li>- <strong>Optimized Formats:</strong> Auto-convert to Shopify-recommended sizes</li>
                 </ul>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Requires Pro or Business subscription. <a href="https://tools.fawadhs.dev/pricing" className="text-green-600 dark:text-green-400 hover:underline">Upgrade now</a>
@@ -199,12 +199,12 @@ export const Header: React.FC = () => {
               <section>
                 <h3 className="text-lg font-semibold text-primary-600 dark:text-primary-400 mb-2">💡 Tips & Tricks</h3>
                 <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                  <li>• <strong>WebP:</strong> Best for web - smaller files with great quality</li>
-                  <li>• <strong>AVIF:</strong> Newest format - smallest files but slower encoding</li>
-                  <li>• <strong>Batch Processing:</strong> Apply same settings to multiple images</li>
-                  <li>• <strong>Before/After:</strong> Click converted images to compare quality</li>
-                  <li>• <strong>History:</strong> View your recent conversions in the History panel</li>
-                  <li>• <strong>Mobile:</strong> Fully touch-optimized for mobile editing</li>
+                  <li>- <strong>WebP:</strong> Best for web - smaller files with great quality</li>
+                  <li>- <strong>AVIF:</strong> Newest format - smallest files but slower encoding</li>
+                  <li>- <strong>Batch Processing:</strong> Apply same settings to multiple images</li>
+                  <li>- <strong>Before/After:</strong> Click converted images to compare quality</li>
+                  <li>- <strong>History:</strong> View your recent conversions in the History panel</li>
+                  <li>- <strong>Mobile:</strong> Fully touch-optimized for mobile editing</li>
                 </ul>
               </section>
 

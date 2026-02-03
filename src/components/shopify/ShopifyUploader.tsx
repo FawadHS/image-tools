@@ -719,7 +719,7 @@ export function ShopifyUploader() {
                     ) : mapping.product ? (
                       <div className="flex items-center gap-1 mt-0.5">
                         <span className="text-xs text-green-600 dark:text-green-400 truncate">
-                          → {mapping.product.title}
+                          -> {mapping.product.title}
                         </span>
                         <button
                           onClick={() => updateFileMapping(mapping.fileId, null)}
@@ -833,12 +833,12 @@ export function ShopifyUploader() {
               <div className="mt-2 space-y-1">
                 {uploadProgress.results.filter(r => !r.success).slice(0, 3).map((result, idx) => (
                   <p key={idx} className="text-xs text-amber-600 dark:text-amber-400">
-                    • {result.filename}: {result.error}
+                    - {result.filename}: {result.error}
                   </p>
                 ))}
                 {uploadProgress.results.filter(r => !r.success).length > 3 && (
                   <p className="text-xs text-amber-600 dark:text-amber-400">
-                    • and {uploadProgress.results.filter(r => !r.success).length - 3} more...
+                    - and {uploadProgress.results.filter(r => !r.success).length - 3} more...
                   </p>
                 )}
               </div>

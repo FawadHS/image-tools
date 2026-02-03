@@ -581,7 +581,7 @@ export const CropTool = () => {
             <div>
               <span className="text-gray-600 dark:text-gray-400">Size:</span>{' '}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {Math.round(cropArea.width)} × {Math.round(cropArea.height)}
+                {Math.round(cropArea.width)} x {Math.round(cropArea.height)}
               </span>
             </div>
           </div>

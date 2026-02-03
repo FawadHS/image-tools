@@ -78,7 +78,7 @@ export const DropZone: React.FC = () => {
                 Supports: HEIC, JPEG, PNG, GIF, BMP, TIFF, WebP
               </p>
               <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
-                Maximum {MAX_FILES} files • 50MB per file
+                Maximum {MAX_FILES} files - 50MB per file
               </p>
             </>
           )}

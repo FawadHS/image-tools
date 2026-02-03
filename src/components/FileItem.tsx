@@ -83,6 +83,12 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
     error: 'border-red-400 dark:border-red-500',
   };
 
+  const reductionLabel = file.result
+    ? file.result.reduction >= 0
+      ? `${file.result.reduction}% smaller`
+      : `${Math.abs(file.result.reduction)}% larger`
+    : null;
+
   return (
     <div
       onClick={handleClick}
@@ -145,9 +151,9 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {formatFileSize(file.file.size)}
-          {file.result && (
+          {file.result && reductionLabel && (
             <span className="text-green-600 dark:text-green-400 ml-2">
-              → {formatFileSize(file.result.convertedSize)} ({file.result.reduction}% smaller)
+              -> {formatFileSize(file.result.convertedSize)} ({reductionLabel})
             </span>
           )}
         </p>
@@ -182,7 +188,10 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
 
       {/* Remove Button */}
       <button
-        onClick={() => onRemove(file.id)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRemove(file.id);
+        }}
         disabled={file.status === 'converting'}
         aria-label={`Remove ${file.file.name}`}
         aria-disabled={file.status === 'converting'}

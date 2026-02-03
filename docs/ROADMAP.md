@@ -1,7 +1,7 @@
 # Image Tools - Development Roadmap
 
-> **Last Updated**: January 11, 2026  
-> **Current Version**: 2.4.1 (Phase 8 In Progress)  
+> **Last Updated**: February 3, 2026  
+> **Current Version**: 3.0.0 (Phase 8 In Progress)  
 > **Project Status**: ✅ Production Ready | Active Development
 
 ---
@@ -24,6 +24,36 @@ Phase 8: UX Enhancements & Quality    ███████░░░░░░░
 - Added selective file conversion with checkbox-based selection
 - Fixed HEIC comparison viewer display with high-quality conversion
 - All E2E tests passing (6/6 - 100% success rate)
+
+---
+
+## Version 4.0 - Quality Release (Planned)
+
+This release focuses on quality, correctness, and stability. It preserves the central render pipeline and avoids new major features.
+
+### Key Themes
+- Preserve central render pipeline (`renderEditsToCanvas` main + worker mirror).
+- Fix encoding/mojibake issues in UI copy and presets.
+- Tighten memory cleanup and cancellation behavior.
+- Gate unsupported output formats.
+- Consolidate presets and correct misleading options.
+
+### Roadmap Reference
+- See `docs/01-specifications/NEXT-VERSION-SPEC.md` for full requirements.
+- See `docs/ROADMAP-QUALITY.md` for milestone breakdown.
+
+---
+
+## Version 4.0 Sprint Plan (Topic-Based)
+
+| Sprint | Topic | Scope | Status |
+|--------|-------|-------|--------|
+| Sprint 1 | Copy + UX Correctness | Encoding fixes in UI + presets, remove-button click isolation, size reduction messaging | Done |
+| Sprint 2 | Text Overlay Persistence | Decide single vs multi overlay, update UI and pipeline accordingly | Planned |
+| Sprint 3 | Memory + Cleanup | displayPreview URL cleanup, duplicate removal cleanup | Planned |
+| Sprint 4 | Cancel + Format Gating | Cancel current conversion, disable unsupported formats | Planned |
+| Sprint 5 | Options + Presets | Remove misleading metadata toggle or implement, enforce total size limit, consolidate presets | Planned |
+| Sprint 6 | Testing | Render pipeline unit tests, golden-image tests, smoke tests | Planned |
 
 ---
 

@@ -50,7 +50,7 @@ export function displayToNatural(
 
 /**
  * Clamp crop rectangle to stay within image bounds
- * Ensures minimum 1Ã—1 crop size
+ * Ensures minimum 1x1 crop size
  * 
  * @param crop - Proposed crop rectangle
  * @param maxWidth - Maximum width (image width)
@@ -77,7 +77,7 @@ export function clampCropRect(
 
 /**
  * Compute dimensions after rotation
- * 90Â° and 270Â° rotations swap width/height
+ * 90Â deg and 270Â deg rotations swap width/height
  * 
  * @param width - Original width
  * @param height - Original height
