@@ -28,3 +28,6 @@ Date: 2026-02-03
 - Golden-image tests for circle crop and HEIC orientation.
 - Smoke tests for cancel behavior and format gating.
 - Update README + CHANGELOG; tag quality release.
+
+## Milestone 6: Build Hygiene (Optional)
+- Address bundle size warning for image-tools-utils via manualChunks or dynamic import.

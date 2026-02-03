@@ -2,6 +2,15 @@
 
 This document summarizes quality and correctness improvements found during a code review of Image Preflight. The focus is on tightening existing features before adding new ones.
 
+## Status update (2026-02-03)
+Completed in Version 4 sprints 1-6:
+- Encoding cleanup and UI text fixes.
+- Text overlay persistence and interaction improvements.
+- Object URL cleanup and duplicate removal cleanup.
+- Worker cancel behavior and format support gating.
+- Metadata toggle removal, total size enforcement, preset consolidation.
+- Render pipeline unit tests and Sprint 6 E2E smoke tests.
+
 ## High priority fixes (user visible or correctness)
 - Preserve and respect the central render pipeline. The single source of truth is `renderEditsToCanvas` in `src/utils/imageTransform.ts`, with the worker mirror in `src/workers/converter.worker.ts`. Any improvements must go through this pipeline so previews, exports, and worker conversions stay identical. Avoid adding ad-hoc transforms in UI components that bypass these functions.
 - Fix mojibake / encoding issues in UI strings and comments. Several files show broken characters like "90Adeg", "Ax", and "A->" that appear to be UTF-8 text saved or read with the wrong encoding. This affects user visible labels and preset descriptions.
