@@ -65,6 +65,9 @@ Phase C: Dynamic imports (targeted)
   - Optional tools (comparison slider, history panels) on demand.
 - Keep `renderEditsToCanvas` and worker pipeline in the base chunk.
 
+Phase C Update (2026-02-03)
+- HEIC decode is now lazy-loaded via `import('heic-to')` inside `convertHeicToBlob`.
+
 Phase D: Validate
 - Ensure core flow (upload -> preview -> convert -> download) works.
 - Check no regressions in text overlay, crop, or worker pipeline.

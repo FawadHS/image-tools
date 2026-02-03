@@ -1,4 +1,3 @@
-import { heicTo } from 'heic-to';
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
@@ -64,6 +63,7 @@ export const isHeicFile = (fileOrName: File | string): boolean => {
  */
 export const convertHeicToBlob = async (file: File | Blob): Promise<Blob> => {
   try {
+    const { heicTo } = await import('heic-to');
     const result = await heicTo({
       blob: file,
       type: 'image/png',
