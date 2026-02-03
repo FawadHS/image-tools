@@ -31,3 +31,35 @@ Date: 2026-02-03
 
 ## Milestone 6: Build Hygiene (Optional)
 - Address bundle size warning for image-tools-utils via manualChunks or dynamic import.
+
+### Split Plan (image-tools-utils)
+Goal: reduce the single ~2.6 MB `image-tools-utils` chunk by splitting rarely used or heavy modules, without breaking the central render pipeline.
+
+Phase A: Identify heavy imports (analysis only)
+- Run `vite build --report` or add `rollup-plugin-visualizer` to inspect chunk composition.
+- Note top modules by size (likely filters, HEIC decode, presets, crop/overlay helpers).
+- Confirm which are used on initial load vs. lazy paths.
+
+Phase B: Manual chunking (safe, low-risk)
+- Add `build.rollupOptions.output.manualChunks` in `vite.config.ts`.
+- Split into stable buckets:
+  - `image-tools-vendor`: third-party deps (heic2any, jszip, etc.)
+  - `image-tools-editor`: crop/filters/text overlay helpers
+  - `image-tools-encode`: conversion/format helpers
+  - `image-tools-history`: history/stat logic (if bundled)
+- Verify lazy route still works and chunks load in correct order.
+
+Phase C: Dynamic imports (targeted)
+- Convert heavy optional features to `import()`:
+  - HEIC decode path only when file is HEIC.
+  - Optional tools (comparison slider, history panels) on demand.
+- Keep `renderEditsToCanvas` and worker pipeline in the base chunk.
+
+Phase D: Validate
+- Ensure core flow (upload -> preview -> convert -> download) works.
+- Check no regressions in text overlay, crop, or worker pipeline.
+- Confirm chunk warning resolved or reduced.
+
+Exit Criteria
+- Largest chunk < 1 MB or warning resolved.
+- No behavior regressions in render pipeline or worker conversions.
