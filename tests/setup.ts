@@ -26,6 +26,7 @@ HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
   rotate: jest.fn(),
   arc: jest.fn(),
   fill: jest.fn(),
+  fillText: jest.fn(),
   measureText: jest.fn(() => ({ width: 0 })),
   transform: jest.fn(),
   rect: jest.fn(),

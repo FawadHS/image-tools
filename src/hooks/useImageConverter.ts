@@ -16,6 +16,7 @@ export const useImageConverter = () => {
   const { files, options, isConverting } = state;
   const abortRef = useRef(false);
   const conversionIdRef = useRef(0);
+  const pendingRejectRef = useRef<((error: Error) => void) | null>(null);
   const workerRef = useRef<Worker | null>(null);
   // Web Worker now uses unified pipeline (renderEditsToOffscreenCanvas)
   // matching the exact transformation order of main thread
@@ -78,6 +79,7 @@ export const useImageConverter = () => {
         const handleMessage = (e: MessageEvent) => {
           if (runId !== conversionIdRef.current || abortRef.current) {
             worker.removeEventListener('message', handleMessage);
+            pendingRejectRef.current = null;
             reject(new Error('Conversion cancelled'));
             return;
           }
@@ -90,14 +92,17 @@ export const useImageConverter = () => {
             });
           } else if (type === 'success' && payload) {
             worker.removeEventListener('message', handleMessage);
+            pendingRejectRef.current = null;
             resolve(payload);
           } else if (type === 'error') {
             worker.removeEventListener('message', handleMessage);
+            pendingRejectRef.current = null;
             reject(new Error(error || 'Worker conversion failed'));
           }
         };
 
         worker.addEventListener('message', handleMessage);
+        pendingRejectRef.current = reject;
 
         // Send to worker with file-specific transform
         worker.postMessage({
@@ -387,6 +392,10 @@ export const useImageConverter = () => {
   const cancelConversion = useCallback(() => {
     abortRef.current = true;
     conversionIdRef.current += 1;
+    if (pendingRejectRef.current) {
+      pendingRejectRef.current(new Error('Conversion cancelled'));
+      pendingRejectRef.current = null;
+    }
     if (workerRef.current) {
       workerRef.current.terminate();
       workerRef.current = null;

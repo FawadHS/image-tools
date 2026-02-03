@@ -27,9 +27,7 @@ export default {
   // Focused coverage: only measure tested code
   collectCoverageFrom: [
     'src/utils/mathHelpers.ts',
-    // Future: add imageTransform.ts, converter.ts as they get tested
-    // 'src/utils/imageTransform.ts',
-    // 'src/utils/converter.ts',
+    'src/utils/imageTransform.ts',
   ],
   
   coveragePathIgnorePatterns: [
