@@ -133,7 +133,7 @@ export const HistoryPanel: React.FC = () => {
                       </span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatFileSize(record.originalSize)} -> {formatFileSize(record.convertedSize)}
+                        {formatFileSize(record.originalSize)} {'->'} {formatFileSize(record.convertedSize)}
                       </span>
                       <span className="text-xs font-medium text-green-600 dark:text-green-400">
                         -{record.reduction}%

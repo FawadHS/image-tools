@@ -156,9 +156,9 @@ function ShopifyPanelContent() {
                 using SKU or product handle patterns in filenames.
               </p>
               <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
-                <p>- <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">SKU-12345.jpg</code> -> matches product with SKU "12345"</p>
-                <p>- <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">red-sneakers.jpg</code> -> matches product handle "red-sneakers"</p>
-                <p>- <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">ABC123_1.jpg</code> -> matches SKU with position 1</p>
+                <p>- <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">SKU-12345.jpg</code> {'->'} matches product with SKU "12345"</p>
+                <p>- <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">red-sneakers.jpg</code> {'->'} matches product handle "red-sneakers"</p>
+                <p>- <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">ABC123_1.jpg</code> {'->'} matches SKU with position 1</p>
               </div>
               
               {completedFiles.length > 0 ? (

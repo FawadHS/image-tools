@@ -76,7 +76,7 @@ export const ToolsIndex = () => {
                   Convert images between formats. HEIC, JPEG, PNG, WebP, AVIF. Quality control, resize, and batch processing.
                 </p>
                 <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-medium text-sm">
-                  Open Tool ->
+                  Open Tool {'->'}
                 </div>
               </div>
             </div>

@@ -153,7 +153,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
           {formatFileSize(file.file.size)}
           {file.result && reductionLabel && (
             <span className="text-green-600 dark:text-green-400 ml-2">
-              -> {formatFileSize(file.result.convertedSize)} ({reductionLabel})
+              {'->'} {formatFileSize(file.result.convertedSize)} ({reductionLabel})
             </span>
           )}
         </p>

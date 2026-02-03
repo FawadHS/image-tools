@@ -719,7 +719,7 @@ export function ShopifyUploader() {
                     ) : mapping.product ? (
                       <div className="flex items-center gap-1 mt-0.5">
                         <span className="text-xs text-green-600 dark:text-green-400 truncate">
-                          -> {mapping.product.title}
+                          {'->'} {mapping.product.title}
                         </span>
                         <button
                           onClick={() => updateFileMapping(mapping.fileId, null)}
