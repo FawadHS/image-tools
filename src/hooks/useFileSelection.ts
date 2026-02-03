@@ -3,7 +3,7 @@ import { useConverter } from '../context/ConverterContext';
 import { SelectedFile } from '../types';
 import { generateId } from '../utils/converter';
 import { createPreviewUrl, revokePreviewUrl, isSupportedFormat } from '../utils/fileUtils';
-import { MAX_FILES, MAX_FILE_SIZE } from '../constants';
+import { MAX_FILES, MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '../constants';
 import toast from 'react-hot-toast';
 
 const revokeDisplayPreview = (file: SelectedFile) => {
@@ -20,6 +20,7 @@ export const useFileSelection = () => {
     (newFiles: File[]) => {
       const currentCount = files.length;
       const availableSlots = MAX_FILES - currentCount;
+      let runningTotalSize = files.reduce((acc, f) => acc + f.file.size, 0);
 
       if (availableSlots <= 0) {
         toast.error(`Maximum ${MAX_FILES} files allowed`);
@@ -44,6 +45,14 @@ export const useFileSelection = () => {
           errors.push(`${file.name}: Exceeds 50MB limit`);
           return;
         }
+
+        // Check total size limit
+        if (runningTotalSize + file.size > MAX_TOTAL_SIZE) {
+          errors.push(`${file.name}: Exceeds total ${Math.round(MAX_TOTAL_SIZE / (1024 * 1024))} MB limit`);
+          return;
+        }
+
+        runningTotalSize += file.size;
 
         validFiles.push({
           id: generateId(),

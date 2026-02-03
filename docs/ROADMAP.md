@@ -53,7 +53,7 @@ This release focuses on quality, correctness, and stability. It preserves the ce
 | Sprint 2b | Text Overlay Refinement | Multi-text apply, drag stability, pipeline support for multiple overlays | Done |
 | Sprint 3 | Memory + Cleanup | displayPreview URL cleanup, duplicate removal cleanup | Done |
 | Sprint 4 | Cancel + Format Gating | Cancel current conversion, disable unsupported formats | Done |
-| Sprint 5 | Options + Presets | Remove misleading metadata toggle or implement, enforce total size limit, consolidate presets | Planned |
+| Sprint 5 | Options + Presets | Remove misleading metadata toggle or implement, enforce total size limit, consolidate presets | Done |
 | Sprint 6 | Testing | Render pipeline unit tests, golden-image tests, smoke tests | Planned |
 
 ---

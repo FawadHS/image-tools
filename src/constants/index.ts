@@ -3,6 +3,8 @@
  * @packageDocumentation
  */
 
+import { Preset, PresetType } from '../types';
+
 /** Maximum number of files that can be processed at once */
 export const MAX_FILES = 50;
 
@@ -55,7 +57,7 @@ export const CONCURRENT_CONVERSIONS = 4;
 /**
  * E-commerce presets with Shopify-specific optimizations
  */
-export const PRESETS = {
+export const PRESETS: Record<PresetType, Preset> = {
   // Existing presets
   'ecommerce-product': {
     id: 'ecommerce-product' as const,
@@ -139,7 +141,4 @@ export const PRESETS = {
     maxWidth: undefined,
     maxHeight: undefined,
   },
-} as const;
-
-/** Type for preset configuration */
-export type PresetConfig = typeof PRESETS[keyof typeof PRESETS];
+};

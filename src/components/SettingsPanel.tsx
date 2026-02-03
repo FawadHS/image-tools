@@ -305,17 +305,9 @@ export const SettingsPanel: React.FC = () => {
           </span>
         </label>
 
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={options.stripMetadata}
-            onChange={() => handleCheckboxChange('stripMetadata')}
-            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Strip metadata (smaller files)
-          </span>
-        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Metadata is always stripped for privacy.
+        </p>
       </div>
     </div>
   );
