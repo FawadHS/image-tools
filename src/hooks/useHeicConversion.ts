@@ -12,6 +12,7 @@ import { isHeicFile, convertHeicToBlob } from '../utils/converter';
 export const useHeicConversion = () => {
   const { state, dispatch } = useConverter();
   const processingRef = useRef<Set<string>>(new Set());
+  const previousDisplayPreviewsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     const processHeicFiles = async () => {
@@ -70,15 +71,27 @@ export const useHeicConversion = () => {
     processHeicFiles();
   }, [state.files, dispatch]);
 
-  // Cleanup object URLs when files are removed
+  // Cleanup object URLs when files are removed or updated
   useEffect(() => {
+    const currentMap = new Map<string, string>();
+    state.files.forEach((file) => {
+      if (file.displayPreview && file.displayPreview !== file.preview && file.displayPreview.startsWith('blob:')) {
+        currentMap.set(file.id, file.displayPreview);
+      }
+    });
+
+    previousDisplayPreviewsRef.current.forEach((url, id) => {
+      if (!currentMap.has(id) || currentMap.get(id) !== url) {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    previousDisplayPreviewsRef.current = currentMap;
+
     return () => {
-      // This runs on unmount - cleanup any created URLs
-      state.files.forEach(file => {
-        if (file.displayPreview && file.displayPreview !== file.preview && file.displayPreview.startsWith('blob:')) {
-          URL.revokeObjectURL(file.displayPreview);
-        }
+      currentMap.forEach((url) => {
+        URL.revokeObjectURL(url);
       });
     };
-  }, []);
+  }, [state.files]);
 };

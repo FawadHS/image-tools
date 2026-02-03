@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 
 export const FileList: React.FC = () => {
   const { files, removeFile, clearFiles, toggleFileSelection, selectAll, deselectAll } = useFileSelection();
-  const { state, dispatch } = useConverter();
+  const { state } = useConverter();
   const { hasDuplicates, duplicateCount, isDuplicate, getDuplicateIdsToRemove } = useDuplicateDetection(files);
 
   if (files.length === 0) {
@@ -21,7 +21,7 @@ export const FileList: React.FC = () => {
   const handleRemoveDuplicates = () => {
     const idsToRemove = getDuplicateIdsToRemove();
     idsToRemove.forEach((id) => {
-      dispatch({ type: 'REMOVE_FILE', payload: id });
+      removeFile(id);
     });
     toast.success(`Removed ${idsToRemove.length} duplicate file(s)`);
   };

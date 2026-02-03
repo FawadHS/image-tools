@@ -6,6 +6,12 @@ import { createPreviewUrl, revokePreviewUrl, isSupportedFormat } from '../utils/
 import { MAX_FILES, MAX_FILE_SIZE } from '../constants';
 import toast from 'react-hot-toast';
 
+const revokeDisplayPreview = (file: SelectedFile) => {
+  if (file.displayPreview && file.displayPreview !== file.preview && file.displayPreview.startsWith('blob:')) {
+    URL.revokeObjectURL(file.displayPreview);
+  }
+};
+
 export const useFileSelection = () => {
   const { state, dispatch } = useConverter();
   const { files } = state;
@@ -69,9 +75,7 @@ export const useFileSelection = () => {
       const file = files.find((f) => f.id === id);
       if (file) {
         revokePreviewUrl(file.preview);
-        if (file.result?.blob) {
-          URL.revokeObjectURL(URL.createObjectURL(file.result.blob));
-        }
+        revokeDisplayPreview(file);
       }
       dispatch({ type: 'REMOVE_FILE', payload: id });
     },
@@ -82,6 +86,7 @@ export const useFileSelection = () => {
     // Clean up all preview URLs
     files.forEach((file) => {
       revokePreviewUrl(file.preview);
+      revokeDisplayPreview(file);
     });
     dispatch({ type: 'CLEAR_FILES' });
     toast.success('All files cleared');
