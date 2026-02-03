@@ -22,6 +22,7 @@ export const TextOverlayTool = () => {
   const [overlays, setOverlays] = useState<TextOverlayConfig[]>([]);
   const [selectedOverlay, setSelectedOverlay] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [lastTransformState, setLastTransformState] = useState<string>('');
 
   // Get the active file
@@ -158,8 +159,8 @@ export const TextOverlayTool = () => {
       opacity: 1,
     };
     
-    setOverlays([...overlays, newOverlay]);
-    setSelectedOverlay(overlays.length);
+    setOverlays([newOverlay]);
+    setSelectedOverlay(0);
     toast.success('Text added', { duration: 2000 });
   };
 
@@ -175,7 +176,7 @@ export const TextOverlayTool = () => {
     setOverlays(overlays.map((overlay, i) => (i === index ? { ...overlay, ...updates } : overlay)));
   };
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current || !processedImage) return;
 
     const canvas = canvasRef.current;
@@ -200,6 +201,7 @@ export const TextOverlayTool = () => {
       if (x >= overlay.x && x <= overlay.x + metrics.width && y >= overlay.y && y <= overlay.y + textHeight) {
         setSelectedOverlay(i);
         setIsDragging(true);
+        setDragOffset({ x: x - overlay.x, y: y - overlay.y });
         return;
       }
     }
@@ -208,7 +210,7 @@ export const TextOverlayTool = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || selectedOverlay === null || !canvasRef.current || !processedImage) return;
+    if (!isDragging || selectedOverlay === null || !canvasRef.current || !processedImage || !dragOffset) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -220,15 +222,28 @@ export const TextOverlayTool = () => {
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
 
+    const overlay = overlays[selectedOverlay];
+    if (!overlay) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+    const textWidth = ctx.measureText(overlay.text).width;
+    const textHeight = overlay.fontSize * 1.2;
+
+    const nextX = x - dragOffset.x;
+    const nextY = y - dragOffset.y;
+
     // Keep within bounds
-    const boundedX = Math.max(0, Math.min(x, imgWidth - 50));
-    const boundedY = Math.max(0, Math.min(y, imgHeight - 20));
+    const boundedX = Math.max(0, Math.min(nextX, imgWidth - textWidth));
+    const boundedY = Math.max(0, Math.min(nextY, imgHeight - textHeight));
 
     updateOverlay(selectedOverlay, { x: boundedX, y: boundedY });
   };
 
   const handleCanvasMouseUp = () => {
     setIsDragging(false);
+    setDragOffset(null);
   };
 
   // Touch event handlers for mobile support
@@ -268,6 +283,7 @@ export const TextOverlayTool = () => {
       ) {
         setSelectedOverlay(i);
         setIsDragging(true);
+        setDragOffset({ x: x - overlay.x, y: y - overlay.y });
         return;
       }
     }
@@ -276,7 +292,7 @@ export const TextOverlayTool = () => {
   };
 
   const handleCanvasTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDragging || selectedOverlay === null || !canvasRef.current || !processedImage || e.touches.length !== 1) return;
+    if (!isDragging || selectedOverlay === null || !canvasRef.current || !processedImage || e.touches.length !== 1 || !dragOffset) return;
     e.preventDefault();
 
     const touch = e.touches[0];
@@ -289,14 +305,27 @@ export const TextOverlayTool = () => {
     const x = (touch.clientX - rect.left) / scale;
     const y = (touch.clientY - rect.top) / scale;
 
-    const boundedX = Math.max(0, Math.min(x, imgWidth - 50));
-    const boundedY = Math.max(0, Math.min(y, imgHeight - 20));
+    const overlay = overlays[selectedOverlay];
+    if (!overlay) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+    const textWidth = ctx.measureText(overlay.text).width;
+    const textHeight = overlay.fontSize * 1.2;
+
+    const nextX = x - dragOffset.x;
+    const nextY = y - dragOffset.y;
+
+    const boundedX = Math.max(0, Math.min(nextX, imgWidth - textWidth));
+    const boundedY = Math.max(0, Math.min(nextY, imgHeight - textHeight));
 
     updateOverlay(selectedOverlay, { x: boundedX, y: boundedY });
   };
 
   const handleCanvasTouchEnd = () => {
     setIsDragging(false);
+    setDragOffset(null);
   };
   
   const discardTextOverlay = () => {
@@ -432,7 +461,7 @@ export const TextOverlayTool = () => {
           ) : (
             <canvas
               ref={canvasRef}
-              onClick={handleCanvasClick}
+              onMouseDown={handleCanvasMouseDown}
               onMouseMove={handleCanvasMouseMove}
               onMouseUp={handleCanvasMouseUp}
               onMouseLeave={handleCanvasMouseUp}
