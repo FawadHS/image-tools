@@ -32,6 +32,7 @@ export const TextOverlayTool = () => {
   const [processedImage, setProcessedImage] = useState<HTMLImageElement | null>(null);
   const [overlays, setOverlays] = useState<TextOverlayConfig[]>([]);
   const [selectedOverlay, setSelectedOverlay] = useState<number | null>(null);
+  const [hoveredOverlay, setHoveredOverlay] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [lastTransformState, setLastTransformState] = useState<string>('');
@@ -46,6 +47,8 @@ export const TextOverlayTool = () => {
   // Text coordinates are stored in transformed+cropped space, no adjustment needed
   useEffect(() => {
     setOverlays(committedOverlays);
+    setHoveredOverlay(null);
+    setSelectedOverlay(null);
   }, [JSON.stringify(committedOverlays), activeFile?.id]);
   
   // Check if preview differs from committed state
@@ -98,6 +101,23 @@ export const TextOverlayTool = () => {
     loadProcessedImage();
   }, [activeFile, lastTransformState, state.files.length]);
 
+  const getOverlayAtPoint = (
+    x: number,
+    y: number,
+    ctx: CanvasRenderingContext2D
+  ): number | null => {
+    for (let i = overlays.length - 1; i >= 0; i--) {
+      const overlay = overlays[i];
+      ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
+      const metrics = ctx.measureText(overlay.text);
+      const textHeight = overlay.fontSize * 1.2;
+      if (x >= overlay.x && x <= overlay.x + metrics.width && y >= overlay.y && y <= overlay.y + textHeight) {
+        return i;
+      }
+    }
+    return null;
+  };
+
   // Draw canvas preview
   useEffect(() => {
     if (!canvasRef.current || !processedImage) return;
@@ -133,18 +153,18 @@ export const TextOverlayTool = () => {
       ctx.textBaseline = 'top';
       ctx.fillText(overlay.text, scaledX, scaledY);
 
-      // Draw selection box
-      if (selectedOverlay === index) {
+      // Draw hover/selection box
+      if (selectedOverlay === index || hoveredOverlay === index) {
         const metrics = ctx.measureText(overlay.text);
         const textHeight = scaledFontSize * 1.2;
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = selectedOverlay === index ? '#3b82f6' : '#93c5fd';
+        ctx.lineWidth = selectedOverlay === index ? 2 : 1;
         ctx.globalAlpha = 1;
         ctx.strokeRect(scaledX - 5, scaledY - 5, metrics.width + 10, textHeight + 10);
       }
       ctx.restore();
     });
-  }, [processedImage, overlays, selectedOverlay]);
+  }, [processedImage, overlays, selectedOverlay, hoveredOverlay]);
 
   const addTextOverlay = () => {
     if (!processedImage) {
@@ -204,26 +224,20 @@ export const TextOverlayTool = () => {
     // Check if clicked on existing overlay
     const canvas2d = canvas.getContext('2d');
     if (!canvas2d) return;
-
-    for (let i = overlays.length - 1; i >= 0; i--) {
-      const overlay = overlays[i];
-      canvas2d.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
-      const metrics = canvas2d.measureText(overlay.text);
-      const textHeight = overlay.fontSize * 1.2;
-
-      if (x >= overlay.x && x <= overlay.x + metrics.width && y >= overlay.y && y <= overlay.y + textHeight) {
-        setSelectedOverlay(i);
-        setIsDragging(true);
-        setDragOffset({ x: x - overlay.x, y: y - overlay.y });
-        return;
-      }
+    const hitIndex = getOverlayAtPoint(x, y, canvas2d);
+    if (hitIndex !== null) {
+      const overlay = overlays[hitIndex];
+      setSelectedOverlay(hitIndex);
+      setIsDragging(true);
+      setDragOffset({ x: x - overlay.x, y: y - overlay.y });
+      return;
     }
 
     setSelectedOverlay(null);
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || selectedOverlay === null || !canvasRef.current || !processedImage || !dragOffset) return;
+    if (!canvasRef.current || !processedImage) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -235,11 +249,18 @@ export const TextOverlayTool = () => {
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
 
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const hitIndex = getOverlayAtPoint(x, y, ctx);
+    setHoveredOverlay(hitIndex);
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = hitIndex !== null ? 'move' : 'default';
+    }
+
+    if (!isDragging || selectedOverlay === null || !dragOffset) return;
     const overlay = overlays[selectedOverlay];
     if (!overlay) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
     ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
     const textWidth = ctx.measureText(overlay.text).width;
     const textHeight = overlay.fontSize * 1.2;
@@ -257,6 +278,14 @@ export const TextOverlayTool = () => {
   const handleCanvasMouseUp = () => {
     setIsDragging(false);
     setDragOffset(null);
+  };
+  const handleCanvasMouseLeave = () => {
+    setIsDragging(false);
+    setDragOffset(null);
+    setHoveredOverlay(null);
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = 'default';
+    }
   };
 
   // Touch event handlers for mobile support
@@ -472,7 +501,7 @@ export const TextOverlayTool = () => {
               onMouseDown={handleCanvasMouseDown}
               onMouseMove={handleCanvasMouseMove}
               onMouseUp={handleCanvasMouseUp}
-              onMouseLeave={handleCanvasMouseUp}
+              onMouseLeave={handleCanvasMouseLeave}
               onTouchStart={handleCanvasTouchStart}
               onTouchMove={handleCanvasTouchMove}
               onTouchEnd={handleCanvasTouchEnd}
@@ -520,6 +549,7 @@ export const TextOverlayTool = () => {
           {overlays.map((overlay, index) => (
             <div
               key={index}
+              onClick={() => setSelectedOverlay(index)}
               className={`p-4 border rounded-lg transition-all ${
                 selectedOverlay === index
                   ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
