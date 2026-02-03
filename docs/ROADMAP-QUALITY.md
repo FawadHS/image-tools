@@ -40,6 +40,12 @@ Phase A: Identify heavy imports (analysis only)
 - Note top modules by size (likely filters, HEIC decode, presets, crop/overlay helpers).
 - Confirm which are used on initial load vs. lazy paths.
 
+Phase A Findings (report mode, 2026-02-03)
+- Dominant module: `heic-to/dist/heic-to.js` (~2465 kB rendered). This is the primary driver of the 2.6 MB utils chunk.
+- Other notable modules: `jszip/dist/jszip.min.js` (~96 kB), `react-dropzone` (~37 kB), `file-selector` (~49 kB).
+- Shopify UI components are sizable (ShopifyUploader ~33 kB, SkuMapper ~25 kB, ProductSearch ~18 kB).
+- Core editor pieces are moderate (TextOverlayTool ~23 kB, CropTool ~22 kB, ImageEditor ~16 kB).
+
 Phase B: Manual chunking (safe, low-risk)
 - Add `build.rollupOptions.output.manualChunks` in `vite.config.ts`.
 - Split into stable buckets:

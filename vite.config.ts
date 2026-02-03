@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { resolve } from 'path'
 import { readFileSync } from 'fs'
 
@@ -57,9 +58,19 @@ export default defineConfig(({ mode }) => {
   }
 
   // Standard application build
+  const plugins = [react()]
+  if (mode === 'report') {
+    plugins.push(visualizer({
+      filename: 'dist/bundle-report.json',
+      template: 'raw-data',
+      gzipSize: true,
+      brotliSize: true,
+    }))
+  }
+
   return {
     base: '/image-tools/',
-    plugins: [react()],
+    plugins,
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),
     },
