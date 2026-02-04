@@ -70,7 +70,7 @@ This release builds on the V4 quality baseline with practical workflow features 
 | Sprint 1 | Batch Rename | Prefix/suffix/sequence/timestamp/dimensions + e-commerce templates | Done |
 | Sprint 2 | Queue Reorder | Drag-and-drop reorder + keyboard reorder | Done |
 | Sprint 3 | EXIF + Metadata | EXIF viewer + opt-in metadata preservation path | Done |
-| Sprint 4 | URL Import | URL input, CORS guidance, optional proxy support | Planned |
+| Sprint 4 | URL Import | URL input, CORS guidance, optional proxy support | Done |
 | Sprint 5 | Parallelism | Multi-worker conversion with throttling + cancel cleanup | Planned |
 | Sprint 6 | WASM Encoders | Optional WASM WebP/AVIF paths + fallback | Planned |
 | Sprint 7 | AI Enhancements | AI upscaling / smart compression using existing AI API | Planned |
