@@ -51,6 +51,11 @@ export interface ConvertOptions {
   nameSuffix?: string;
   addTimestamp?: boolean;
   addDimensions?: boolean;
+  addSequence?: boolean;
+  renameSequenceStart?: number;
+  renameSequencePad?: number;
+  renamePattern?: string;
+  renameSequence?: number;
   // Transform passed at conversion time (merged from file)
   transform?: ImageTransform;
 }

@@ -19,6 +19,7 @@ import { ConvertOptions, ConvertResult, ImageTransform } from '../types';
 
 // Import shared utilities to avoid code duplication
 import { getMimeType, getExtension, calculateDimensions } from '../utils/imageHelpers';
+import { buildOutputFilename } from '../utils/filename';
 
 /**
  * Load an image from a blob and return ImageBitmap (Worker-optimized)
@@ -305,9 +306,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     });
     postMessage({ type: 'progress', progress: 95 } as WorkerResponse);
 
-    // Generate filename
-    const originalName = filename.replace(/\.[^/.]+$/, '');
-    const outputFilename = `${originalName}${extension}`;
+    const outputFilename = buildOutputFilename(
+      filename,
+      extension,
+      outputCanvas.width,
+      outputCanvas.height,
+      options
+    );
 
     // Calculate reduction percentage
     const convertedSize = outputBlob.size;

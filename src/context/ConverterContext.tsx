@@ -29,6 +29,14 @@ const initialOptions: ConvertOptions = {
   stripMetadata: true,
   preset: 'custom',
   outputFormat: 'webp',
+  namePrefix: '',
+  nameSuffix: '',
+  addTimestamp: false,
+  addDimensions: false,
+  addSequence: false,
+  renameSequenceStart: 1,
+  renameSequencePad: 0,
+  renamePattern: '{prefix}{name}{suffix}{timestamp}{dimensions}{seq}',
 };
 
 // Load total conversions from localStorage

@@ -1,5 +1,6 @@
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
+import { buildOutputFilename } from './filename';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
 
 /**
@@ -198,14 +199,13 @@ export const convertImage = async (
       );
     });
 
-    // Generate filename
-    const originalName = file.name.replace(/\\.[^/.]+$/, '');
-    const prefix = options.namePrefix || '';
-    const suffix = options.nameSuffix || '';
-    const timestamp = options.addTimestamp ? `_${new Date().toISOString().split('T')[0]}` : '';
-    const dimensionStr = options.addDimensions ? `_${outputCanvas.width}x${outputCanvas.height}` : '';
-    
-    const filename = `${prefix}${originalName}${suffix}${timestamp}${dimensionStr}${extension}`;
+    const filename = buildOutputFilename(
+      file.name,
+      extension,
+      outputCanvas.width,
+      outputCanvas.height,
+      options
+    );
 
     // Calculate reduction percentage
     const convertedSize = outputBlob.size;
@@ -275,14 +275,13 @@ export const convertImage = async (
     );
   });
 
-  // Generate filename
-  const originalName = file.name.replace(/\.[^/.]+$/, '');
-  const prefix = options.namePrefix || '';
-  const suffix = options.nameSuffix || '';
-  const timestamp = options.addTimestamp ? `_${new Date().toISOString().split('T')[0]}` : '';
-  const dimensionStr = options.addDimensions ? `_${outputCanvas.width}x${outputCanvas.height}` : '';
-  
-  const filename = `${prefix}${originalName}${suffix}${timestamp}${dimensionStr}${extension}`;
+  const filename = buildOutputFilename(
+    file.name,
+    extension,
+    outputCanvas.width,
+    outputCanvas.height,
+    options
+  );
 
   // Calculate reduction percentage
   const convertedSize = outputBlob.size;

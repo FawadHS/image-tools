@@ -3,6 +3,8 @@ import { useConverter } from '../context/ConverterContext';
 import { presetList, getPreset } from '../utils/presets';
 import { PresetType, OutputFormat } from '../types';
 import { isFormatSupported } from '../utils/converter';
+import { getExtension } from '../utils/imageHelpers';
+import { buildOutputFilename } from '../utils/filename';
 
 const OUTPUT_FORMATS: { id: OutputFormat; name: string; description: string }[] = [
   { id: 'webp', name: 'WebP', description: 'Best compression, modern browsers' },
@@ -21,10 +23,34 @@ const RESIZE_PRESETS = [
   { id: 'custom', name: 'Custom', width: undefined, height: undefined },
 ];
 
+const RENAME_TEMPLATES = [
+  {
+    id: 'custom',
+    name: 'Custom',
+    pattern: '{prefix}{name}{suffix}{timestamp}{dimensions}{seq}',
+  },
+  {
+    id: 'ecom-product',
+    name: 'E-commerce: Product + Sequence',
+    pattern: 'product-{name}{seq}',
+  },
+  {
+    id: 'ecom-size',
+    name: 'E-commerce: Name + Size',
+    pattern: '{name}-{width}x{height}{seq}',
+  },
+  {
+    id: 'ecom-date',
+    name: 'E-commerce: Date + Sequence',
+    pattern: '{name}{timestamp}{seq}',
+  },
+];
+
 export const SettingsPanel: React.FC = () => {
   const { state, dispatch } = useConverter();
-  const { options } = state;
+  const { options, files, activeFileId } = state;
   const [resizePreset, setResizePreset] = useState('original');
+  const [renameTemplate, setRenameTemplate] = useState('custom');
   const [formatSupport, setFormatSupport] = useState<Record<OutputFormat, boolean>>({
     webp: true,
     jpeg: true,
@@ -123,6 +149,46 @@ export const SettingsPanel: React.FC = () => {
       payload: { [field]: !options[field] },
     });
   };
+
+  const handleRenameFieldChange = (field: keyof typeof options, value: string | number | boolean) => {
+    dispatch({
+      type: 'SET_OPTIONS',
+      payload: { [field]: value },
+    });
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setRenameTemplate(templateId);
+    const template = RENAME_TEMPLATES.find((t) => t.id === templateId);
+    if (template) {
+      dispatch({
+        type: 'SET_OPTIONS',
+        payload: { renamePattern: template.pattern },
+      });
+    }
+  };
+
+  const activeFile = files.find((f) => f.id === activeFileId) || files[0];
+  const previewWidth =
+    activeFile?.result?.dimensions.width ||
+    activeFile?.transform?.crop?.width ||
+    options.maxWidth ||
+    1000;
+  const previewHeight =
+    activeFile?.result?.dimensions.height ||
+    activeFile?.transform?.crop?.height ||
+    options.maxHeight ||
+    1000;
+  const previewExtension = getExtension(options.outputFormat || 'webp');
+  const previewFilename = activeFile
+    ? buildOutputFilename(
+        activeFile.file.name,
+        previewExtension,
+        previewWidth,
+        previewHeight,
+        options
+      )
+    : 'example-output' + previewExtension;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -308,6 +374,142 @@ export const SettingsPanel: React.FC = () => {
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Metadata is always stripped for privacy.
         </p>
+      </div>
+
+      {/* File Naming */}
+      <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+          File Naming (Batch Rename)
+        </h3>
+
+        <div className="mb-4">
+          <label htmlFor="rename-template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Template
+          </label>
+          <select
+            id="rename-template"
+            value={renameTemplate}
+            onChange={(e) => handleTemplateChange(e.target.value)}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            {RENAME_TEMPLATES.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="rename-pattern" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Pattern
+          </label>
+          <input
+            id="rename-pattern"
+            type="text"
+            value={options.renamePattern || ''}
+            onChange={(e) => handleRenameFieldChange('renamePattern', e.target.value)}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Tokens: {'{name} {prefix} {suffix} {timestamp} {dimensions} {width} {height} {seq} {ext} {extDot}'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label htmlFor="rename-prefix" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+              Prefix
+            </label>
+            <input
+              id="rename-prefix"
+              type="text"
+              value={options.namePrefix || ''}
+              onChange={(e) => handleRenameFieldChange('namePrefix', e.target.value)}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="e.g. shop_"
+            />
+          </div>
+          <div>
+            <label htmlFor="rename-suffix" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+              Suffix
+            </label>
+            <input
+              id="rename-suffix"
+              type="text"
+              value={options.nameSuffix || ''}
+              onChange={(e) => handleRenameFieldChange('nameSuffix', e.target.value)}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="e.g. _hero"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label htmlFor="rename-seq-start" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+              Sequence start
+            </label>
+            <input
+              id="rename-seq-start"
+              type="number"
+              min={1}
+              value={options.renameSequenceStart ?? 1}
+              onChange={(e) => handleRenameFieldChange('renameSequenceStart', parseInt(e.target.value, 10) || 1)}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label htmlFor="rename-seq-pad" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+              Sequence pad
+            </label>
+            <input
+              id="rename-seq-pad"
+              type="number"
+              min={0}
+              value={options.renameSequencePad ?? 0}
+              onChange={(e) => handleRenameFieldChange('renameSequencePad', parseInt(e.target.value, 10) || 0)}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.addSequence || false}
+              onChange={() => handleRenameFieldChange('addSequence', !options.addSequence)}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">Include sequence</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.addTimestamp || false}
+              onChange={() => handleRenameFieldChange('addTimestamp', !options.addTimestamp)}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">Include timestamp</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.addDimensions || false}
+              onChange={() => handleRenameFieldChange('addDimensions', !options.addDimensions)}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">Include dimensions</span>
+          </label>
+        </div>
+
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Preview</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+            {previewFilename}
+          </p>
+        </div>
       </div>
     </div>
   );

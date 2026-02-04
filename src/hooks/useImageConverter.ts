@@ -55,7 +55,13 @@ export const useImageConverter = () => {
    * @returns Promise resolving to conversion result
    */
   const convertWithWorker = useCallback(
-    async (file: File, fileId: string, fileTransform: any, runId: number): Promise<ConvertResult> => {
+    async (
+      file: File,
+      fileId: string,
+      fileTransform: any,
+      runId: number,
+      renameSequence: number
+    ): Promise<ConvertResult> => {
       return new Promise(async (resolve, reject) => {
         const workerInstance = ensureWorker();
         if (!workerInstance) {
@@ -114,6 +120,7 @@ export const useImageConverter = () => {
             options: {
               ...options,
               transform: fileTransform, // Use file-specific transform
+              renameSequence,
             },
           },
         });
@@ -142,9 +149,13 @@ export const useImageConverter = () => {
     let successCount = 0;
     let errorCount = 0;
     let cancelled = false;
+    const sequenceStart = options.renameSequenceStart ?? 1;
+    let sequenceOffset = 0;
 
     // Process ONE BY ONE to prevent memory issues
     for (const selectedFile of pendingFiles) {
+      const renameSequence = sequenceStart + sequenceOffset;
+      sequenceOffset += 1;
       // Check if conversion was cancelled
       if (abortRef.current || runId !== conversionIdRef.current) {
         toast('Conversion cancelled');
@@ -165,7 +176,13 @@ export const useImageConverter = () => {
         
         // Use Web Worker if available, otherwise fall back to main thread
         if (useWorker.current) {
-          result = await convertWithWorker(selectedFile.file, selectedFile.id, selectedFile.transform, runId);
+          result = await convertWithWorker(
+            selectedFile.file,
+            selectedFile.id,
+            selectedFile.transform,
+            runId,
+            renameSequence
+          );
         } else {
           dispatch({
             type: 'UPDATE_FILE',
@@ -174,6 +191,7 @@ export const useImageConverter = () => {
           result = await convertImage(selectedFile.file, {
             ...options,
             transform: selectedFile.transform, // Use file-specific transform
+            renameSequence,
           });
         }
 
@@ -281,9 +299,13 @@ export const useImageConverter = () => {
     let successCount = 0;
     let errorCount = 0;
     let cancelled = false;
+    const sequenceStart = options.renameSequenceStart ?? 1;
+    let sequenceOffset = 0;
 
     // Process ONE BY ONE to prevent memory issues
     for (const selectedFile of selectedFiles) {
+      const renameSequence = sequenceStart + sequenceOffset;
+      sequenceOffset += 1;
       // Check if conversion was cancelled
       if (abortRef.current || runId !== conversionIdRef.current) {
         toast('Conversion cancelled');
@@ -304,7 +326,13 @@ export const useImageConverter = () => {
         
         // Use Web Worker if available, otherwise fall back to main thread
         if (useWorker.current) {
-          result = await convertWithWorker(selectedFile.file, selectedFile.id, selectedFile.transform, runId);
+          result = await convertWithWorker(
+            selectedFile.file,
+            selectedFile.id,
+            selectedFile.transform,
+            runId,
+            renameSequence
+          );
         } else {
           dispatch({
             type: 'UPDATE_FILE',
@@ -313,6 +341,7 @@ export const useImageConverter = () => {
           result = await convertImage(selectedFile.file, {
             ...options,
             transform: selectedFile.transform,
+            renameSequence,
           });
         }
 
@@ -414,11 +443,18 @@ export const useImageConverter = () => {
 
       try {
         const runId = ++conversionIdRef.current;
+        const renameSequence = options.renameSequenceStart ?? 1;
         let result: ConvertResult;
         
         // Use Web Worker if available, otherwise fall back to main thread
         if (useWorker.current) {
-          result = await convertWithWorker(selectedFile.file, fileId, selectedFile.transform, runId);
+          result = await convertWithWorker(
+            selectedFile.file,
+            fileId,
+            selectedFile.transform,
+            runId,
+            renameSequence
+          );
         } else {
           dispatch({
             type: 'UPDATE_FILE',
@@ -427,6 +463,7 @@ export const useImageConverter = () => {
           result = await convertImage(selectedFile.file, {
             ...options,
             transform: selectedFile.transform, // Use file-specific transform
+            renameSequence,
           });
         }
 
