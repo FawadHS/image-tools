@@ -22,16 +22,16 @@ const toDecimal = (coord: number[], ref?: string): string => {
 export const readExifData = async (file: File): Promise<ExifField[]> => {
   try {
     const buffer = await file.arrayBuffer();
-    const tags = ExifReader.load(buffer, { expanded: true });
+    const tags = ExifReader.load(buffer, { expanded: true }) as any;
 
     const gps = tags.gps || {};
     const exif = tags.exif || {};
-    const image = tags.image || {};
+    const image = tags.image || tags['0th'] || {};
 
-    const gpsLat = gps?.GPSLatitude?.value as number[] | undefined;
-    const gpsLatRef = gps?.GPSLatitudeRef?.value as string | undefined;
-    const gpsLon = gps?.GPSLongitude?.value as number[] | undefined;
-    const gpsLonRef = gps?.GPSLongitudeRef?.value as string | undefined;
+    const gpsLat = (gps?.Latitude?.value || gps?.GPSLatitude?.value) as number[] | undefined;
+    const gpsLatRef = (gps?.LatitudeRef?.value || gps?.GPSLatitudeRef?.value) as string | undefined;
+    const gpsLon = (gps?.Longitude?.value || gps?.GPSLongitude?.value) as number[] | undefined;
+    const gpsLonRef = (gps?.LongitudeRef?.value || gps?.GPSLongitudeRef?.value) as string | undefined;
 
     const fields: ExifField[] = [
       { label: 'Make', value: formatValue(image?.Make?.description || image?.Make?.value) },

@@ -1,4 +1,4 @@
-const dataUrlToBlob = (dataUrl) => {
+const dataUrlToBlob = (dataUrl: string): Blob => {
   const [header, data] = dataUrl.split(',');
   const mimeMatch = header.match(/data:(.*);base64/);
   const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
@@ -9,7 +9,12 @@ const dataUrlToBlob = (dataUrl) => {
   return new Blob([bytes], { type: mime });
 };
 
-export const maybePreserveMetadata = async (outputBlob, originalFile, outputFormat, options) => {
+export const maybePreserveMetadata = async (
+  outputBlob: Blob,
+  originalFile: File,
+  outputFormat: string,
+  options: { preserveMetadata?: boolean }
+): Promise<Blob> => {
   if (!options?.preserveMetadata) return outputBlob;
   if (outputFormat !== 'jpeg') return outputBlob;
 
