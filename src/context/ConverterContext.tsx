@@ -38,6 +38,7 @@ const initialOptions: ConvertOptions = {
   renameSequenceStart: 1,
   renameSequencePad: 0,
   renamePattern: '{prefix}{name}{suffix}{timestamp}{dimensions}{seq}',
+  preserveMetadata: false,
 };
 
 // Load total conversions from localStorage

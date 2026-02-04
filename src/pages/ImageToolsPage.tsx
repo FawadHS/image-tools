@@ -26,6 +26,9 @@ const ReviewsList = lazy(() =>
 const ShopifyPanel = lazy(() =>
   import('../components/shopify/ShopifyPanel').then((module) => ({ default: module.ShopifyPanel }))
 );
+const ExifPanel = lazy(() =>
+  import('../components/ExifPanel').then((module) => ({ default: module.ExifPanel }))
+);
 
 // Inner component that uses hooks requiring ConverterProvider context
 const ImageToolsContent = () => {
@@ -92,6 +95,9 @@ const ImageToolsContent = () => {
                 <CropTool />
                 <TextOverlayTool />
                 <SettingsPanel />
+                <Suspense fallback={null}>
+                  <ExifPanel />
+                </Suspense>
                 {/* Shopify Panel - Show for all users with upgrade prompts */}
                 <Suspense fallback={null}>
                   <ShopifyPanel />

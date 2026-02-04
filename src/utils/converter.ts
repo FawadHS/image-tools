@@ -1,6 +1,7 @@
 import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
 import { buildOutputFilename } from './filename';
+import { maybePreserveMetadata } from './metadata';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
 
 /**
@@ -207,12 +208,14 @@ export const convertImage = async (
       options
     );
 
+    const finalBlob = await maybePreserveMetadata(outputBlob, file, outputFormat, options);
+
     // Calculate reduction percentage
-    const convertedSize = outputBlob.size;
+    const convertedSize = finalBlob.size;
     const reduction = Math.round(((originalSize - convertedSize) / originalSize) * 100);
 
     return {
-      blob: outputBlob,
+      blob: finalBlob,
       originalSize,
       convertedSize,
       reduction,
@@ -283,12 +286,14 @@ export const convertImage = async (
     options
   );
 
+  const finalBlob = await maybePreserveMetadata(outputBlob, file, finalOutputFormat, options);
+
   // Calculate reduction percentage
-  const convertedSize = outputBlob.size;
+  const convertedSize = finalBlob.size;
   const reduction = Math.round(((originalSize - convertedSize) / originalSize) * 100);
 
   return {
-    blob: outputBlob,
+    blob: finalBlob,
     originalSize,
     convertedSize,
     reduction,

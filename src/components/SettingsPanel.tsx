@@ -143,7 +143,7 @@ export const SettingsPanel: React.FC = () => {
     });
   };
 
-  const handleCheckboxChange = (field: 'lossless' | 'maintainAspectRatio' | 'stripMetadata') => {
+  const handleCheckboxChange = (field: 'lossless' | 'maintainAspectRatio' | 'stripMetadata' | 'preserveMetadata') => {
     dispatch({
       type: 'SET_OPTIONS',
       payload: { [field]: !options[field] },
@@ -371,8 +371,20 @@ export const SettingsPanel: React.FC = () => {
           </span>
         </label>
 
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={options.preserveMetadata || false}
+            onChange={() => handleCheckboxChange('preserveMetadata')}
+            disabled={options.outputFormat !== 'jpeg'}
+            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            Preserve metadata (JPEG only)
+          </span>
+        </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Metadata is always stripped for privacy.
+          Privacy-first by default. Metadata preservation works only when input and output are JPEG.
         </p>
       </div>
 

@@ -173,9 +173,10 @@ export const useImageConverter = () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         
         let result: ConvertResult;
+        const canUseWorker = useWorker.current && !options.preserveMetadata;
         
-        // Use Web Worker if available, otherwise fall back to main thread
-        if (useWorker.current) {
+        // Use Web Worker if available and metadata preservation is off
+        if (canUseWorker) {
           result = await convertWithWorker(
             selectedFile.file,
             selectedFile.id,
@@ -445,9 +446,10 @@ export const useImageConverter = () => {
         const runId = ++conversionIdRef.current;
         const renameSequence = options.renameSequenceStart ?? 1;
         let result: ConvertResult;
+        const canUseWorker = useWorker.current && !options.preserveMetadata;
         
-        // Use Web Worker if available, otherwise fall back to main thread
-        if (useWorker.current) {
+        // Use Web Worker if available and metadata preservation is off
+        if (canUseWorker) {
           result = await convertWithWorker(
             selectedFile.file,
             fileId,
