@@ -15,6 +15,7 @@ type ConverterAction =
   | { type: 'REMOVE_FILE'; payload: string }
   | { type: 'CLEAR_FILES' }
   | { type: 'UPDATE_FILE'; payload: { id: string; updates: Partial<SelectedFile> } }
+  | { type: 'MOVE_FILE'; payload: { sourceId: string; targetId: string } }
   | { type: 'SET_OPTIONS'; payload: Partial<ConvertOptions> }
   | { type: 'SET_PRESET'; payload: PresetType }
   | { type: 'SET_OUTPUT_FORMAT'; payload: OutputFormat }
@@ -102,6 +103,21 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
           f.id === action.payload.id ? { ...f, ...action.payload.updates } : f
         ),
       };
+
+    case 'MOVE_FILE': {
+      const { sourceId, targetId } = action.payload;
+      if (sourceId === targetId) return state;
+      const sourceIndex = state.files.findIndex((f) => f.id === sourceId);
+      const targetIndex = state.files.findIndex((f) => f.id === targetId);
+      if (sourceIndex === -1 || targetIndex === -1) return state;
+      const reordered = [...state.files];
+      const [moved] = reordered.splice(sourceIndex, 1);
+      reordered.splice(targetIndex, 0, moved);
+      return {
+        ...state,
+        files: reordered,
+      };
+    }
 
     case 'SET_OPTIONS':
       return {

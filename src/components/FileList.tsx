@@ -7,7 +7,16 @@ import { useDuplicateDetection } from '../hooks/useDuplicateDetection';
 import toast from 'react-hot-toast';
 
 export const FileList: React.FC = () => {
-  const { files, removeFile, clearFiles, toggleFileSelection, selectAll, deselectAll } = useFileSelection();
+  const {
+    files,
+    removeFile,
+    clearFiles,
+    toggleFileSelection,
+    selectAll,
+    deselectAll,
+    moveFile,
+    moveFileByOffset,
+  } = useFileSelection();
   const { state } = useConverter();
   const { hasDuplicates, duplicateCount, isDuplicate, getDuplicateIdsToRemove } = useDuplicateDetection(files);
 
@@ -73,6 +82,9 @@ export const FileList: React.FC = () => {
             file={file} 
             onRemove={removeFile}
             onToggleSelect={toggleFileSelection}
+            onMove={moveFile}
+            onMoveUp={(id) => moveFileByOffset(id, -1)}
+            onMoveDown={(id) => moveFileByOffset(id, 1)}
             isActive={file.id === state.activeFileId}
             isDuplicate={isDuplicate(file.id)}
           />

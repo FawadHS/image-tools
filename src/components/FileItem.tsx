@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy } from 'lucide-react';
+import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { SelectedFile } from '../types';
 import { formatFileSize } from '../utils/fileUtils';
 import { ComparisonSlider } from './ComparisonSlider';
@@ -9,11 +9,23 @@ interface FileItemProps {
   file: SelectedFile;
   onRemove: (id: string) => void;
   onToggleSelect?: (id: string) => void;
+  onMove?: (sourceId: string, targetId: string) => void;
+  onMoveUp?: (id: string) => void;
+  onMoveDown?: (id: string) => void;
   isActive?: boolean;
   isDuplicate?: boolean;
 }
 
-export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSelect, isActive = false, isDuplicate = false }) => {
+export const FileItem: React.FC<FileItemProps> = ({
+  file,
+  onRemove,
+  onToggleSelect,
+  onMove,
+  onMoveUp,
+  onMoveDown,
+  isActive = false,
+  isDuplicate = false,
+}) => {
   const { dispatch } = useConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
@@ -27,6 +39,35 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleSelect?.(file.id);
+  };
+
+  const handleDragStart = (event: React.DragEvent) => {
+    event.dataTransfer.setData('text/plain', file.id);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData('text/plain');
+    if (sourceId && sourceId !== file.id) {
+      onMove?.(sourceId, file.id);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.altKey && event.key === 'ArrowUp') {
+      event.preventDefault();
+      onMoveUp?.(file.id);
+    }
+    if (event.altKey && event.key === 'ArrowDown') {
+      event.preventDefault();
+      onMoveDown?.(file.id);
+    }
   };
 
   // Use centralized displayPreview (already converted for HEIC files)
@@ -92,6 +133,9 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
   return (
     <div
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
       className={`
         relative flex items-center gap-3 p-3 bg-white dark:bg-gray-800 
         rounded-lg border-2 ${statusBorder[file.status]}
@@ -103,6 +147,41 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove, onToggleSele
       tabIndex={0}
       aria-label={`Select ${file.file.name} for editing`}
     >
+      <div className="flex flex-col items-center gap-1">
+        <button
+          type="button"
+          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab"
+          aria-label="Drag to reorder"
+          draggable
+          onDragStart={handleDragStart}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <div className="flex flex-col">
+          <button
+            type="button"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Move up"
+            onClick={(event) => {
+              event.stopPropagation();
+              onMoveUp?.(file.id);
+            }}
+          >
+            <ArrowUp className="w-3 h-3" />
+          </button>
+          <button
+            type="button"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Move down"
+            onClick={(event) => {
+              event.stopPropagation();
+              onMoveDown?.(file.id);
+            }}
+          >
+            <ArrowDown className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
       {/* Duplicate Badge */}
       {isDuplicate && file.status === 'pending' && (
         <div className="absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full shadow-sm">

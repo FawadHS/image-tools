@@ -123,6 +123,27 @@ export const useFileSelection = () => {
     });
   }, [files, dispatch]);
 
+  const moveFile = useCallback(
+    (sourceId: string, targetId: string) => {
+      dispatch({ type: 'MOVE_FILE', payload: { sourceId, targetId } });
+    },
+    [dispatch]
+  );
+
+  const moveFileByOffset = useCallback(
+    (fileId: string, offset: number) => {
+      const index = files.findIndex((f) => f.id === fileId);
+      if (index === -1) return;
+      const targetIndex = index + offset;
+      if (targetIndex < 0 || targetIndex >= files.length) return;
+      dispatch({
+        type: 'MOVE_FILE',
+        payload: { sourceId: fileId, targetId: files[targetIndex].id },
+      });
+    },
+    [files, dispatch]
+  );
+
   const deselectAll = useCallback(() => {
     files.forEach((file) => {
       dispatch({
@@ -146,6 +167,8 @@ export const useFileSelection = () => {
     toggleFileSelection,
     selectAll,
     deselectAll,
+    moveFile,
+    moveFileByOffset,
     totalSize,
     pendingFiles,
     completedFiles,
