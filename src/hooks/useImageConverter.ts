@@ -16,36 +16,42 @@ export const useImageConverter = () => {
   const { files, options, isConverting } = state;
   const abortRef = useRef(false);
   const conversionIdRef = useRef(0);
-  const pendingRejectRef = useRef<((error: Error) => void) | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  const pendingRejectsRef = useRef<Set<(error: Error) => void>>(new Set());
+  const workerPoolRef = useRef<Worker[]>([]);
   // Web Worker now uses unified pipeline (renderEditsToOffscreenCanvas)
   // matching the exact transformation order of main thread
   const useWorker = useRef(isWorkerSupported());
 
-  const ensureWorker = useCallback(() => {
-    if (!useWorker.current) return null;
-    if (workerRef.current) return workerRef.current;
-    try {
-      workerRef.current = new Worker(
-        new URL('../workers/converter.worker.ts', import.meta.url),
-        { type: 'module' }
-      );
-      return workerRef.current;
-    } catch (error) {
-      console.warn('Failed to initialize Web Worker, falling back to main thread:', error);
-      useWorker.current = false;
-      return null;
-    }
+  const getWorkerConcurrency = useCallback(() => {
+    const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
+    return Math.min(Math.max(cores - 1, 1), 3);
   }, []);
+
+  const ensureWorkerPool = useCallback(() => {
+    if (!useWorker.current) return [];
+    if (workerPoolRef.current.length > 0) return workerPoolRef.current;
+    const count = getWorkerConcurrency();
+    try {
+      workerPoolRef.current = Array.from({ length: count }, () =>
+        new Worker(new URL('../workers/converter.worker.ts', import.meta.url), { type: 'module' })
+      );
+      return workerPoolRef.current;
+    } catch (error) {
+      console.warn('Failed to initialize Web Workers, falling back to main thread:', error);
+      useWorker.current = false;
+      workerPoolRef.current = [];
+      return [];
+    }
+  }, [getWorkerConcurrency]);
 
   // Initialize worker
   useEffect(() => {
-    ensureWorker();
+    ensureWorkerPool();
     return () => {
-      workerRef.current?.terminate();
-      workerRef.current = null;
+      workerPoolRef.current.forEach((worker) => worker.terminate());
+      workerPoolRef.current = [];
     };
-  }, [ensureWorker]);
+  }, [ensureWorkerPool]);
 
   /**
    * Convert using Web Worker (if supported)
@@ -56,6 +62,7 @@ export const useImageConverter = () => {
    */
   const convertWithWorker = useCallback(
     async (
+      worker: Worker,
       file: File,
       fileId: string,
       fileTransform: any,
@@ -63,11 +70,7 @@ export const useImageConverter = () => {
       renameSequence: number
     ): Promise<ConvertResult> => {
       return new Promise(async (resolve, reject) => {
-        const workerInstance = ensureWorker();
-        if (!workerInstance) {
-          reject(new Error('Worker not available'));
-          return;
-        }
+        pendingRejectsRef.current.add(reject);
 
         // Preprocess HEIC if needed (HEIC conversion must happen on main thread)
         let blob: Blob = file;
@@ -75,17 +78,16 @@ export const useImageConverter = () => {
           try {
             blob = await convertHeicToBlob(file);
           } catch (error) {
+            pendingRejectsRef.current.delete(reject);
             reject(error);
             return;
           }
         }
 
-        const worker = workerInstance;
-
         const handleMessage = (e: MessageEvent) => {
           if (runId !== conversionIdRef.current || abortRef.current) {
             worker.removeEventListener('message', handleMessage);
-            pendingRejectRef.current = null;
+            pendingRejectsRef.current.delete(reject);
             reject(new Error('Conversion cancelled'));
             return;
           }
@@ -98,17 +100,16 @@ export const useImageConverter = () => {
             });
           } else if (type === 'success' && payload) {
             worker.removeEventListener('message', handleMessage);
-            pendingRejectRef.current = null;
+            pendingRejectsRef.current.delete(reject);
             resolve(payload);
           } else if (type === 'error') {
             worker.removeEventListener('message', handleMessage);
-            pendingRejectRef.current = null;
+            pendingRejectsRef.current.delete(reject);
             reject(new Error(error || 'Worker conversion failed'));
           }
         };
 
         worker.addEventListener('message', handleMessage);
-        pendingRejectRef.current = reject;
 
         // Send to worker with file-specific transform
         worker.postMessage({
@@ -126,7 +127,7 @@ export const useImageConverter = () => {
         });
       });
     },
-    [options, dispatch, ensureWorker]
+    [options, dispatch]
   );
 
   /**
@@ -150,126 +151,120 @@ export const useImageConverter = () => {
     let errorCount = 0;
     let cancelled = false;
     const sequenceStart = options.renameSequenceStart ?? 1;
-    let sequenceOffset = 0;
+    const canUseWorker = useWorker.current && !options.preserveMetadata;
+    const workers = canUseWorker ? ensureWorkerPool() : [];
+    const concurrency = Math.min(workers.length || 1, pendingFiles.length);
+    let index = 0;
 
-    // Process ONE BY ONE to prevent memory issues
-    for (const selectedFile of pendingFiles) {
-      const renameSequence = sequenceStart + sequenceOffset;
-      sequenceOffset += 1;
-      // Check if conversion was cancelled
-      if (abortRef.current || runId !== conversionIdRef.current) {
-        toast('Conversion cancelled');
-        cancelled = true;
-        break;
-      }
-
-      dispatch({
-        type: 'UPDATE_FILE',
-        payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
-      });
-
-      try {
-        // Small delay to allow UI to update and prevent UI_UPDATE_DELAY_MSocking
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        let result: ConvertResult;
-        const canUseWorker = useWorker.current && !options.preserveMetadata;
-        
-        // Use Web Worker if available and metadata preservation is off
-        if (canUseWorker) {
-          result = await convertWithWorker(
-            selectedFile.file,
-            selectedFile.id,
-            selectedFile.transform,
-            runId,
-            renameSequence
-          );
-        } else {
-          dispatch({
-            type: 'UPDATE_FILE',
-            payload: { id: selectedFile.id, updates: { progress: 50 } },
-          });
-          result = await convertImage(selectedFile.file, {
-            ...options,
-            transform: selectedFile.transform, // Use file-specific transform
-            renameSequence,
-          });
-        }
+    const processNext = async () => {
+      while (index < pendingFiles.length) {
+        const currentIndex = index++;
+        const selectedFile = pendingFiles[currentIndex];
+        const renameSequence = sequenceStart + currentIndex;
 
         if (abortRef.current || runId !== conversionIdRef.current) {
-          dispatch({
-            type: 'UPDATE_FILE',
-            payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
-          });
           cancelled = true;
-          break;
+          return;
         }
 
         dispatch({
           type: 'UPDATE_FILE',
-          payload: {
-            id: selectedFile.id,
-            updates: { status: 'completed', progress: 100, result },
-          },
+          payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
         });
-        
-        // Increment total conversions counter
-        dispatch({
-          type: 'INCREMENT_CONVERSIONS',
-          payload: 1,
-        });
-        
-        // Log conversion to backend (if user is authenticated)
-        logConversion({
-          action: 'convert',
-          fileCount: 1,
-          inputSize: result.originalSize,
-          outputSize: result.convertedSize,
-          inputFormat: selectedFile.file.type,
-          outputFormat: options.outputFormat || 'webp',
-        }).catch(() => {
-          // Silent fail - don't disrupt user experience
-        });
-        
-        // Save to history
-        addToHistory({
-          filename: result.filename,
-          originalSize: result.originalSize,
-          convertedSize: result.convertedSize,
-          reduction: result.reduction,
-          format: options.outputFormat || 'webp',
-          quality: options.quality,
-        });
-        
-        successCount++;
-        
-        // Brief pause between conversions to free up memCONVERSION_DELAY_MS
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-      } catch (error) {
-        if (error instanceof Error && error.message === 'Conversion cancelled') {
+
+        try {
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          let result: ConvertResult;
+          if (workers.length > 0) {
+            const worker = workers[currentIndex % workers.length];
+            result = await convertWithWorker(
+              worker,
+              selectedFile.file,
+              selectedFile.id,
+              selectedFile.transform,
+              runId,
+              renameSequence
+            );
+          } else {
+            dispatch({
+              type: 'UPDATE_FILE',
+              payload: { id: selectedFile.id, updates: { progress: 50 } },
+            });
+            result = await convertImage(selectedFile.file, {
+              ...options,
+              transform: selectedFile.transform,
+              renameSequence,
+            });
+          }
+
+          if (abortRef.current || runId !== conversionIdRef.current) {
+            dispatch({
+              type: 'UPDATE_FILE',
+              payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
+            });
+            cancelled = true;
+            return;
+          }
+
           dispatch({
             type: 'UPDATE_FILE',
-            payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
+            payload: {
+              id: selectedFile.id,
+              updates: { status: 'completed', progress: 100, result },
+            },
           });
-          cancelled = true;
-          break;
+
+          dispatch({ type: 'INCREMENT_CONVERSIONS', payload: 1 });
+
+          logConversion({
+            action: 'convert',
+            fileCount: 1,
+            inputSize: result.originalSize,
+            outputSize: result.convertedSize,
+            inputFormat: selectedFile.file.type,
+            outputFormat: options.outputFormat || 'webp',
+          }).catch(() => {});
+
+          addToHistory({
+            filename: result.filename,
+            originalSize: result.originalSize,
+            convertedSize: result.convertedSize,
+            reduction: result.reduction,
+            format: options.outputFormat || 'webp',
+            quality: options.quality,
+          });
+
+          successCount++;
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          if (error instanceof Error && error.message === 'Conversion cancelled') {
+            dispatch({
+              type: 'UPDATE_FILE',
+              payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
+            });
+            cancelled = true;
+            return;
+          }
+          const errorMessage = error instanceof Error ? error.message : 'Conversion failed';
+          dispatch({
+            type: 'UPDATE_FILE',
+            payload: {
+              id: selectedFile.id,
+              updates: { status: 'error', progress: 0, error: errorMessage },
+            },
+          });
+          errorCount++;
         }
-        const errorMessage = error instanceof Error ? error.message : 'Conversion failed';
-        dispatch({
-          type: 'UPDATE_FILE',
-          payload: {
-            id: selectedFile.id,
-            updates: { status: 'error', progress: 0, error: errorMessage },
-          },
-        });
-        errorCount++;
       }
-    }
+    };
+
+    await Promise.all(Array.from({ length: concurrency }, () => processNext()));
 
     dispatch({ type: 'SET_CONVERTING', payload: false });
 
     if (cancelled) {
+      toast('Conversion cancelled');
       return;
     }
 
@@ -279,7 +274,7 @@ export const useImageConverter = () => {
     if (errorCount > 0) {
       toast.error(`Failed to convert ${errorCount} file(s)`);
     }
-  }, [files, options, dispatch, convertWithWorker]);
+  }, [files, options, dispatch, convertWithWorker, ensureWorkerPool]);
 
   /**
    * Convert only selected files
@@ -301,113 +296,111 @@ export const useImageConverter = () => {
     let errorCount = 0;
     let cancelled = false;
     const sequenceStart = options.renameSequenceStart ?? 1;
-    let sequenceOffset = 0;
+    const canUseWorker = useWorker.current && !options.preserveMetadata;
+    const workers = canUseWorker ? ensureWorkerPool() : [];
+    const concurrency = Math.min(workers.length || 1, selectedFiles.length);
+    let index = 0;
 
-    // Process ONE BY ONE to prevent memory issues
-    for (const selectedFile of selectedFiles) {
-      const renameSequence = sequenceStart + sequenceOffset;
-      sequenceOffset += 1;
-      // Check if conversion was cancelled
-      if (abortRef.current || runId !== conversionIdRef.current) {
-        toast('Conversion cancelled');
-        cancelled = true;
-        break;
-      }
-
-      dispatch({
-        type: 'UPDATE_FILE',
-        payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
-      });
-
-      try {
-        // Small delay to allow UI to update
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        let result: ConvertResult;
-        
-        // Use Web Worker if available, otherwise fall back to main thread
-        if (useWorker.current) {
-          result = await convertWithWorker(
-            selectedFile.file,
-            selectedFile.id,
-            selectedFile.transform,
-            runId,
-            renameSequence
-          );
-        } else {
-          dispatch({
-            type: 'UPDATE_FILE',
-            payload: { id: selectedFile.id, updates: { progress: 50 } },
-          });
-          result = await convertImage(selectedFile.file, {
-            ...options,
-            transform: selectedFile.transform,
-            renameSequence,
-          });
-        }
+    const processNext = async () => {
+      while (index < selectedFiles.length) {
+        const currentIndex = index++;
+        const selectedFile = selectedFiles[currentIndex];
+        const renameSequence = sequenceStart + currentIndex;
 
         if (abortRef.current || runId !== conversionIdRef.current) {
-          dispatch({
-            type: 'UPDATE_FILE',
-            payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
-          });
           cancelled = true;
-          break;
+          return;
         }
 
         dispatch({
           type: 'UPDATE_FILE',
-          payload: {
-            id: selectedFile.id,
-            updates: { status: 'completed', progress: 100, result },
-          },
+          payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
         });
-        
-        // Increment total conversions counter
-        dispatch({
-          type: 'INCREMENT_CONVERSIONS',
-          payload: 1,
-        });
-        
-        // Save to history
-        addToHistory({
-          filename: result.filename,
-          originalSize: result.originalSize,
-          convertedSize: result.convertedSize,
-          reduction: result.reduction,
-          format: options.outputFormat || 'webp',
-          quality: options.quality,
-        });
-        
-        successCount++;
-        
-        // Brief pause between conversions
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-      } catch (error) {
-        if (error instanceof Error && error.message === 'Conversion cancelled') {
+
+        try {
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          let result: ConvertResult;
+          if (workers.length > 0) {
+            const worker = workers[currentIndex % workers.length];
+            result = await convertWithWorker(
+              worker,
+              selectedFile.file,
+              selectedFile.id,
+              selectedFile.transform,
+              runId,
+              renameSequence
+            );
+          } else {
+            dispatch({
+              type: 'UPDATE_FILE',
+              payload: { id: selectedFile.id, updates: { progress: 50 } },
+            });
+            result = await convertImage(selectedFile.file, {
+              ...options,
+              transform: selectedFile.transform,
+              renameSequence,
+            });
+          }
+
+          if (abortRef.current || runId !== conversionIdRef.current) {
+            dispatch({
+              type: 'UPDATE_FILE',
+              payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
+            });
+            cancelled = true;
+            return;
+          }
+
           dispatch({
             type: 'UPDATE_FILE',
-            payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
+            payload: {
+              id: selectedFile.id,
+              updates: { status: 'completed', progress: 100, result },
+            },
           });
-          cancelled = true;
-          break;
+
+          dispatch({ type: 'INCREMENT_CONVERSIONS', payload: 1 });
+
+          addToHistory({
+            filename: result.filename,
+            originalSize: result.originalSize,
+            convertedSize: result.convertedSize,
+            reduction: result.reduction,
+            format: options.outputFormat || 'webp',
+            quality: options.quality,
+          });
+
+          successCount++;
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          if (error instanceof Error && error.message === 'Conversion cancelled') {
+            dispatch({
+              type: 'UPDATE_FILE',
+              payload: { id: selectedFile.id, updates: { status: 'pending', progress: 0 } },
+            });
+            cancelled = true;
+            return;
+          }
+          const errorMessage = error instanceof Error ? error.message : 'Conversion failed';
+          dispatch({
+            type: 'UPDATE_FILE',
+            payload: {
+              id: selectedFile.id,
+              updates: { status: 'error', progress: 0, error: errorMessage },
+            },
+          });
+          errorCount++;
         }
-        const errorMessage = error instanceof Error ? error.message : 'Conversion failed';
-        dispatch({
-          type: 'UPDATE_FILE',
-          payload: {
-            id: selectedFile.id,
-            updates: { status: 'error', progress: 0, error: errorMessage },
-          },
-        });
-        errorCount++;
       }
-    }
+    };
+
+    await Promise.all(Array.from({ length: concurrency }, () => processNext()));
 
     dispatch({ type: 'SET_CONVERTING', payload: false });
 
     if (cancelled) {
+      toast('Conversion cancelled');
       return;
     }
 
@@ -417,19 +410,17 @@ export const useImageConverter = () => {
     if (errorCount > 0) {
       toast.error(`Failed to convert ${errorCount} file(s)`);
     }
-  }, [files, options, dispatch, convertWithWorker]);
+  }, [files, options, dispatch, convertWithWorker, ensureWorkerPool]);
 
   const cancelConversion = useCallback(() => {
     abortRef.current = true;
     conversionIdRef.current += 1;
-    if (pendingRejectRef.current) {
-      pendingRejectRef.current(new Error('Conversion cancelled'));
-      pendingRejectRef.current = null;
-    }
-    if (workerRef.current) {
-      workerRef.current.terminate();
-      workerRef.current = null;
-    }
+    pendingRejectsRef.current.forEach((reject) => {
+      reject(new Error('Conversion cancelled'));
+    });
+    pendingRejectsRef.current.clear();
+    workerPoolRef.current.forEach((worker) => worker.terminate());
+    workerPoolRef.current = [];
   }, []);
 
   const convertSingle = useCallback(
@@ -450,7 +441,13 @@ export const useImageConverter = () => {
         
         // Use Web Worker if available and metadata preservation is off
         if (canUseWorker) {
+          const workers = ensureWorkerPool();
+          const worker = workers[0];
+          if (!worker) {
+            throw new Error('Worker not available');
+          }
           result = await convertWithWorker(
+            worker,
             selectedFile.file,
             fileId,
             selectedFile.transform,
@@ -511,7 +508,7 @@ export const useImageConverter = () => {
         toast.error(`Failed to convert ${selectedFile.file.name}`);
       }
     },
-    [files, options, dispatch, convertWithWorker]
+    [files, options, dispatch, convertWithWorker, ensureWorkerPool]
   );
 
   return {
