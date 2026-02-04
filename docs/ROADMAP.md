@@ -63,6 +63,21 @@ This release builds on the V4 quality baseline with practical workflow features 
 
 ---
 
+## Version 4.1 Sprint Plan (Topic-Based)
+
+| Sprint | Topic | Scope | Status |
+|--------|-------|-------|--------|
+| Sprint 1 | Batch Rename | Prefix/suffix/sequence/timestamp/dimensions + e-commerce templates | Planned |
+| Sprint 2 | Queue Reorder | Drag-and-drop reorder + keyboard reorder | Planned |
+| Sprint 3 | EXIF + Metadata | EXIF viewer + opt-in metadata preservation path | Planned |
+| Sprint 4 | URL Import | URL input, CORS guidance, optional proxy support | Planned |
+| Sprint 5 | Parallelism | Multi-worker conversion with throttling + cancel cleanup | Planned |
+| Sprint 6 | WASM Encoders | Optional WASM WebP/AVIF paths + fallback | Planned |
+| Sprint 7 | AI Enhancements | AI upscaling / smart compression using existing AI API | Planned |
+| Sprint 8 | Testing & Release | E2E + unit tests + doc updates + deploy | Planned |
+
+---
+
 ## Version 4.0 Sprint Plan (Topic-Based)
 
 | Sprint | Topic | Scope | Status |
