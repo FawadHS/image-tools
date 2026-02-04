@@ -44,6 +44,25 @@ This release focuses on quality, correctness, and stability. It preserves the ce
 
 ---
 
+## Version 4.1 - Feature Expansion (Planned)
+
+This release builds on the V4 quality baseline with practical workflow features and performance upgrades.
+
+### New Features
+- Batch Rename: prefix/suffix, sequence, timestamp, dimensions, and e-commerce naming templates.
+- Drag-and-drop reorder of the conversion queue.
+- EXIF Viewer for selected image + optional metadata preservation path.
+- URL Import with CORS guidance and optional proxy usage.
+- Multi-worker parallelism with safe throttling.
+- WASM encoders for faster WebP/AVIF (when available).
+- AI upscaling or smart compression via existing AI API.
+
+### Notes
+- Keep the central render pipeline (`renderEditsToCanvas`) as the single source of truth.
+- Any metadata preservation must be explicitly opt-in and compatible with current canvas export flow.
+
+---
+
 ## Version 4.0 Sprint Plan (Topic-Based)
 
 | Sprint | Topic | Scope | Status |
