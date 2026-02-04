@@ -30,18 +30,22 @@ export const buildOutputFilename = (
 
   const hasExtToken = pattern.includes('{ext}') || pattern.includes('{extDot}');
 
-  let filename = pattern
-    .replaceAll('{name}', originalName)
-    .replaceAll('{prefix}', options.namePrefix || '')
-    .replaceAll('{suffix}', options.nameSuffix || '')
-    .replaceAll('{timestamp}', timestamp)
-    .replaceAll('{date}', timestamp)
-    .replaceAll('{dimensions}', dimensions)
-    .replaceAll('{width}', String(width))
-    .replaceAll('{height}', String(height))
-    .replaceAll('{seq}', seq)
-    .replaceAll('{ext}', extBare)
-    .replaceAll('{extDot}', extDot);
+  const replaceToken = (input: string, token: string, value: string): string => {
+    return input.split(token).join(value);
+  };
+
+  let filename = pattern;
+  filename = replaceToken(filename, '{name}', originalName);
+  filename = replaceToken(filename, '{prefix}', options.namePrefix || '');
+  filename = replaceToken(filename, '{suffix}', options.nameSuffix || '');
+  filename = replaceToken(filename, '{timestamp}', timestamp);
+  filename = replaceToken(filename, '{date}', timestamp);
+  filename = replaceToken(filename, '{dimensions}', dimensions);
+  filename = replaceToken(filename, '{width}', String(width));
+  filename = replaceToken(filename, '{height}', String(height));
+  filename = replaceToken(filename, '{seq}', seq);
+  filename = replaceToken(filename, '{ext}', extBare);
+  filename = replaceToken(filename, '{extDot}', extDot);
 
   if (!hasExtToken) {
     filename = `${filename}${extDot}`;
