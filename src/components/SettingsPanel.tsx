@@ -204,222 +204,233 @@ export const SettingsPanel: React.FC = () => {
       )
     : 'example-output' + previewExtension;
 
+
+  const Section: React.FC<{
+    title: string;
+    children: React.ReactNode;
+    defaultOpen?: boolean;
+  }> = ({ title, children, defaultOpen }) => (
+    <details
+      className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+      open={defaultOpen}
+    >
+      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
+        <span>{title}</span>
+        <span className="text-xs text-gray-400">Toggle</span>
+      </summary>
+      <div className="px-4 pb-4 pt-1">{children}</div>
+    </details>
+  );
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Conversion Settings
-      </h2>
-
-      {/* Output Format Selector */}
-      <fieldset className="mb-6">
-        <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Output Format
-        </legend>
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Select output format">
-          {OUTPUT_FORMATS.map((format) => {
-            const isSupported = formatSupport[format.id];
-            return (
-            <button
-              key={format.id}
-              onClick={() => handleOutputFormatChange(format.id)}
-              type="button"
-              aria-label={`Select ${format.name} format - ${format.description}`}
-              disabled={!isSupported}
-              className={`
-                px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
-                ${options.outputFormat === format.id && isSupported
-                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                  : isSupported
-                  ? 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
-                  : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                }
-              `}
-            >
-              {format.name}
-              {!isSupported && (
-                <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
-                  Unsupported
-                </span>
-              )}
-            </button>
-          );
-          })}
-        </div>
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
-          {OUTPUT_FORMATS.find(f => f.id === options.outputFormat)?.description}
-        </p>
-      </fieldset>
-
-      {/* Preset Selector */}
-      <div className="mb-6">
-        <label htmlFor="preset-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Preset
-        </label>
-        <select
-          id="preset-select"
-          value={options.preset || 'custom'}
-          onChange={(e) => handlePresetChange(e.target.value as PresetType)}
-          aria-label="Select quality preset"
-          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          {presetList.map((preset) => (
-            <option key={preset.id} value={preset.id}>
-              {preset.name}
-            </option>
-          ))}
-        </select>
-        {options.preset && options.preset !== 'custom' && (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {getPreset(options.preset).description}
-          </p>
-        )}
-      </div>
-
-      {/* Quality Slider */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <label htmlFor="quality-slider" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Quality
-          </label>
-          <span className="text-sm font-semibold text-primary-600 dark:text-primary-400" aria-live="polite">
-            {options.quality}%
-          </span>
-        </div>
-        <input
-          id="quality-slider"
-          type="range"
-          min="1"
-          max="100"
-          value={options.quality}
-          onChange={(e) => handleQualityChange(parseInt(e.target.value, 10))}
-          disabled={options.lossless}
-          aria-label={`Quality: ${options.quality}%`}
-          aria-valuenow={options.quality}
-          aria-valuemin={1}
-          aria-valuemax={100}
-          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600 disabled:opacity-50"
-        />
-        <div className="flex justify-between text-xs text-gray-400 mt-1">
-          <span>Smaller file</span>
-          <span>Higher quality</span>
-        </div>
-      </div>
-
-      {/* Dimensions */}
-      <div className="mb-6">
-        <label htmlFor="resize-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Resize
-        </label>
-        <select
-          id="resize-select"
-          value={resizePreset}
-          onChange={(e) => handleResizePresetChange(e.target.value)}
-          aria-label="Select resize preset"
-          className="w-full px-3 py-2 mb-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          {RESIZE_PRESETS.map((preset) => (
-            <option key={preset.id} value={preset.id}>
-              {preset.name}
-            </option>
-          ))}
-        </select>
-        
-        {resizePreset === 'custom' && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="custom-width" className="sr-only">Custom width in pixels</label>
-              <input
-                id="custom-width"
-                type="number"
-                placeholder="Width"
-                aria-label="Custom width in pixels"
-                value={options.maxWidth || ''}
-                onChange={(e) => handleDimensionChange('maxWidth', e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label htmlFor="custom-height" className="sr-only">Custom height in pixels</label>
-              <input
-                id="custom-height"
-                type="number"
-                placeholder="Height"
-                aria-label="Custom height in pixels"
-                value={options.maxHeight || ''}
-                onChange={(e) => handleDimensionChange('maxHeight', e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
+    <div className="space-y-4">
+      <Section title="Conversion" defaultOpen>
+        {/* Output Format Selector */}
+        <fieldset className="mb-6">
+          <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Output Format
+          </legend>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Select output format">
+            {OUTPUT_FORMATS.map((format) => {
+              const isSupported = formatSupport[format.id];
+              return (
+              <button
+                key={format.id}
+                onClick={() => handleOutputFormatChange(format.id)}
+                type="button"
+                aria-label={`Select ${format.name} format - ${format.description}`}
+                disabled={!isSupported}
+                className={`
+                  px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
+                  ${options.outputFormat === format.id && isSupported
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                    : isSupported
+                    ? 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                  }
+                `}
+              >
+                {format.name}
+                {!isSupported && (
+                  <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
+                    Unsupported
+                  </span>
+                )}
+              </button>
+            );
+            })}
           </div>
-        )}
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {resizePreset === 'original' ? 'Images will keep their original dimensions' : 
-           resizePreset === 'custom' ? 'Enter custom max dimensions' : 
-           'Images larger than this will be scaled down'}
-        </p>
-      </div>
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
+            {OUTPUT_FORMATS.find(f => f.id === options.outputFormat)?.description}
+          </p>
+        </fieldset>
 
-      {/* Checkboxes */}
-      <div className="space-y-3">
-        <label className="flex items-center gap-3 cursor-pointer">
+        {/* Preset Selector */}
+        <div className="mb-6">
+          <label htmlFor="preset-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Preset
+          </label>
+          <select
+            id="preset-select"
+            value={options.preset || 'custom'}
+            onChange={(e) => handlePresetChange(e.target.value as PresetType)}
+            aria-label="Select quality preset"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            {presetList.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name}
+              </option>
+            ))}
+          </select>
+          {options.preset && options.preset !== 'custom' && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {getPreset(options.preset).description}
+            </p>
+          )}
+        </div>
+
+        {/* Quality Slider */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <label htmlFor="quality-slider" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Quality
+            </label>
+            <span className="text-sm font-semibold text-primary-600 dark:text-primary-400" aria-live="polite">
+              {options.quality}%
+            </span>
+          </div>
           <input
-            type="checkbox"
-            checked={options.lossless}
-            onChange={() => handleCheckboxChange('lossless')}
-            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            id="quality-slider"
+            type="range"
+            min="1"
+            max="100"
+            value={options.quality}
+            onChange={(e) => handleQualityChange(parseInt(e.target.value, 10))}
+            disabled={options.lossless}
+            aria-label={`Quality: ${options.quality}%`}
+            aria-valuenow={options.quality}
+            aria-valuemin={1}
+            aria-valuemax={100}
+            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600 disabled:opacity-50"
           />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Lossless compression
-          </span>
-        </label>
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>Smaller file</span>
+            <span>Higher quality</span>
+          </div>
+        </div>
 
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={options.maintainAspectRatio}
-            onChange={() => handleCheckboxChange('maintainAspectRatio')}
-            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Maintain aspect ratio
-          </span>
-        </label>
+        {/* Dimensions */}
+        <div className="mb-6">
+          <label htmlFor="resize-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Resize
+          </label>
+          <select
+            id="resize-select"
+            value={resizePreset}
+            onChange={(e) => handleResizePresetChange(e.target.value)}
+            aria-label="Select resize preset"
+            className="w-full px-3 py-2 mb-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            {RESIZE_PRESETS.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name}
+              </option>
+            ))}
+          </select>
+          
+          {resizePreset === 'custom' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="custom-width" className="sr-only">Custom width in pixels</label>
+                <input
+                  id="custom-width"
+                  type="number"
+                  placeholder="Width"
+                  aria-label="Custom width in pixels"
+                  value={options.maxWidth || ''}
+                  onChange={(e) => handleDimensionChange('maxWidth', e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-height" className="sr-only">Custom height in pixels</label>
+                <input
+                  id="custom-height"
+                  type="number"
+                  placeholder="Height"
+                  aria-label="Custom height in pixels"
+                  value={options.maxHeight || ''}
+                  onChange={(e) => handleDimensionChange('maxHeight', e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {resizePreset === 'original' ? 'Images will keep their original dimensions' : 
+             resizePreset === 'custom' ? 'Enter custom max dimensions' : 
+             'Images larger than this will be scaled down'}
+          </p>
+        </div>
 
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={options.preserveMetadata || false}
-            onChange={() => handleCheckboxChange('preserveMetadata')}
-            disabled={options.outputFormat !== 'jpeg'}
-            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Preserve metadata (JPEG only)
-          </span>
-        </label>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={options.useWasmEncoders || false}
-            onChange={() => handleCheckboxChange('useWasmEncoders')}
-            disabled={options.outputFormat !== 'webp' && options.outputFormat !== 'avif'}
-            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Use WASM encoders (WebP/AVIF)
-          </span>
-        </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Privacy-first by default. Metadata preservation works only when input and output are JPEG.
-        </p>
-      </div>
+        {/* Checkboxes */}
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.lossless}
+              onChange={() => handleCheckboxChange('lossless')}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Lossless compression
+            </span>
+          </label>
 
-      {/* File Naming */}
-      <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          File Naming (Batch Rename)
-        </h3>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.maintainAspectRatio}
+              onChange={() => handleCheckboxChange('maintainAspectRatio')}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Maintain aspect ratio
+            </span>
+          </label>
 
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.preserveMetadata || false}
+              onChange={() => handleCheckboxChange('preserveMetadata')}
+              disabled={options.outputFormat !== 'jpeg'}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Preserve metadata (JPEG only)
+            </span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={options.useWasmEncoders || false}
+              onChange={() => handleCheckboxChange('useWasmEncoders')}
+              disabled={options.outputFormat !== 'webp' && options.outputFormat !== 'avif'}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Use WASM encoders (WebP/AVIF)
+            </span>
+          </label>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Privacy-first by default. Metadata preservation works only when input and output are JPEG.
+          </p>
+        </div>
+      </Section>
+
+      <Section title="File Naming (Batch Rename)">
         <div className="mb-4">
           <label htmlFor="rename-template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Template
@@ -548,14 +559,9 @@ export const SettingsPanel: React.FC = () => {
             {previewFilename}
           </p>
         </div>
-      </div>
+      </Section>
 
-      {/* AI Enhancements */}
-      <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          AI Enhancements
-        </h3>
-
+      <Section title="AI Enhancements" defaultOpen>
         <div className="mb-3">
           <label htmlFor="ai-mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Mode
@@ -630,7 +636,7 @@ export const SettingsPanel: React.FC = () => {
             AI is disabled for this image ({(previewPixels / 1_000_000).toFixed(1)}MP).
           </p>
         )}
-      </div>
+      </Section>
     </div>
   );
 };
