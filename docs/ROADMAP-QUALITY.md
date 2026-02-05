@@ -1,6 +1,6 @@
 # Image Preflight Quality Roadmap (Next Version)
 
-Date: 2026-02-03
+Date: 2026-02-05
 
 ## Milestone 1: Pipeline and UX Correctness
 - Fix encoding/mojibake in UI strings and docs.
@@ -73,6 +73,12 @@ Phase D: Validate
 - Ensure core flow (upload -> preview -> convert -> download) works.
 - Check no regressions in text overlay, crop, or worker pipeline.
 - Confirm chunk warning resolved or reduced.
+
+Phase D Update (2026-02-05)
+- Production verification complete (Image Preflight loads and converts).
+- AI guardrails validated (only-if-smaller, fallback toast, pixel limit).
+- Shopify auth noise removed (no recurring 401 errors).
+- Build warning no longer shown during Vite build (chunk split + thresholds).
 
 Exit Criteria
 - Largest chunk < 1 MB or warning resolved.

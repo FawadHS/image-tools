@@ -1,8 +1,8 @@
 # Image Tools - Development Roadmap
 
-> **Last Updated**: February 3, 2026  
-> **Current Version**: 3.0.0 (Phase 8 In Progress)  
-> **Project Status**: ✅ Production Ready | Active Development
+> **Last Updated**: February 5, 2026  
+> **Current Version**: 3.0.0 (V4.1 sprints complete; release verification)  
+> **Project Status**: Production Ready | Active Development
 
 ---
 
@@ -16,18 +16,19 @@ Phase 4: Advanced Features            ██████████████
 Phase 5: Polish & Optimization        ████████████████████  100% ✅
 Phase 6: Stabilization & Quality      ████████████████████  100% ✅
 Phase 7: Testing Infrastructure       ████████████████████  100% ✅
-Phase 8: UX Enhancements & Quality    ███████░░░░░░░░░░░░░   35% 🚧
+Phase 8: UX Enhancements & Quality    [####################] 100% DONE
 ```
 
-**Recent Achievements (v2.4.1)**: 
-- Fixed comparison slider image ordering (converted left, original right)
-- Added selective file conversion with checkbox-based selection
-- Fixed HEIC comparison viewer display with high-quality conversion
-- All E2E tests passing (6/6 - 100% success rate)
+**Recent Achievements (v4.1)**:
+- AI smart compression guardrails (only-if-smaller toggle, fallback toasts, pixel limit)
+- Shopify auth refresh flow to eliminate recurring 401s
+- Multi-worker throttling and WASM encoders enabled
+- URL import + EXIF viewer + batch rename completed
+- V4.1 changes deployed to production
 
 ---
 
-## Version 4.0 - Quality Release (Planned)
+## Version 4.0 - Quality Release (Complete)
 
 This release focuses on quality, correctness, and stability. It preserves the central render pipeline and avoids new major features.
 
@@ -44,7 +45,7 @@ This release focuses on quality, correctness, and stability. It preserves the ce
 
 ---
 
-## Version 4.1 - Feature Expansion (Planned)
+## Version 4.1 - Feature Expansion (Complete)
 
 This release builds on the V4 quality baseline with practical workflow features and performance upgrades.
 
@@ -320,7 +321,7 @@ Comprehensive testing framework with unit tests, E2E tests, and documentation or
 
 ---
 
-## 🚧 Phase 8: UX Enhancements & Quality — IN PROGRESS (35%)
+## Phase 8: UX Enhancements & Quality - COMPLETE (100%)
 
 ### User Experience Improvements
 | Feature | Status | Priority | Description |
@@ -348,17 +349,16 @@ Comprehensive testing framework with unit tests, E2E tests, and documentation or
 | **Coverage Reporting** | ⚠️ TODO | Medium | Automated coverage reports |
 | **Test Status Badge** | ⚠️ TODO | Low | README badge |
 
-**Recent Completions (v2.4.1)**:
-- ✅ Fixed comparison slider image layering for standard before/after UX
-- ✅ Added checkbox-based selective file conversion system
-- ✅ Implemented Select All/Deselect All bulk operations
-- ✅ Fixed HEIC display in comparison viewer with high-quality conversion
+**Recent Completions (v4.1)**:
+- AI smart compression guardrails with fallback + size protection
+- AI-only-if-smaller toggle + pixel-limit warnings
+- Shopify auth refresh to avoid 401 errors
+- Production deployment validated
 
 **Next Steps**:
-1. Complete remaining E2E test scenarios (circle crop, golden images)
-2. Set up GitHub Actions workflow for CI/CD
-3. Add automated coverage reporting
-4. Implement additional UX enhancements
+1. Add CI workflow for unit + E2E tests
+2. Add golden-image + circle-crop validation tests
+3. Expand API monitoring for AI endpoint timeouts
 
 ---
 
@@ -667,5 +667,5 @@ const img = await loadImageWithExif(blob);
 ---
 
 *Roadmap Version: 2.0*  
-*Last Updated: January 11, 2026*  
+*Last Updated: February 5, 2026*  
 *Maintained by: Fawad Hussain*
