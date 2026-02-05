@@ -175,7 +175,13 @@ export function ShopifyProvider({ children }: ShopifyProviderProps) {
       dispatch({ type: 'SET_CONNECTIONS', payload: connections });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load connections';
-      dispatch({ type: 'SET_ERROR', payload: message });
+      if (message === 'unauthenticated') {
+        dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+        dispatch({ type: 'SET_CONNECTIONS', payload: [] });
+        dispatch({ type: 'SET_ACTIVE_CONNECTION', payload: null });
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: message });
+      }
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }

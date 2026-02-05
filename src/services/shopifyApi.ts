@@ -144,12 +144,16 @@ async function refreshAccessToken(): Promise<string> {
  */
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  config: { silentAuth?: boolean } = {}
 ): Promise<T> {
   const makeRequest = async () => {
     const token = getAuthToken();
     
     if (!token) {
+      if (config.silentAuth) {
+        throw new Error('unauthenticated');
+      }
       throw new Error('Not authenticated. Please login first.');
     }
 
@@ -172,10 +176,12 @@ async function apiRequest<T>(
       // Retry the request with new token
       response = await makeRequest();
     } catch {
-      // Refresh failed - redirect to login
+      // Refresh failed - clear auth and optionally redirect
       clearAuth();
-      redirectToLogin();
-      throw new Error('Session expired. Please login again.');
+      if (!config.silentAuth) {
+        redirectToLogin();
+      }
+      throw new Error(config.silentAuth ? 'unauthenticated' : 'Session expired. Please login again.');
     }
   }
 
@@ -293,7 +299,7 @@ export const shopifyApi = {
    * List all connected Shopify stores
    */
   async getConnections(): Promise<{ connections: ShopifyConnection[] }> {
-    return apiRequest('/api/shopify/connections');
+    return apiRequest('/api/shopify/connections', {}, { silentAuth: true });
   },
 
   /**
