@@ -85,6 +85,10 @@ Goal: keep the current visual style, but improve clarity, usability, and mobile 
 
 ### Version 4.2 Sprint Plan (Topic-Based)
 
+Roadmap Reference
+- See `docs/01-specifications/V4.2-UI-UPLIFT.md` for Sprint 1 IA + layout proposal.
+
+
 | Sprint | Topic | Scope | Status |
 |--------|-------|-------|--------|
 | Sprint 1 | IA + Layout | Re-organize main layout; define primary column + secondary panel; mobile-first stacking | Planned |
