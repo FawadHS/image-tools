@@ -137,7 +137,7 @@ export const FileItem: React.FC<FileItemProps> = ({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={`
-        relative flex items-center gap-3 p-3 bg-white dark:bg-gray-800 
+        relative flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white dark:bg-gray-800 
         rounded-lg border-2 ${statusBorder[file.status]}
         transition-all duration-200 cursor-pointer
         ${isDuplicate && file.status === 'pending' ? 'bg-amber-50 dark:bg-amber-950/20' : ''}
@@ -147,102 +147,104 @@ export const FileItem: React.FC<FileItemProps> = ({
       tabIndex={0}
       aria-label={`Select ${file.file.name} for editing`}
     >
-      <div className="flex flex-col items-center gap-1">
-        <button
-          type="button"
-          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab"
-          aria-label="Drag to reorder"
-          draggable
-          onDragStart={handleDragStart}
-        >
-          <GripVertical className="w-4 h-4" />
-        </button>
-        <div className="flex flex-col">
+      <div className="flex items-center gap-3 w-full">
+        <div className="flex flex-row sm:flex-col items-center gap-1">
           <button
             type="button"
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            aria-label="Move up"
-            onClick={(event) => {
-              event.stopPropagation();
-              onMoveUp?.(file.id);
-            }}
+            className="hidden sm:inline-flex p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab"
+            aria-label="Drag to reorder"
+            draggable
+            onDragStart={handleDragStart}
           >
-            <ArrowUp className="w-3 h-3" />
+            <GripVertical className="w-4 h-4" />
           </button>
-          <button
-            type="button"
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            aria-label="Move down"
-            onClick={(event) => {
-              event.stopPropagation();
-              onMoveDown?.(file.id);
-            }}
-          >
-            <ArrowDown className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-      {/* Duplicate Badge */}
-      {isDuplicate && file.status === 'pending' && (
-        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full shadow-sm">
-          <Copy className="w-3 h-3" />
-          <span>Duplicate</span>
-        </div>
-      )}
-
-      {/* Selection Checkbox */}
-      {onToggleSelect && (
-        <div onClick={handleCheckboxClick} className="flex-shrink-0">
-          <input
-            type="checkbox"
-            checked={file.selected ?? false}
-            onChange={() => {}}
-            className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
-            aria-label={`Select ${file.file.name} for conversion`}
-          />
-        </div>
-      )}
-
-      {/* Preview */}
-      <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt={file.file.name}
-            className="w-full h-full object-cover"
-          />
-        ) : !file.displayPreview ? (
-          // Loading state - HEIC conversion in progress
-          <div className="w-full h-full flex items-center justify-center">
-            <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />
+          <div className="flex flex-row sm:flex-col">
+            <button
+              type="button"
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label="Move up"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMoveUp?.(file.id);
+              }}
+            >
+              <ArrowUp className="w-3 h-3" />
+            </button>
+            <button
+              type="button"
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label="Move down"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMoveDown?.(file.id);
+              }}
+            >
+              <ArrowDown className="w-3 h-3" />
+            </button>
           </div>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="w-6 h-6 text-gray-400" />
+        </div>
+        {/* Duplicate Badge */}
+        {isDuplicate && file.status === 'pending' && (
+          <div className="absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full shadow-sm">
+            <Copy className="w-3 h-3" />
+            <span>Duplicate</span>
           </div>
         )}
-      </div>
 
-      {/* File Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-          {file.file.name}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {formatFileSize(file.file.size)}
-          {file.result && reductionLabel && (
-            <span className="text-green-600 dark:text-green-400 ml-2">
-              {'->'} {formatFileSize(file.result.convertedSize)} ({reductionLabel})
-            </span>
+        {/* Selection Checkbox */}
+        {onToggleSelect && (
+          <div onClick={handleCheckboxClick} className="flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={file.selected ?? false}
+              onChange={() => {}}
+              className="w-5 h-5 sm:w-4 sm:h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+              aria-label={`Select ${file.file.name} for conversion`}
+            />
+          </div>
+        )}
+
+        {/* Preview */}
+        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt={file.file.name}
+              className="w-full h-full object-cover"
+            />
+          ) : !file.displayPreview ? (
+            // Loading state - HEIC conversion in progress
+            <div className="w-full h-full flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />
+            </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ImageIcon className="w-6 h-6 text-gray-400" />
+            </div>
           )}
-        </p>
-        {file.error && (
-          <p className="text-xs text-red-500 mt-1">{file.error}</p>
-        )}
+        </div>
+
+        {/* File Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {file.file.name}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {formatFileSize(file.file.size)}
+            {file.result && reductionLabel && (
+              <span className="text-green-600 dark:text-green-400 ml-2">
+                {'->'} {formatFileSize(file.result.convertedSize)} ({reductionLabel})
+              </span>
+            )}
+          </p>
+          {file.error && (
+            <p className="text-xs text-red-500 mt-1">{file.error}</p>
+          )}
+        </div>
       </div>
 
-      {/* Status & Progress */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+        <div className="flex items-center gap-2">
         {file.status === 'converting' && (
           <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
@@ -263,22 +265,23 @@ export const FileItem: React.FC<FileItemProps> = ({
             <Eye className="w-4 h-4" />
           </button>
         )}
-      </div>
+        </div>
 
-      {/* Remove Button */}
-      <button
-        onClick={(event) => {
-          event.stopPropagation();
-          onRemove(file.id);
-        }}
-        disabled={file.status === 'converting'}
-        aria-label={`Remove ${file.file.name}`}
-        aria-disabled={file.status === 'converting'}
-        tabIndex={0}
-        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <X className="w-4 h-4" />
-      </button>
+        {/* Remove Button */}
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove(file.id);
+          }}
+          disabled={file.status === 'converting'}
+          aria-label={`Remove ${file.file.name}`}
+          aria-disabled={file.status === 'converting'}
+          tabIndex={0}
+          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
       
       {/* Comparison Modal */}
       {showComparison && file.result && originalImageUrl && convertedUrl && (
