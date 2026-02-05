@@ -231,15 +231,20 @@ export const convertImage = async (
 
     if (options.aiMode === 'compress') {
       const standardBlob = await createStandardBlob(outputCanvas, outputFormat, quality, 'none');
-      const aiBlob = await createStandardBlob(
-        outputCanvas,
-        outputFormat,
-        quality,
-        options.aiMode,
-        'image/jpeg',
-        0.92
-      );
-      outputBlob = aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
+      let aiBlob: Blob | null = null;
+      try {
+        aiBlob = await createStandardBlob(
+          outputCanvas,
+          outputFormat,
+          quality,
+          options.aiMode,
+          'image/jpeg',
+          0.92
+        );
+      } catch {
+        aiBlob = null;
+      }
+      outputBlob = aiBlob && aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
     } else {
       outputBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
     }
@@ -311,15 +316,20 @@ export const convertImage = async (
 
   if (options.aiMode === 'compress') {
     const standardBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, 'none');
-    const aiBlob = await createStandardBlob(
-      outputCanvas,
-      finalOutputFormat,
-      quality,
-      options.aiMode,
-      'image/jpeg',
-      0.92
-    );
-    outputBlob = aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
+    let aiBlob: Blob | null = null;
+    try {
+      aiBlob = await createStandardBlob(
+        outputCanvas,
+        finalOutputFormat,
+        quality,
+        options.aiMode,
+        'image/jpeg',
+        0.92
+      );
+    } catch {
+      aiBlob = null;
+    }
+    outputBlob = aiBlob && aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
   } else {
     outputBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
   }

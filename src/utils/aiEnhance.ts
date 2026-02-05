@@ -34,10 +34,24 @@ export const runAiEnhancement = async (
     formData.append('quality', String(options.aiQuality));
   }
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90_000);
+
+  let response: Response;
+  try {
+    response = await fetch(apiUrl, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('AI request timed out. Please try again.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const message = await response.text().catch(() => '');
