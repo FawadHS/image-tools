@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Copy } from 'lucide-react';
+import { Trash2, Copy, ListChecks } from 'lucide-react';
 import { FileItem } from './FileItem';
 import { useFileSelection } from '../hooks/useFileSelection';
 import { useConverter } from '../context/ConverterContext';
@@ -39,7 +39,8 @@ export const FileList: React.FC = () => {
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-primary-400" />
             Selected Files ({files.length})
           </h2>
           {selectedCount > 0 && (

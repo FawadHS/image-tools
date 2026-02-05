@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sliders, Type, Sparkles } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { presetList, getPreset } from '../utils/presets';
 import { PresetType, OutputFormat } from '../types';
@@ -210,13 +210,17 @@ export const SettingsPanel: React.FC = () => {
     title: string;
     children: React.ReactNode;
     defaultOpen?: boolean;
-  }> = ({ title, children, defaultOpen }) => (
+    icon?: React.ReactNode;
+  }> = ({ title, children, defaultOpen, icon }) => (
     <details
       className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
       open={defaultOpen}
     >
       <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
-        <span>{title}</span>
+        <span className="flex items-center gap-2">
+          {icon}
+          {title}
+        </span>
         <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />
       </summary>
       <div className="px-4 pb-4 pt-1">{children}</div>
@@ -225,7 +229,7 @@ export const SettingsPanel: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <Section title="Conversion" defaultOpen>
+      <Section title="Conversion" defaultOpen icon={<Sliders className="h-4 w-4 text-primary-400" />}>
         {/* Output Format Selector */}
         <fieldset className="mb-6">
           <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -431,7 +435,7 @@ export const SettingsPanel: React.FC = () => {
         </div>
       </Section>
 
-      <Section title="File Naming (Batch Rename)">
+      <Section title="File Naming (Batch Rename)" icon={<Type className="h-4 w-4 text-primary-400" />}>
         <div className="mb-4">
           <label htmlFor="rename-template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Template
@@ -562,7 +566,7 @@ export const SettingsPanel: React.FC = () => {
         </div>
       </Section>
 
-      <Section title="AI Enhancements" defaultOpen>
+      <Section title="AI Enhancements" defaultOpen icon={<Sparkles className="h-4 w-4 text-primary-400" />}>
         <div className="mb-3">
           <label htmlFor="ai-mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Mode

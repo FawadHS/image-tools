@@ -11,7 +11,7 @@ import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
 import { TierLimitsBanner } from '../components/TierLimitsBanner';
 import { lazy, Suspense, useState } from 'react';
-import { MessageSquare, ChevronDown } from 'lucide-react';
+import { MessageSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { useHeicConversion } from '../hooks/useHeicConversion';
 
 const HistoryPanel = lazy(() =>
@@ -55,7 +55,10 @@ const ImageToolsContent = () => {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit & Preview</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-primary-400" />
+                  Edit & Preview
+                </h2>
                 <span className="text-xs text-gray-500 dark:text-gray-400">Optional</span>
               </div>
               <div className="space-y-6">
@@ -111,7 +114,10 @@ const ImageToolsContent = () => {
                 {/* Shopify Panel - Show for all users with upgrade prompts */}
                 <details className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
-                    <span>Shopify Integration</span>
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary-400" />
+                      Shopify Integration
+                    </span>
                     <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />
                   </summary>
                   <div className="px-4 pb-4 pt-1">
