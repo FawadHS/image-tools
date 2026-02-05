@@ -93,7 +93,7 @@ Roadmap Reference
 |--------|-------|-------|--------|
 | Sprint 1 | IA + Layout | Re-organize main layout; define primary column + secondary panel; mobile-first stacking | Done |
 | Sprint 2 | Settings UX | Group controls, add collapsible sections, improve labels/tooltips | Done |
-| Sprint 3 | Action Flow | Sticky primary actions, clearer progress + result states | Planned |
+| Sprint 3 | Action Flow | Sticky primary actions, clearer progress + result states | Done |
 | Sprint 4 | Mobile | Thumb-friendly controls, responsive preview, compact file list | Planned |
 | Sprint 5 | Visual Polish | Consistent spacing, headers, dividers, empty states | Planned |
 

@@ -36,7 +36,30 @@ export const ActionBar: React.FC = () => {
   if (files.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 sticky bottom-4 z-40 sm:static">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3" aria-live="polite">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1">
+            <span className="h-2 w-2 rounded-full bg-gray-400" />
+            Pending: {pendingFiles.length}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-900/20 px-3 py-1">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            Completed: {completedFiles.length}
+          </span>
+          {files.some((f) => f.status === 'error') && (
+            <span className="inline-flex items-center gap-2 rounded-full bg-red-50 dark:bg-red-900/20 px-3 py-1">
+              <span className="h-2 w-2 rounded-full bg-red-500" />
+              Errors: {files.filter((f) => f.status === 'error').length}
+            </span>
+          )}
+        </div>
+        {hasCompleted && (
+          <span className="text-green-600 dark:text-green-400 font-medium">
+            Ready to download
+          </span>
+        )}
+      </div>
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
         {/* Convert Buttons */}
         <div className="flex gap-2 w-full sm:w-auto">
@@ -132,33 +155,6 @@ export const ActionBar: React.FC = () => {
         )}
       </div>
 
-      {/* Summary */}
-      {files.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-              <span className="text-gray-600 dark:text-gray-400">
-                Pending: {pendingFiles.length}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span className="text-gray-600 dark:text-gray-400">
-                Completed: {completedFiles.length}
-              </span>
-            </div>
-            {files.some((f) => f.status === 'error') && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Errors: {files.filter((f) => f.status === 'error').length}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
