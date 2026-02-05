@@ -4,10 +4,6 @@ const getAiApiUrl = (): string | null => {
   return import.meta.env.VITE_AI_IMAGE_API_URL || null;
 };
 
-const getAiApiKey = (): string | null => {
-  return import.meta.env.VITE_AI_IMAGE_API_KEY || null;
-};
-
 export const runAiEnhancement = async (
   inputBlob: Blob,
   options: ConvertOptions,
@@ -22,6 +18,11 @@ export const runAiEnhancement = async (
     return inputBlob;
   }
 
+  const allowedFormats = new Set<OutputFormat>(['png', 'jpeg', 'webp']);
+  if (!allowedFormats.has(outputFormat)) {
+    throw new Error('AI enhancements support only PNG, JPEG, or WebP output formats.');
+  }
+
   const formData = new FormData();
   formData.append('image', inputBlob, 'input.png');
   formData.append('mode', options.aiMode);
@@ -33,15 +34,8 @@ export const runAiEnhancement = async (
     formData.append('quality', String(options.aiQuality));
   }
 
-  const headers: Record<string, string> = {};
-  const apiKey = getAiApiKey();
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-
   const response = await fetch(apiUrl, {
     method: 'POST',
-    headers,
     body: formData,
   });
 

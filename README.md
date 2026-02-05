@@ -53,6 +53,8 @@ npm run dev
 npm run build
 ```
 
+Optional: enable AI enhancements via the server-side proxy by setting `VITE_AI_IMAGE_API_URL` (see `.env.development` and `.env.production`).
+
 ## 🎯 Use Cases
 
 ### E-commerce & Online Stores 🛒
