@@ -110,8 +110,6 @@ export default defineConfig(({ mode }) => {
               return 'vendor'
             }
 
-            if (id.includes('/src/components/shopify/')) return 'shopify'
-            if (id.includes('/src/components/')) return 'editor'
             return undefined
           }
         }
