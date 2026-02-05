@@ -91,6 +91,12 @@ export const SettingsPanel: React.FC = () => {
     }
   }, [formatSupport, options.outputFormat, dispatch, firstSupportedFormat]);
 
+  useEffect(() => {
+    if (options.aiMode === 'upscale') {
+      dispatch({ type: 'SET_OPTIONS', payload: { aiMode: 'none' } });
+    }
+  }, [options.aiMode, dispatch]);
+
   const handleOutputFormatChange = (format: OutputFormat) => {
     dispatch({ type: 'SET_OUTPUT_FORMAT', payload: format });
   };
@@ -578,27 +584,12 @@ export const SettingsPanel: React.FC = () => {
             className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="none">Off</option>
-            <option value="upscale">Upscale</option>
             <option value="compress">Smart Compression</option>
           </select>
+          <p className="mt-2 text-xs text-amber-500 dark:text-amber-400">
+            Upscale is temporarily disabled while we finalize the AI provider.
+          </p>
         </div>
-
-        {options.aiMode === 'upscale' && (
-          <div className="mb-3">
-            <label htmlFor="ai-scale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Upscale factor
-            </label>
-            <select
-              id="ai-scale"
-              value={options.aiScale || 2}
-              onChange={(e) => handleAiOptionChange('aiScale', parseInt(e.target.value, 10))}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value={2}>2x</option>
-              <option value={4}>4x</option>
-            </select>
-          </div>
-        )}
 
         {options.aiMode === 'compress' && (
           <div className="mb-3">
