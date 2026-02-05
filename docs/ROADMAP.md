@@ -21,6 +21,8 @@ Phase 8: UX Enhancements & Quality    [####################] 100% DONE
 
 **Recent Achievements (v4.1)**:
 - AI smart compression guardrails (only-if-smaller toggle, fallback toasts, pixel limit)
+- AI timeout handling polish (clean error message + one-click retry)
+- AI processing status label in file list for in-flight requests
 - Shopify auth refresh flow to eliminate recurring 401s
 - Multi-worker throttling and WASM encoders enabled
 - URL import + EXIF viewer + batch rename completed

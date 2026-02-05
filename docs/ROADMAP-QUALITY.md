@@ -105,6 +105,11 @@ AI Endpoint Monitoring (Notes + Thresholds)
   - Enforce max upload size (align with nginx client_max_body_size).
   - If AI result larger or timeout, auto-fallback and show toast reason.
 
+Status (2026-02-05)
+- Intermittent 504s observed during AI requests; backend timeouts extended for image proxy.
+- Client error payloads sanitized; timeout messaging now clean and retryable.
+- One-click AI retry added in file list; in-flight AI status shown per file.
+
 Exit Criteria
 - Largest chunk < 1 MB or warning resolved.
 - No behavior regressions in render pipeline or worker conversions.
