@@ -18,7 +18,7 @@ test.describe('Smoke Test: Export Pipeline', () => {
   test('upload → crop → export produces correct dimensions', async ({ page }) => {
     test.slow(); // Allow extra time for image processing
     
-    await page.goto('/image-tools');
+    await page.goto('/');
     
     // Create a test 1000×800 PNG in-browser
     const testImageDataURL = await page.evaluate(() => {
@@ -42,6 +42,8 @@ test.describe('Smoke Test: Export Pipeline', () => {
       return canvas.toDataURL('image/png');
     });
     
+    await page.waitForSelector('[data-testid="file-input"]', { timeout: 5000, state: 'attached' });
+
     // Upload the test image by simulating file input
     await page.evaluate((dataURL) => {
       return fetch(dataURL)
@@ -50,7 +52,7 @@ test.describe('Smoke Test: Export Pipeline', () => {
           const file = new File([blob], 'test-1000x800.png', { type: 'image/png' });
           
           // Find file input and trigger change event
-          const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+          const input = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
           if (!input) throw new Error('File input not found');
           
           const dataTransfer = new DataTransfer();
@@ -94,7 +96,7 @@ test.describe('Smoke Test: Export Pipeline', () => {
   });
   
   test('verify debug flag can be enabled', async ({ page }) => {
-    await page.goto('/image-tools');
+    await page.goto('/');
     
     // Enable DEBUG_RENDER flag
     await page.evaluate(() => {
@@ -118,7 +120,7 @@ test.describe('Smoke Test: Export Pipeline', () => {
 
 test.describe('Math Helpers Integration', () => {
   test('coordinate conversion works with non-uniform scaling', async ({ page }) => {
-    await page.goto('/image-tools');
+    await page.goto('/');
     
     // This test would verify that clicking on CropTool canvas
     // with letterboxed display produces accurate natural coordinates
@@ -134,12 +136,13 @@ test.describe('Math Helpers Integration', () => {
       return canvas.toDataURL('image/png');
     });
     
+    await page.waitForSelector('[data-testid="file-input"]', { timeout: 5000, state: 'attached' });
     await page.evaluate((dataURL) => {
       return fetch(dataURL)
         .then(res => res.blob())
         .then(blob => {
           const file = new File([blob], 'coord-test.png', { type: 'image/png' });
-          const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+          const input = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
           if (!input) throw new Error('File input not found');
           
           const dataTransfer = new DataTransfer();

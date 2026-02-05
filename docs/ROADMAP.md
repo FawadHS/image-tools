@@ -74,7 +74,7 @@ This release builds on the V4 quality baseline with practical workflow features 
 | Sprint 5 | Parallelism | Multi-worker conversion with throttling + cancel cleanup | Done |
 | Sprint 6 | WASM Encoders | Optional WASM WebP/AVIF paths + fallback | Done |
 | Sprint 7 | AI Enhancements | AI upscaling / smart compression using existing AI API | Done |
-| Sprint 8 | Testing & Release | E2E + unit tests + doc updates + deploy | Planned |
+| Sprint 8 | Testing & Release | E2E + unit tests + doc updates + deploy | Done |
 
 ---
 
