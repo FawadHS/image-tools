@@ -35,7 +35,8 @@ export const runAiEnhancement = async (
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90_000);
+  const timeoutMs = options.aiMode === 'upscale' ? 180_000 : 90_000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
   try {

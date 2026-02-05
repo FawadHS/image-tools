@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy, GripVertical, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import { SelectedFile } from '../types';
 import { formatFileSize } from '../utils/fileUtils';
 import { ComparisonSlider } from './ComparisonSlider';
@@ -26,7 +26,7 @@ export const FileItem: React.FC<FileItemProps> = ({
   isActive = false,
   isDuplicate = false,
 }) => {
-  const { dispatch } = useConverter();
+  const { state, dispatch } = useConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
@@ -237,6 +237,12 @@ export const FileItem: React.FC<FileItemProps> = ({
               </span>
             )}
           </p>
+          {file.status === 'converting' && state.options.aiMode && state.options.aiMode !== 'none' && (
+            <p className="text-xs text-primary-500 mt-1 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              AI processing...
+            </p>
+          )}
           {file.error && (
             <p className="text-xs text-red-500 mt-1">{file.error}</p>
           )}
