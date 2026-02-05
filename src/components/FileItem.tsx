@@ -12,6 +12,7 @@ interface FileItemProps {
   onMove?: (sourceId: string, targetId: string) => void;
   onMoveUp?: (id: string) => void;
   onMoveDown?: (id: string) => void;
+  onRetryAi?: (id: string) => void;
   isActive?: boolean;
   isDuplicate?: boolean;
 }
@@ -23,6 +24,7 @@ export const FileItem: React.FC<FileItemProps> = ({
   onMove,
   onMoveUp,
   onMoveDown,
+  onRetryAi,
   isActive = false,
   isDuplicate = false,
 }) => {
@@ -129,6 +131,12 @@ export const FileItem: React.FC<FileItemProps> = ({
       ? `${file.result.reduction}% smaller`
       : `${Math.abs(file.result.reduction)}% larger`
     : null;
+
+  const isAiTimeout = Boolean(
+    file.error &&
+    file.error.toLowerCase().includes('timed out') &&
+    file.error.toLowerCase().includes('ai')
+  );
 
   return (
     <div
@@ -243,9 +251,23 @@ export const FileItem: React.FC<FileItemProps> = ({
               AI processing...
             </p>
           )}
-          {file.error && (
-            <p className="text-xs text-red-500 mt-1">{file.error}</p>
-          )}
+        {file.error && (
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-xs text-red-500">{file.error}</p>
+            {isAiTimeout && onRetryAi && (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRetryAi(file.id);
+                }}
+                className="text-xs font-medium text-primary-500 hover:text-primary-600"
+              >
+                Retry AI
+              </button>
+            )}
+          </div>
+        )}
         </div>
       </div>
 

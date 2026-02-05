@@ -4,6 +4,7 @@ import { FileItem } from './FileItem';
 import { useFileSelection } from '../hooks/useFileSelection';
 import { useConverter } from '../context/ConverterContext';
 import { useDuplicateDetection } from '../hooks/useDuplicateDetection';
+import { useImageConverter } from '../hooks/useImageConverter';
 import toast from 'react-hot-toast';
 
 export const FileList: React.FC = () => {
@@ -17,6 +18,7 @@ export const FileList: React.FC = () => {
     moveFile,
     moveFileByOffset,
   } = useFileSelection();
+  const { convertSingle } = useImageConverter();
   const { state } = useConverter();
   const { hasDuplicates, duplicateCount, isDuplicate, getDuplicateIdsToRemove } = useDuplicateDetection(files);
 
@@ -86,6 +88,7 @@ export const FileList: React.FC = () => {
             onMove={moveFile}
             onMoveUp={(id) => moveFileByOffset(id, -1)}
             onMoveDown={(id) => moveFileByOffset(id, 1)}
+            onRetryAi={convertSingle}
             isActive={file.id === state.activeFileId}
             isDuplicate={isDuplicate(file.id)}
           />
