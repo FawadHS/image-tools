@@ -47,11 +47,24 @@ const ImageToolsContent = () => {
         <TierLimitsBanner />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Drop Zone & File List */}
+          {/* Primary Column - Upload, Queue, Actions, Editor */}
           <div className="lg:col-span-2 space-y-6">
             <DropZone />
             <FileList />
             <ActionBar />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit & Preview</h2>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Optional</span>
+              </div>
+              <div className="space-y-6">
+                <ImageEditor />
+                <CropTool />
+                <TextOverlayTool />
+              </div>
+            </div>
+
             <Suspense fallback={null}>
               <HistoryPanel />
             </Suspense>
@@ -88,12 +101,9 @@ const ImageToolsContent = () => {
               )}
             </div>
 
-            {/* Right Column - Settings */}
+            {/* Secondary Column - Settings Stack */}
             <div className="lg:col-span-1">
               <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 custom-scrollbar">
-                <ImageEditor />
-                <CropTool />
-                <TextOverlayTool />
                 <SettingsPanel />
                 <Suspense fallback={null}>
                   <ExifPanel />
