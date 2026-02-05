@@ -1,7 +1,7 @@
 # Image Tools - Development Roadmap
 
 > **Last Updated**: February 5, 2026  
-> **Current Version**: 3.0.0 (V4.1 sprints complete; release verification)  
+> **Current Version**: 3.0.0 (V4.2 UI uplift planning)  
 > **Project Status**: Production Ready | Active Development
 
 ---
@@ -63,6 +63,35 @@ This release builds on the V4 quality baseline with practical workflow features 
 - Any metadata preservation must be explicitly opt-in and compatible with current canvas export flow.
 
 ---
+
+## Version 4.2 - UI Uplift (Planned)
+
+Goal: keep the current visual style, but improve clarity, usability, and mobile ergonomics without changing core workflows.
+
+### UI Uplift Analysis (Current Pain Points)
+- Dense settings area with long scroll; key actions buried on mobile.
+- Preview + editor + settings compete for space; unclear primary focus.
+- Mixed control hierarchy (checkboxes/selects/sliders) lacks grouping and progressive disclosure.
+- Conversion feedback is split across file list, preview, and history; hard to scan on small screens.
+- Shopify/AI/EXIF sections are heavy and visually similar; hard to distinguish importance.
+- Call-to-action (Convert/Download) is not consistently prominent across breakpoints.
+
+### UI Uplift Goals
+- Clear primary flow: Upload -> Configure -> Convert -> Download.
+- Improve mobile layout with stacked sections and sticky action bar.
+- Reduce cognitive load using collapsible groups and sensible defaults.
+- Increase scanability with consistent spacing, headings, and status badges.
+- Keep existing color system and component styles; avoid a full redesign.
+
+### Version 4.2 Sprint Plan (Topic-Based)
+
+| Sprint | Topic | Scope | Status |
+|--------|-------|-------|--------|
+| Sprint 1 | IA + Layout | Re-organize main layout; define primary column + secondary panel; mobile-first stacking | Planned |
+| Sprint 2 | Settings UX | Group controls, add collapsible sections, improve labels/tooltips | Planned |
+| Sprint 3 | Action Flow | Sticky primary actions, clearer progress + result states | Planned |
+| Sprint 4 | Mobile | Thumb-friendly controls, responsive preview, compact file list | Planned |
+| Sprint 5 | Visual Polish | Consistent spacing, headers, dividers, empty states | Planned |
 
 ## Version 4.1 Sprint Plan (Topic-Based)
 

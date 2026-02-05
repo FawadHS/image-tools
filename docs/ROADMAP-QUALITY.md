@@ -80,6 +80,31 @@ Phase D Update (2026-02-05)
 - Shopify auth noise removed (no recurring 401 errors).
 - Build warning no longer shown during Vite build (chunk split + thresholds).
 
+
+AI Endpoint Monitoring (Notes + Thresholds)
+- Goals: reduce user-visible failures, make AI fallback decisions transparent, and catch regressions early.
+- Metrics to capture (server + client):
+  - Latency p50/p95/p99 for /api/ai/openai/image (ms).
+  - Error rate (4xx/5xx) overall and by mode (compress/upscale).
+  - 504/timeout rate (target < 1% of AI requests).
+  - 413 payload too large rate (target 0%; block client-side before send).
+  - Fallback rate (AI -> standard) with reason buckets (timeout, larger, pixel limit).
+  - Success size delta distribution (median % smaller; target median >= 15%).
+- Thresholds / SLOs:
+  - p95 latency <= 25s, p99 <= 60s for AI requests.
+  - 5xx error rate <= 2% (rolling 24h).
+  - 504/timeout <= 1% (rolling 24h).
+  - CORS header present on 100% of AI responses (including errors/timeouts).
+- Alerts:
+  - 5xx > 2% for 15 min.
+  - 504/timeout > 1% for 15 min.
+  - p95 latency > 25s for 30 min.
+  - Fallback rate > 30% for 24h (indicates model regression or input changes).
+- Client guardrails:
+  - Enforce pixel limit before AI submit.
+  - Enforce max upload size (align with nginx client_max_body_size).
+  - If AI result larger or timeout, auto-fallback and show toast reason.
+
 Exit Criteria
 - Largest chunk < 1 MB or warning resolved.
 - No behavior regressions in render pipeline or worker conversions.
