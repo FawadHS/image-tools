@@ -116,6 +116,43 @@ export const convertImage = async (
     }
   }
 
+  const createStandardBlob = async (
+    canvas: HTMLCanvasElement,
+    format: OutputFormat,
+    qualityValue: number | undefined,
+    aiMode?: string
+  ): Promise<Blob> => {
+    if (aiMode && aiMode !== 'none') {
+      const aiInput = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to prepare AI input'));
+          },
+          'image/png'
+        );
+      });
+      return runAiEnhancement(aiInput, options, format);
+    }
+
+    const wasmBlob = await encodeWithWasm(canvas, format, options);
+    if (wasmBlob) return wasmBlob;
+
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error(`Failed to create ${format.toUpperCase()} blob`));
+          }
+        },
+        getMimeType(format),
+        qualityValue
+      );
+    });
+  };
+
   // Convert HEIC first if needed
   if (isHeicFile(file)) {
     blob = await convertHeicToBlob(file);
@@ -184,38 +221,17 @@ export const convertImage = async (
     }
     
     // Continue with JPEG export using outputCanvas
-    const mimeType = getMimeType(outputFormat);
     const extension = getExtension(outputFormat);
     const quality = options.lossless ? 1 : options.quality / 100;
 
-    let outputBlob: Blob | null = null;
+    let outputBlob: Blob;
 
-    if (options.aiMode && options.aiMode !== 'none') {
-      const aiInput = await new Promise<Blob>((resolve, reject) => {
-        outputCanvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Failed to prepare AI input'));
-          },
-          'image/png'
-        );
-      });
-      outputBlob = await runAiEnhancement(aiInput, options, outputFormat);
+    if (options.aiMode === 'compress') {
+      const standardBlob = await createStandardBlob(outputCanvas, outputFormat, quality, 'none');
+      const aiBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
+      outputBlob = aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
     } else {
-      const wasmBlob = await encodeWithWasm(outputCanvas, outputFormat, options);
-      outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
-        outputCanvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error(`Failed to create ${outputFormat.toUpperCase()} blob`));
-            }
-          },
-          mimeType,
-          quality
-        );
-      });
+      outputBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
     }
 
     const filename = buildOutputFilename(
@@ -274,7 +290,6 @@ export const convertImage = async (
 
   // Get output format settings
   const finalOutputFormat = options.outputFormat || 'webp';
-  const mimeType = getMimeType(finalOutputFormat);
   const extension = getExtension(finalOutputFormat);
   
   // PNG is always lossless, so quality doesn't apply
@@ -282,34 +297,14 @@ export const convertImage = async (
                   options.lossless ? 1 : options.quality / 100;
 
   // Convert to selected format
-  let outputBlob: Blob | null = null;
+  let outputBlob: Blob;
 
-  if (options.aiMode && options.aiMode !== 'none') {
-    const aiInput = await new Promise<Blob>((resolve, reject) => {
-      outputCanvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Failed to prepare AI input'));
-        },
-        'image/png'
-      );
-    });
-    outputBlob = await runAiEnhancement(aiInput, options, finalOutputFormat);
+  if (options.aiMode === 'compress') {
+    const standardBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, 'none');
+    const aiBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
+    outputBlob = aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
   } else {
-    const wasmBlob = await encodeWithWasm(outputCanvas, finalOutputFormat, options);
-    outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
-      outputCanvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error(`Failed to create ${finalOutputFormat.toUpperCase()} blob`));
-          }
-        },
-        mimeType,
-        quality
-      );
-    });
+    outputBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
   }
 
   const filename = buildOutputFilename(

@@ -101,6 +101,8 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
   };
 
   const reduction = Math.round(((originalSize - convertedSize) / originalSize) * 100);
+  const reductionLabel = reduction >= 0 ? `${reduction}%` : `+${Math.abs(reduction)}%`;
+  const reductionText = reduction >= 0 ? 'Reduction' : 'Increase';
 
   // Calculate container aspect ratio based on larger image
   const containerAspectRatio = imageDimensions
@@ -212,9 +214,15 @@ export const ComparisonSlider: React.FC<ComparisonSliderProps> = ({
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Reduction</p>
-            <p className="text-sm sm:text-base lg:text-lg font-semibold text-primary-600 dark:text-primary-400">
-              {reduction}%
+            <p className="text-xs text-gray-500 dark:text-gray-400">{reductionText}</p>
+            <p
+              className={`text-sm sm:text-base lg:text-lg font-semibold ${
+                reduction >= 0
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-amber-500 dark:text-amber-400'
+              }`}
+            >
+              {reductionLabel}
             </p>
           </div>
         </div>

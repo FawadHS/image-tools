@@ -110,7 +110,9 @@ export const HistoryPanel: React.FC = () => {
             <div className="text-center">
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg. Reduction</p>
               <p className="text-lg font-semibold text-primary-600 dark:text-primary-400">
-                {stats.averageReduction}%
+                {stats.averageReduction >= 0
+                  ? `${stats.averageReduction}%`
+                  : `+${Math.abs(stats.averageReduction)}%`}
               </p>
             </div>
           </div>
@@ -136,7 +138,9 @@ export const HistoryPanel: React.FC = () => {
                         {formatFileSize(record.originalSize)} {'->'} {formatFileSize(record.convertedSize)}
                       </span>
                       <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                        -{record.reduction}%
+                        {record.reduction >= 0
+                          ? `-${record.reduction}%`
+                          : `+${Math.abs(record.reduction)}%`}
                       </span>
                     </div>
                   </div>
