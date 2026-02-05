@@ -103,7 +103,8 @@ export const calculateDimensions = calcDimensions;
  */
 export const convertImage = async (
   file: File,
-  options: ConvertOptions
+  options: ConvertOptions,
+  onAiStatus?: (status: { status: 'queued' | 'processing' | 'polling' | 'done' | 'error'; message?: string; jobId?: string }) => void
 ): Promise<ConvertResult> => {
   const originalSize = file.size;
   let blob: Blob = file;
@@ -135,7 +136,7 @@ export const convertImage = async (
           aiInputQuality
         );
       });
-      return runAiEnhancement(aiInput, options, format);
+      return runAiEnhancement(aiInput, options, format, onAiStatus);
     }
 
     const wasmBlob = await encodeWithWasm(canvas, format, options);

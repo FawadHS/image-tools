@@ -1,5 +1,11 @@
 import { ConvertOptions, OutputFormat } from '../types';
 
+type AiStatusUpdate = {
+  status: 'queued' | 'processing' | 'polling' | 'done' | 'error';
+  message?: string;
+  jobId?: string;
+};
+
 const getAiApiUrl = (): string | null => {
   return import.meta.env.VITE_AI_IMAGE_API_URL || null;
 };
@@ -45,7 +51,8 @@ const getPlainErrorMessage = async (response: Response) => {
 export const runAiEnhancement = async (
   inputBlob: Blob,
   options: ConvertOptions,
-  outputFormat: OutputFormat
+  outputFormat: OutputFormat,
+  onStatus?: (update: AiStatusUpdate) => void
 ): Promise<Blob> => {
   const apiUrl = getAiApiUrl();
   if (!apiUrl) {
@@ -125,9 +132,11 @@ export const runAiEnhancement = async (
       throw new Error('AI request failed to start. Please try again.');
     }
 
+    onStatus?.({ status: 'queued', jobId: asyncPayload.jobId });
     const statusUrl = `${asyncBaseUrl.replace(/\/$/, '')}/${asyncPayload.jobId}`;
     const resultUrl = `${statusUrl}/result`;
     let pollDelay = 1000;
+    let lastStatus: string | undefined;
     while (Date.now() - startTime < asyncTimeoutMs) {
       const statusController = new AbortController();
       const statusTimeout = setTimeout(() => statusController.abort(), requestTimeoutMs);
@@ -142,7 +151,18 @@ export const runAiEnhancement = async (
 
       if (statusResponse && statusResponse.ok) {
         const statusPayload = (await statusResponse.json().catch(() => ({}))) as { status?: string; error?: string };
+        if (statusPayload.status && statusPayload.status !== lastStatus) {
+          lastStatus = statusPayload.status;
+          if (statusPayload.status === 'processing') {
+            onStatus?.({ status: 'processing', jobId: asyncPayload.jobId });
+          } else if (statusPayload.status === 'queued') {
+            onStatus?.({ status: 'queued', jobId: asyncPayload.jobId });
+          }
+        } else {
+          onStatus?.({ status: 'polling', jobId: asyncPayload.jobId });
+        }
         if (statusPayload.status === 'done') {
+          onStatus?.({ status: 'done', jobId: asyncPayload.jobId });
           const resultResponse = await fetch(resultUrl, { cache: 'no-store' });
           if (!resultResponse.ok) {
             const message = await getPlainErrorMessage(resultResponse);
@@ -151,9 +171,11 @@ export const runAiEnhancement = async (
           return resultResponse.blob();
         }
         if (statusPayload.status === 'error') {
+          onStatus?.({ status: 'error', message: statusPayload.error, jobId: asyncPayload.jobId });
           throw new Error(statusPayload.error || 'AI request failed. Please try again.');
         }
       } else if (statusResponse && statusResponse.status === 404) {
+        onStatus?.({ status: 'error', message: 'AI request expired', jobId: asyncPayload.jobId });
         throw new Error('AI request expired. Please try again.');
       }
 
@@ -161,8 +183,12 @@ export const runAiEnhancement = async (
       pollDelay = Math.min(pollDelay + 500, 5000);
     }
 
+    onStatus?.({ status: 'error', message: 'AI request timed out. Please try again.', jobId: asyncPayload.jobId });
     throw new Error('AI request timed out. Please try again.');
   } catch (error) {
+    if (error instanceof Error) {
+      onStatus?.({ status: 'error', message: error.message });
+    }
     if (error instanceof Error && error.message.includes('timed out')) {
       throw error;
     }

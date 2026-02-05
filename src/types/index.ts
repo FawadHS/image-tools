@@ -78,6 +78,9 @@ export interface SelectedFile {
   progress: number;
   result?: ConvertResult;
   error?: string;
+  aiStatus?: 'queued' | 'processing' | 'polling' | 'done' | 'error';
+  aiMessage?: string;
+  aiJobId?: string;
   selected?: boolean; // For selective conversion
   // Image-specific transformations (stored per-file)
   transform?: ImageTransform;

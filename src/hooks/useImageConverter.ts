@@ -33,6 +33,25 @@ export const useImageConverter = () => {
     }
   }, []);
 
+  const makeAiStatusHandler = useCallback(
+    (fileId: string) => {
+      return (update: { status: 'queued' | 'processing' | 'polling' | 'done' | 'error'; message?: string; jobId?: string }) => {
+        dispatch({
+          type: 'UPDATE_FILE',
+          payload: {
+            id: fileId,
+            updates: {
+              aiStatus: update.status,
+              aiMessage: update.message,
+              aiJobId: update.jobId,
+            },
+          },
+        });
+      };
+    },
+    [dispatch]
+  );
+
   const getWorkerConcurrency = useCallback(() => {
     const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
     return Math.min(Math.max(cores - 1, 1), 3);
@@ -180,7 +199,7 @@ export const useImageConverter = () => {
 
         dispatch({
           type: 'UPDATE_FILE',
-          payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
+          payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20, aiStatus: undefined, aiMessage: undefined, aiJobId: undefined } },
         });
 
         try {
@@ -206,7 +225,7 @@ export const useImageConverter = () => {
               ...options,
               transform: selectedFile.transform,
               renameSequence,
-            });
+            }, makeAiStatusHandler(selectedFile.id));
           }
 
           if (abortRef.current || runId !== conversionIdRef.current) {
@@ -222,7 +241,7 @@ export const useImageConverter = () => {
             type: 'UPDATE_FILE',
             payload: {
               id: selectedFile.id,
-              updates: { status: 'completed', progress: 100, result },
+              updates: { status: 'completed', progress: 100, result, aiStatus: undefined, aiMessage: undefined },
             },
           });
 
@@ -264,7 +283,7 @@ export const useImageConverter = () => {
             type: 'UPDATE_FILE',
             payload: {
               id: selectedFile.id,
-              updates: { status: 'error', progress: 0, error: errorMessage },
+              updates: { status: 'error', progress: 0, error: errorMessage, aiStatus: 'error', aiMessage: errorMessage },
             },
           });
           errorCount++;
@@ -327,7 +346,7 @@ export const useImageConverter = () => {
 
         dispatch({
           type: 'UPDATE_FILE',
-          payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20 } },
+          payload: { id: selectedFile.id, updates: { status: 'converting', progress: 20, aiStatus: undefined, aiMessage: undefined, aiJobId: undefined } },
         });
 
         try {
@@ -353,7 +372,7 @@ export const useImageConverter = () => {
               ...options,
               transform: selectedFile.transform,
               renameSequence,
-            });
+            }, makeAiStatusHandler(selectedFile.id));
           }
 
           if (abortRef.current || runId !== conversionIdRef.current) {
@@ -369,7 +388,7 @@ export const useImageConverter = () => {
             type: 'UPDATE_FILE',
             payload: {
               id: selectedFile.id,
-              updates: { status: 'completed', progress: 100, result },
+              updates: { status: 'completed', progress: 100, result, aiStatus: undefined, aiMessage: undefined },
             },
           });
 
@@ -402,7 +421,7 @@ export const useImageConverter = () => {
             type: 'UPDATE_FILE',
             payload: {
               id: selectedFile.id,
-              updates: { status: 'error', progress: 0, error: errorMessage },
+              updates: { status: 'error', progress: 0, error: errorMessage, aiStatus: 'error', aiMessage: errorMessage },
             },
           });
           errorCount++;
@@ -445,7 +464,7 @@ export const useImageConverter = () => {
 
       dispatch({
         type: 'UPDATE_FILE',
-        payload: { id: fileId, updates: { status: 'converting', progress: 10 } },
+        payload: { id: fileId, updates: { status: 'converting', progress: 10, aiStatus: undefined, aiMessage: undefined, aiJobId: undefined } },
       });
 
       try {
@@ -478,7 +497,7 @@ export const useImageConverter = () => {
             ...options,
             transform: selectedFile.transform, // Use file-specific transform
             renameSequence,
-          });
+          }, makeAiStatusHandler(fileId));
         }
 
         if (abortRef.current || runId !== conversionIdRef.current) {
@@ -493,7 +512,7 @@ export const useImageConverter = () => {
           type: 'UPDATE_FILE',
           payload: {
             id: fileId,
-            updates: { status: 'completed', progress: 100, result },
+            updates: { status: 'completed', progress: 100, result, aiStatus: undefined, aiMessage: undefined },
           },
         });
         
@@ -519,7 +538,7 @@ export const useImageConverter = () => {
           type: 'UPDATE_FILE',
           payload: {
             id: fileId,
-            updates: { status: 'error', progress: 0, error: errorMessage },
+            updates: { status: 'error', progress: 0, error: errorMessage, aiStatus: 'error', aiMessage: errorMessage },
           },
         });
         toast.error(`Failed to convert ${selectedFile.file.name}`);

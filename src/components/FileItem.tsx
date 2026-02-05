@@ -132,10 +132,19 @@ export const FileItem: React.FC<FileItemProps> = ({
       : `${Math.abs(file.result.reduction)}% larger`
     : null;
 
+  const aiStatusLabel = (() => {
+    if (!file.aiStatus) return null;
+    if (file.aiStatus === 'queued') return 'AI queued...';
+    if (file.aiStatus === 'processing') return 'AI processing...';
+    if (file.aiStatus === 'polling') return 'AI working...';
+    if (file.aiStatus === 'done') return 'AI complete';
+    return null;
+  })();
+
   const isAiTimeout = Boolean(
-    file.error &&
-    file.error.toLowerCase().includes('timed out') &&
-    file.error.toLowerCase().includes('ai')
+    (file.error || file.aiMessage) &&
+    (file.error || file.aiMessage || '').toLowerCase().includes('timed out') &&
+    (file.error || file.aiMessage || '').toLowerCase().includes('ai')
   );
 
   return (
@@ -248,12 +257,12 @@ export const FileItem: React.FC<FileItemProps> = ({
           {file.status === 'converting' && state.options.aiMode && state.options.aiMode !== 'none' && (
             <p className="text-xs text-primary-500 mt-1 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
-              AI processing...
+              {aiStatusLabel || 'AI processing...'}
             </p>
           )}
-        {file.error && (
+        {(file.error || file.aiMessage) && (
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <p className="text-xs text-red-500">{file.error}</p>
+            <p className="text-xs text-red-500">{file.error || file.aiMessage}</p>
             {isAiTimeout && onRetryAi && (
               <button
                 type="button"
