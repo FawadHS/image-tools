@@ -217,18 +217,6 @@ export const convertImage = async (
         );
       });
     }
-      outputCanvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error(`Failed to create ${outputFormat.toUpperCase()} blob`));
-          }
-        },
-        mimeType,
-        quality
-      );
-    });
 
     const filename = buildOutputFilename(
       file.name,
