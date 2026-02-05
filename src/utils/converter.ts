@@ -228,25 +228,51 @@ export const convertImage = async (
     const quality = options.lossless ? 1 : options.quality / 100;
 
     let outputBlob: Blob;
+    let aiFallback = false;
+    let aiSkippedReason: string | undefined;
+    const aiMaxPixels = options.aiMaxPixels ?? 12_000_000;
+    const aiPixels = outputCanvas.width * outputCanvas.height;
+    const aiTooLarge = options.aiMode && options.aiMode !== 'none' && aiPixels > aiMaxPixels;
 
     if (options.aiMode === 'compress') {
       const standardBlob = await createStandardBlob(outputCanvas, outputFormat, quality, 'none');
-      let aiBlob: Blob | null = null;
-      try {
-        aiBlob = await createStandardBlob(
-          outputCanvas,
-          outputFormat,
-          quality,
-          options.aiMode,
-          'image/jpeg',
-          0.92
-        );
-      } catch {
-        aiBlob = null;
+      if (aiTooLarge) {
+        aiSkippedReason = `Image exceeds ${Math.round(aiMaxPixels / 1_000_000)}MP limit`;
+        outputBlob = standardBlob;
+      } else {
+        let aiBlob: Blob | null = null;
+        try {
+          aiBlob = await createStandardBlob(
+            outputCanvas,
+            outputFormat,
+            quality,
+            options.aiMode,
+            'image/jpeg',
+            0.92
+          );
+        } catch {
+          aiBlob = null;
+        }
+        const shouldPreferSmaller = options.aiOnlyIfSmaller ?? true;
+        if (!aiBlob) {
+          aiFallback = true;
+          aiSkippedReason = 'AI failed or timed out';
+          outputBlob = standardBlob;
+        } else if (shouldPreferSmaller && aiBlob.size > standardBlob.size) {
+          aiFallback = true;
+          aiSkippedReason = 'AI result was larger';
+          outputBlob = standardBlob;
+        } else {
+          outputBlob = aiBlob;
+        }
       }
-      outputBlob = aiBlob && aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
     } else {
-      outputBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
+      if (aiTooLarge) {
+        aiSkippedReason = `Image exceeds ${Math.round(aiMaxPixels / 1_000_000)}MP limit`;
+        outputBlob = await createStandardBlob(outputCanvas, outputFormat, quality, 'none');
+      } else {
+        outputBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
+      }
     }
 
     const filename = buildOutputFilename(
@@ -270,6 +296,8 @@ export const convertImage = async (
       reduction,
       dimensions: { width: outputCanvas.width, height: outputCanvas.height },
       filename,
+      aiFallback,
+      aiSkippedReason,
     };
   }
 
@@ -314,24 +342,51 @@ export const convertImage = async (
   // Convert to selected format
   let outputBlob: Blob;
 
+  let aiFallback = false;
+  let aiSkippedReason: string | undefined;
+  const aiMaxPixels = options.aiMaxPixels ?? 12_000_000;
+  const aiPixels = outputCanvas.width * outputCanvas.height;
+  const aiTooLarge = options.aiMode && options.aiMode !== 'none' && aiPixels > aiMaxPixels;
+
   if (options.aiMode === 'compress') {
     const standardBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, 'none');
-    let aiBlob: Blob | null = null;
-    try {
-      aiBlob = await createStandardBlob(
-        outputCanvas,
-        finalOutputFormat,
-        quality,
-        options.aiMode,
-        'image/jpeg',
-        0.92
-      );
-    } catch {
-      aiBlob = null;
+    if (aiTooLarge) {
+      aiSkippedReason = `Image exceeds ${Math.round(aiMaxPixels / 1_000_000)}MP limit`;
+      outputBlob = standardBlob;
+    } else {
+      let aiBlob: Blob | null = null;
+      try {
+        aiBlob = await createStandardBlob(
+          outputCanvas,
+          finalOutputFormat,
+          quality,
+          options.aiMode,
+          'image/jpeg',
+          0.92
+        );
+      } catch {
+        aiBlob = null;
+      }
+      const shouldPreferSmaller = options.aiOnlyIfSmaller ?? true;
+      if (!aiBlob) {
+        aiFallback = true;
+        aiSkippedReason = 'AI failed or timed out';
+        outputBlob = standardBlob;
+      } else if (shouldPreferSmaller && aiBlob.size > standardBlob.size) {
+        aiFallback = true;
+        aiSkippedReason = 'AI result was larger';
+        outputBlob = standardBlob;
+      } else {
+        outputBlob = aiBlob;
+      }
     }
-    outputBlob = aiBlob && aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
   } else {
-    outputBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
+    if (aiTooLarge) {
+      aiSkippedReason = `Image exceeds ${Math.round(aiMaxPixels / 1_000_000)}MP limit`;
+      outputBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, 'none');
+    } else {
+      outputBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
+    }
   }
 
   const filename = buildOutputFilename(
@@ -355,6 +410,8 @@ export const convertImage = async (
     reduction,
     dimensions: { width: outputCanvas.width, height: outputCanvas.height },
     filename,
+    aiFallback,
+    aiSkippedReason,
   };
 };
 

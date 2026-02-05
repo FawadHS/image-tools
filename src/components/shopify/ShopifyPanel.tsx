@@ -8,6 +8,7 @@ import { ShopifyConnect } from './ShopifyConnect';
 import { ShopifyUploader } from './ShopifyUploader';
 import { SkuMapper } from './SkuMapper';
 import { useShopify } from '../../context/ShopifyContext';
+import { shopifyApi } from '../../services/shopifyApi';
 import { useConverter } from '../../context/ConverterContext';
 import { Store, Upload, Crown, ExternalLink, FileStack } from 'lucide-react';
 import { useState } from 'react';
@@ -276,21 +277,7 @@ function getUserTier(): string {
  * Check if user is authenticated (has valid token)
  */
 function isUserAuthenticated(): boolean {
-  // Check direct token first
-  const directToken = localStorage.getItem('token');
-  if (directToken) return true;
-  
-  // Check Zustand store
-  try {
-    const authStore = localStorage.getItem('auth-storage');
-    if (authStore) {
-      const parsed = JSON.parse(authStore);
-      return !!parsed?.state?.token;
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return false;
+  return shopifyApi.isAuthenticated();
 }
 
 /**

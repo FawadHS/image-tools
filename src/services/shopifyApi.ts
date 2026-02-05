@@ -45,6 +45,24 @@ function getAuthToken(): string | null {
   return getTokens().accessToken;
 }
 
+function getTokenExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof decoded?.exp === 'number' ? decoded.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+function isTokenValid(token: string): boolean {
+  const exp = getTokenExpiry(token);
+  if (!exp) return true;
+  const now = Math.floor(Date.now() / 1000);
+  return exp - 30 > now;
+}
+
 /**
  * Update tokens in all storage locations
  */
@@ -292,7 +310,23 @@ export const shopifyApi = {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return !!getAuthToken();
+    const token = getAuthToken();
+    return !!token && isTokenValid(token);
+  },
+
+  /**
+   * Ensure we have a valid token (attempt refresh if needed)
+   */
+  async ensureAuthenticated(): Promise<boolean> {
+    const { accessToken, refreshToken } = getTokens();
+    if (accessToken && isTokenValid(accessToken)) return true;
+    if (!refreshToken) return false;
+    try {
+      await refreshAccessToken();
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   /**

@@ -120,10 +120,17 @@ interface ShopifyProviderProps {
 export function ShopifyProvider({ children }: ShopifyProviderProps) {
   const [state, dispatch] = useReducer(shopifyReducer, initialState);
 
-  // Check auth status on mount
+  // Check auth status on mount (refresh token if needed)
   useEffect(() => {
-    const isAuth = shopifyApi.isAuthenticated();
-    dispatch({ type: 'SET_AUTHENTICATED', payload: isAuth });
+    let mounted = true;
+    shopifyApi.ensureAuthenticated().then((isAuth) => {
+      if (mounted) {
+        dispatch({ type: 'SET_AUTHENTICATED', payload: isAuth });
+      }
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Check for OAuth callback params on mount
@@ -171,6 +178,13 @@ export function ShopifyProvider({ children }: ShopifyProviderProps) {
     dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
+      const isAuth = await shopifyApi.ensureAuthenticated();
+      if (!isAuth) {
+        dispatch({ type: 'SET_AUTHENTICATED', payload: false });
+        dispatch({ type: 'SET_CONNECTIONS', payload: [] });
+        dispatch({ type: 'SET_ACTIVE_CONNECTION', payload: null });
+        return;
+      }
       const { connections } = await shopifyApi.getConnections();
       dispatch({ type: 'SET_CONNECTIONS', payload: connections });
     } catch (error) {

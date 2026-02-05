@@ -43,6 +43,8 @@ const initialOptions: ConvertOptions = {
   aiMode: 'none',
   aiScale: 2,
   aiQuality: 80,
+  aiOnlyIfSmaller: true,
+  aiMaxPixels: 12_000_000,
 };
 
 // Load total conversions from localStorage

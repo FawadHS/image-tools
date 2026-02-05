@@ -22,6 +22,17 @@ export const useImageConverter = () => {
   // matching the exact transformation order of main thread
   const useWorker = useRef(isWorkerSupported());
 
+  const notifyAiFallback = useCallback((result: ConvertResult, filename: string) => {
+    if (result.aiSkippedReason) {
+      toast(`AI skipped for ${filename}: ${result.aiSkippedReason}`);
+      return;
+    }
+    if (result.aiFallback) {
+      const reason = result.aiSkippedReason ? `: ${result.aiSkippedReason}` : '';
+      toast(`AI fallback for ${filename}${reason || ': used standard compression'}`);
+    }
+  }, []);
+
   const getWorkerConcurrency = useCallback(() => {
     const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
     return Math.min(Math.max(cores - 1, 1), 3);
@@ -215,6 +226,8 @@ export const useImageConverter = () => {
             },
           });
 
+          notifyAiFallback(result, selectedFile.file.name);
+
           dispatch({ type: 'INCREMENT_CONVERSIONS', payload: 1 });
 
           logConversion({
@@ -360,6 +373,8 @@ export const useImageConverter = () => {
             },
           });
 
+          notifyAiFallback(result, selectedFile.file.name);
+
           dispatch({ type: 'INCREMENT_CONVERSIONS', payload: 1 });
 
           addToHistory({
@@ -481,6 +496,8 @@ export const useImageConverter = () => {
             updates: { status: 'completed', progress: 100, result },
           },
         });
+        
+        notifyAiFallback(result, selectedFile.file.name);
         
         // Increment total conversions counter
         dispatch({

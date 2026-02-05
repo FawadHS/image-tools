@@ -150,7 +150,10 @@ export const SettingsPanel: React.FC = () => {
     });
   };
 
-  const handleAiOptionChange = (field: 'aiMode' | 'aiScale' | 'aiQuality', value: string | number) => {
+  const handleAiOptionChange = (
+    field: 'aiMode' | 'aiScale' | 'aiQuality' | 'aiOnlyIfSmaller' | 'aiMaxPixels',
+    value: string | number | boolean
+  ) => {
     dispatch({
       type: 'SET_OPTIONS',
       payload: { [field]: value },
@@ -186,6 +189,10 @@ export const SettingsPanel: React.FC = () => {
     activeFile?.transform?.crop?.height ||
     options.maxHeight ||
     1000;
+  const aiMaxPixels = options.aiMaxPixels || 12_000_000;
+  const previewPixels = previewWidth * previewHeight;
+  const aiPixelLimitReached = previewPixels > aiMaxPixels;
+  const aiMaxMegapixels = (aiMaxPixels / 1_000_000).toFixed(1);
   const previewExtension = getExtension(options.outputFormat || 'webp');
   const previewFilename = activeFile
     ? buildOutputFilename(
@@ -599,9 +606,30 @@ export const SettingsPanel: React.FC = () => {
           </div>
         )}
 
+        {options.aiMode !== 'none' && (
+          <label className="flex items-center gap-3 cursor-pointer mb-3">
+            <input
+              type="checkbox"
+              checked={options.aiOnlyIfSmaller ?? true}
+              onChange={() => handleAiOptionChange('aiOnlyIfSmaller', !(options.aiOnlyIfSmaller ?? true))}
+              className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              AI only if faster/smaller (recommended)
+            </span>
+          </label>
+        )}
+
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          AI processing uses the configured API endpoint (VITE_AI_IMAGE_API_URL). Large images may take longer.
+          AI processing uses the configured API endpoint (VITE_AI_IMAGE_API_URL).
+          Images above {aiMaxMegapixels}MP use standard compression automatically.
+          AI may fall back if results are larger or too slow.
         </p>
+        {options.aiMode !== 'none' && aiPixelLimitReached && (
+          <p className="mt-2 text-xs text-amber-500 dark:text-amber-400">
+            AI is disabled for this image ({(previewPixels / 1_000_000).toFixed(1)}MP).
+          </p>
+        )}
       </div>
     </div>
   );

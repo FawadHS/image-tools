@@ -50,6 +50,8 @@ export interface ConvertOptions {
   aiMode?: 'none' | 'upscale' | 'compress';
   aiScale?: 2 | 4;
   aiQuality?: number;
+  aiOnlyIfSmaller?: boolean;
+  aiMaxPixels?: number;
   preset?: PresetType;
   outputFormat: OutputFormat;  // File naming options
   namePrefix?: string;
@@ -88,6 +90,8 @@ export interface ConvertResult {
   reduction: number;
   dimensions: { width: number; height: number };
   filename: string;
+  aiFallback?: boolean;
+  aiSkippedReason?: string;
 }
 
 export type PresetType =
