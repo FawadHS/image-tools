@@ -55,8 +55,21 @@ export const runAiEnhancement = async (
   }
 
   if (!response.ok) {
-    const message = await response.text().catch(() => '');
-    throw new Error(message || `AI enhancement failed (${response.status})`);
+    const rawMessage = await response.text().catch(() => '');
+    const plainMessage = rawMessage
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const isTimeoutStatus = response.status === 504;
+    const hasTimeoutHint = plainMessage.toLowerCase().includes('gateway time-out')
+      || plainMessage.toLowerCase().includes('timeout');
+    if (isTimeoutStatus || hasTimeoutHint) {
+      throw new Error('AI request timed out. Please try again.');
+    }
+    const friendlyMessage = plainMessage.slice(0, 160);
+    throw new Error(friendlyMessage || `AI enhancement failed (${response.status})`);
   }
 
   return response.blob();
