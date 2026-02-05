@@ -150,6 +150,13 @@ export const SettingsPanel: React.FC = () => {
     });
   };
 
+  const handleAiOptionChange = (field: 'aiMode' | 'aiScale' | 'aiQuality', value: string | number) => {
+    dispatch({
+      type: 'SET_OPTIONS',
+      payload: { [field]: value },
+    });
+  };
+
   const handleRenameFieldChange = (field: keyof typeof options, value: string | number | boolean) => {
     dispatch({
       type: 'SET_OPTIONS',
@@ -534,6 +541,67 @@ export const SettingsPanel: React.FC = () => {
             {previewFilename}
           </p>
         </div>
+      </div>
+
+      {/* AI Enhancements */}
+      <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+          AI Enhancements
+        </h3>
+
+        <div className="mb-3">
+          <label htmlFor="ai-mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Mode
+          </label>
+          <select
+            id="ai-mode"
+            value={options.aiMode || 'none'}
+            onChange={(e) => handleAiOptionChange('aiMode', e.target.value)}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="none">Off</option>
+            <option value="upscale">Upscale</option>
+            <option value="compress">Smart Compression</option>
+          </select>
+        </div>
+
+        {options.aiMode === 'upscale' && (
+          <div className="mb-3">
+            <label htmlFor="ai-scale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Upscale factor
+            </label>
+            <select
+              id="ai-scale"
+              value={options.aiScale || 2}
+              onChange={(e) => handleAiOptionChange('aiScale', parseInt(e.target.value, 10))}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value={2}>2x</option>
+              <option value={4}>4x</option>
+            </select>
+          </div>
+        )}
+
+        {options.aiMode === 'compress' && (
+          <div className="mb-3">
+            <label htmlFor="ai-quality" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Compression quality
+            </label>
+            <input
+              id="ai-quality"
+              type="number"
+              min={10}
+              max={100}
+              value={options.aiQuality || 80}
+              onChange={(e) => handleAiOptionChange('aiQuality', parseInt(e.target.value, 10) || 80)}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        )}
+
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          AI processing uses the configured API endpoint (VITE_AI_IMAGE_API_URL). Large images may take longer.
+        </p>
       </div>
     </div>
   );

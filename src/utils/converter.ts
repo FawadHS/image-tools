@@ -3,6 +3,7 @@ import { getMimeType as getImageMimeType, getExtension as getImageExtension, cal
 import { buildOutputFilename } from './filename';
 import { maybePreserveMetadata } from './metadata';
 import { encodeWithWasm } from './wasmEncoders';
+import { runAiEnhancement } from './aiEnhance';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
 
 /**
@@ -187,8 +188,35 @@ export const convertImage = async (
     const extension = getExtension(outputFormat);
     const quality = options.lossless ? 1 : options.quality / 100;
 
-    const wasmBlob = await encodeWithWasm(outputCanvas, outputFormat, options);
-    const outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
+    let outputBlob: Blob | null = null;
+
+    if (options.aiMode && options.aiMode !== 'none') {
+      const aiInput = await new Promise<Blob>((resolve, reject) => {
+        outputCanvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Failed to prepare AI input'));
+          },
+          'image/png'
+        );
+      });
+      outputBlob = await runAiEnhancement(aiInput, options, outputFormat);
+    } else {
+      const wasmBlob = await encodeWithWasm(outputCanvas, outputFormat, options);
+      outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
+        outputCanvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error(`Failed to create ${outputFormat.toUpperCase()} blob`));
+            }
+          },
+          mimeType,
+          quality
+        );
+      });
+    }
       outputCanvas.toBlob(
         (blob) => {
           if (blob) {
@@ -266,20 +294,35 @@ export const convertImage = async (
                   options.lossless ? 1 : options.quality / 100;
 
   // Convert to selected format
-  const wasmBlob = await encodeWithWasm(outputCanvas, finalOutputFormat, options);
-  const outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
-    outputCanvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error(`Failed to create ${finalOutputFormat.toUpperCase()} blob`));
-        }
-      },
-      mimeType,
-      quality
-    );
-  });
+  let outputBlob: Blob | null = null;
+
+  if (options.aiMode && options.aiMode !== 'none') {
+    const aiInput = await new Promise<Blob>((resolve, reject) => {
+      outputCanvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to prepare AI input'));
+        },
+        'image/png'
+      );
+    });
+    outputBlob = await runAiEnhancement(aiInput, options, finalOutputFormat);
+  } else {
+    const wasmBlob = await encodeWithWasm(outputCanvas, finalOutputFormat, options);
+    outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
+      outputCanvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error(`Failed to create ${finalOutputFormat.toUpperCase()} blob`));
+          }
+        },
+        mimeType,
+        quality
+      );
+    });
+  }
 
   const filename = buildOutputFilename(
     file.name,

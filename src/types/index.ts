@@ -47,6 +47,9 @@ export interface ConvertOptions {
   stripMetadata: boolean;
   preserveMetadata?: boolean;
   useWasmEncoders?: boolean;
+  aiMode?: 'none' | 'upscale' | 'compress';
+  aiScale?: 2 | 4;
+  aiQuality?: number;
   preset?: PresetType;
   outputFormat: OutputFormat;  // File naming options
   namePrefix?: string;

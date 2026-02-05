@@ -40,6 +40,9 @@ const initialOptions: ConvertOptions = {
   renamePattern: '{prefix}{name}{suffix}{timestamp}{dimensions}{seq}',
   preserveMetadata: false,
   useWasmEncoders: false,
+  aiMode: 'none',
+  aiScale: 2,
+  aiQuality: 80,
 };
 
 // Load total conversions from localStorage
