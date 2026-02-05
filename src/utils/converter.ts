@@ -2,6 +2,7 @@ import { ConvertOptions, ConvertResult, OutputFormat } from '../types';
 import { getMimeType as getImageMimeType, getExtension as getImageExtension, calculateDimensions as calcDimensions } from './imageHelpers';
 import { buildOutputFilename } from './filename';
 import { maybePreserveMetadata } from './metadata';
+import { encodeWithWasm } from './wasmEncoders';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
 
 /**
@@ -186,7 +187,8 @@ export const convertImage = async (
     const extension = getExtension(outputFormat);
     const quality = options.lossless ? 1 : options.quality / 100;
 
-    const outputBlob = await new Promise<Blob>((resolve, reject) => {
+    const wasmBlob = await encodeWithWasm(outputCanvas, outputFormat, options);
+    const outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
       outputCanvas.toBlob(
         (blob) => {
           if (blob) {
@@ -264,7 +266,8 @@ export const convertImage = async (
                   options.lossless ? 1 : options.quality / 100;
 
   // Convert to selected format
-  const outputBlob = await new Promise<Blob>((resolve, reject) => {
+  const wasmBlob = await encodeWithWasm(outputCanvas, finalOutputFormat, options);
+  const outputBlob = wasmBlob || await new Promise<Blob>((resolve, reject) => {
     outputCanvas.toBlob(
       (blob) => {
         if (blob) {

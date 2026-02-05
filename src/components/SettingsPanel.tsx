@@ -143,7 +143,7 @@ export const SettingsPanel: React.FC = () => {
     });
   };
 
-  const handleCheckboxChange = (field: 'lossless' | 'maintainAspectRatio' | 'stripMetadata' | 'preserveMetadata') => {
+  const handleCheckboxChange = (field: 'lossless' | 'maintainAspectRatio' | 'stripMetadata' | 'preserveMetadata' | 'useWasmEncoders') => {
     dispatch({
       type: 'SET_OPTIONS',
       payload: { [field]: !options[field] },
@@ -381,6 +381,18 @@ export const SettingsPanel: React.FC = () => {
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">
             Preserve metadata (JPEG only)
+          </span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={options.useWasmEncoders || false}
+            onChange={() => handleCheckboxChange('useWasmEncoders')}
+            disabled={options.outputFormat !== 'webp' && options.outputFormat !== 'avif'}
+            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            Use WASM encoders (WebP/AVIF)
           </span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">

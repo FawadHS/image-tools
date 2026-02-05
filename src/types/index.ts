@@ -46,6 +46,7 @@ export interface ConvertOptions {
   maintainAspectRatio: boolean;
   stripMetadata: boolean;
   preserveMetadata?: boolean;
+  useWasmEncoders?: boolean;
   preset?: PresetType;
   outputFormat: OutputFormat;  // File naming options
   namePrefix?: string;
