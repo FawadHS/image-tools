@@ -120,7 +120,9 @@ export const convertImage = async (
     canvas: HTMLCanvasElement,
     format: OutputFormat,
     qualityValue: number | undefined,
-    aiMode?: string
+    aiMode?: string,
+    aiInputMime?: string,
+    aiInputQuality?: number
   ): Promise<Blob> => {
     if (aiMode && aiMode !== 'none') {
       const aiInput = await new Promise<Blob>((resolve, reject) => {
@@ -129,7 +131,8 @@ export const convertImage = async (
             if (blob) resolve(blob);
             else reject(new Error('Failed to prepare AI input'));
           },
-          'image/png'
+          aiInputMime || 'image/png',
+          aiInputQuality
         );
       });
       return runAiEnhancement(aiInput, options, format);
@@ -228,7 +231,14 @@ export const convertImage = async (
 
     if (options.aiMode === 'compress') {
       const standardBlob = await createStandardBlob(outputCanvas, outputFormat, quality, 'none');
-      const aiBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
+      const aiBlob = await createStandardBlob(
+        outputCanvas,
+        outputFormat,
+        quality,
+        options.aiMode,
+        'image/jpeg',
+        0.92
+      );
       outputBlob = aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
     } else {
       outputBlob = await createStandardBlob(outputCanvas, outputFormat, quality, options.aiMode);
@@ -301,7 +311,14 @@ export const convertImage = async (
 
   if (options.aiMode === 'compress') {
     const standardBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, 'none');
-    const aiBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
+    const aiBlob = await createStandardBlob(
+      outputCanvas,
+      finalOutputFormat,
+      quality,
+      options.aiMode,
+      'image/jpeg',
+      0.92
+    );
     outputBlob = aiBlob.size <= standardBlob.size ? aiBlob : standardBlob;
   } else {
     outputBlob = await createStandardBlob(outputCanvas, finalOutputFormat, quality, options.aiMode);
