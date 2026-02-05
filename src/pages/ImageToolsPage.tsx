@@ -11,7 +11,7 @@ import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
 import { TierLimitsBanner } from '../components/TierLimitsBanner';
 import { lazy, Suspense, useState } from 'react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ChevronDown } from 'lucide-react';
 import { useHeicConversion } from '../hooks/useHeicConversion';
 
 const HistoryPanel = lazy(() =>
@@ -109,9 +109,17 @@ const ImageToolsContent = () => {
                   <ExifPanel />
                 </Suspense>
                 {/* Shopify Panel - Show for all users with upgrade prompts */}
-                <Suspense fallback={null}>
-                  <ShopifyPanel />
-                </Suspense>
+                <details className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
+                    <span>Shopify Integration</span>
+                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="px-4 pb-4 pt-1">
+                    <Suspense fallback={null}>
+                      <ShopifyPanel />
+                    </Suspense>
+                  </div>
+                </details>
               </div>
             </div>
           </div>

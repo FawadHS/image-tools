@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { presetList, getPreset } from '../utils/presets';
 import { PresetType, OutputFormat } from '../types';
@@ -211,12 +212,12 @@ export const SettingsPanel: React.FC = () => {
     defaultOpen?: boolean;
   }> = ({ title, children, defaultOpen }) => (
     <details
-      className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+      className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
       open={defaultOpen}
     >
       <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
         <span>{title}</span>
-        <span className="text-xs text-gray-400">Toggle</span>
+        <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />
       </summary>
       <div className="px-4 pb-4 pt-1">{children}</div>
     </details>
