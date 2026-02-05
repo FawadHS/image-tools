@@ -11,7 +11,7 @@ import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
 import { TierLimitsBanner } from '../components/TierLimitsBanner';
 import { lazy, Suspense, useState } from 'react';
-import { MessageSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { MessageSquare, ChevronDown, Image as ImageIcon } from 'lucide-react';
 import { useHeicConversion } from '../hooks/useHeicConversion';
 
 const HistoryPanel = lazy(() =>
@@ -28,6 +28,20 @@ const ShopifyPanel = lazy(() =>
 );
 const ExifPanel = lazy(() =>
   import('../components/ExifPanel').then((module) => ({ default: module.ExifPanel }))
+);
+
+const ShopifyLogo = () => (
+  <svg
+    viewBox="0 0 256 291"
+    className="h-4 w-4 text-[#95bf47]"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path
+      fill="currentColor"
+      d="M210.7 61.7c-.2-.5-.5-1.1-.9-1.5l-29.7-31.6c-1.1-1.1-2.9-1-4-.6l-17.9 5.6c-4.7-13.6-13.1-26-27.5-25.6-0.4 0-0.8 0-1.2.1-3.6-4.8-8.1-6.9-12.1-6.7-30.9 1.5-45.7 39.4-50.3 58.8l-26.1 8.1c-7.6 2.4-7.8 2.7-8.8 9.9-.8 5.4-20.7 159-20.7 159l160.6 30.5 87-21.7s-21.8-154.1-22.3-155.3zM136.9 35.7l-37.4 11.7c3.6-13.9 10.4-27.6 20.7-34.5 3.8-2.5 7.3-3.8 10.5-3.6 3.4 7.7 5 17.1 6.2 26.4zm-30.4-30.1c-2.9.6-5.8 1.8-8.7 3.6-13.7 8.8-22.1 26.7-26.2 42.7L41 62.3c6.2-21.1 20.4-50.8 45.9-56.3 7.2-1.6 13.2.3 19.6 4.6zM143 84.3c-1.6-.1-3.3 0-5 .2-15.2 1.8-22.7 14.3-21.9 28.2 1.1 18.5 25.2 23.6 26.6 36.4 1 9.9-5.1 16.9-14.3 17.9-11 1.3-17.8-5.6-17.8-5.6l-3.4 14.3s6.8 6.3 20.5 6.3c0 0 1.7-.1 2.5-.2 17.4-2 27.1-14.4 26.1-30.4-1.3-21.6-25.3-25-26.7-36.6-.8-7.6 3.8-15.2 15-16.5 9.1-1.1 13.8 3.3 13.8 3.3l3.6-13.6c0 .1-4.7-3.2-18.9-3.9z"
+    />
+  </svg>
 );
 
 // Inner component that uses hooks requiring ConverterProvider context
@@ -115,7 +129,7 @@ const ImageToolsContent = () => {
                 <details className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary-400" />
+                      <ShopifyLogo />
                       Shopify Integration
                     </span>
                     <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />

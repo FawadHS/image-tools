@@ -424,7 +424,7 @@ export const CropTool = () => {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 mb-4">
-          <Crop className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+          <Crop className="w-5 h-5 text-primary-400" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Crop Tool</h2>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -438,7 +438,7 @@ export const CropTool = () => {
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Crop className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+          <Crop className="w-5 h-5 text-primary-400" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Crop Tool</h2>
           {hasUnappliedChanges && (
             <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">

@@ -172,7 +172,8 @@ export const ImageEditor = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <Wand2 className="h-4 w-4 text-primary-400" />
           Image Editing
         </h2>
         {hasAnyEdits && (
