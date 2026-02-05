@@ -77,7 +77,7 @@ export const DropZone: React.FC = () => {
         aria-label="Image file drop zone. Drag and drop images here or browse to select files."
         tabIndex={0}
       >
-        <input {...getInputProps({ 'data-testid': 'file-input' })} />
+        <input {...getInputProps()} data-testid="file-input" />
 
         <div className="flex flex-col items-center gap-4">
           <div
