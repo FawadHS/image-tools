@@ -4,7 +4,7 @@ import { useConverter } from '../context/ConverterContext';
 import { presetList, getPreset } from '../utils/presets';
 import { PresetType, OutputFormat } from '../types';
 import { isFormatSupported } from '../utils/converter';
-import { getExtension } from '../utils/imageHelpers';
+import { getExtension, getRecommendedQuality, getQualityPresetsForFormat, isLosslessFormat } from '../utils/imageHelpers';
 import { buildOutputFilename } from '../utils/filename';
 
 const OUTPUT_FORMATS: { id: OutputFormat; name: string; description: string }[] = [
@@ -129,6 +129,16 @@ export const SettingsPanel: React.FC = () => {
       dispatch({ type: 'SET_OPTIONS', payload: { useWasmEncoders: shouldUseWasm } });
     }
   }, [options.outputFormat, options.useWasmEncoders, formatSupport, dispatch]);
+
+  useEffect(() => {
+    const format = options.outputFormat || 'webp';
+    if (options.preset && options.preset !== 'custom') return;
+    if (isLosslessFormat(format)) return;
+    const recommended = getRecommendedQuality(format);
+    if (options.quality !== recommended) {
+      dispatch({ type: 'SET_OPTIONS', payload: { quality: recommended } });
+    }
+  }, [options.outputFormat, options.preset, options.quality, dispatch]);
 
   const handleOutputFormatChange = (format: OutputFormat) => {
     dispatch({ type: 'SET_OUTPUT_FORMAT', payload: format });
@@ -369,6 +379,35 @@ export const SettingsPanel: React.FC = () => {
             <span>Smaller file</span>
             <span>Higher quality</span>
           </div>
+          {getQualityPresetsForFormat(options.outputFormat || 'webp').length > 0 && (
+            <div className="mt-3">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                Format presets
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {getQualityPresetsForFormat(options.outputFormat || 'webp').map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleQualityChange(preset.value)}
+                    className={`px-2 py-2 text-xs font-medium rounded-lg border transition-all ${
+                      options.quality === preset.value
+                        ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
+                        : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                    title={preset.description}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {isLosslessFormat(options.outputFormat || 'webp') && (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              {options.outputFormat?.toUpperCase()} is lossless. Quality is fixed at 100%.
+            </p>
+          )}
         </div>
 
         {/* Dimensions */}

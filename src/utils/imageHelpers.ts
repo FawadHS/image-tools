@@ -133,3 +133,43 @@ export const getRecommendedQuality = (format: OutputFormat): number => {
   };
   return recommendations[format];
 };
+
+export type FormatQualityPreset = {
+  id: 'small' | 'balanced' | 'quality';
+  label: string;
+  value: number;
+  description: string;
+};
+
+export const getQualityPresetsForFormat = (format: OutputFormat): FormatQualityPreset[] => {
+  const presets: Record<OutputFormat, FormatQualityPreset[]> = {
+    webp: [
+      { id: 'small', label: 'Small', value: 70, description: 'Smaller files' },
+      { id: 'balanced', label: 'Balanced', value: 80, description: 'Default balance' },
+      { id: 'quality', label: 'High', value: 90, description: 'Best quality' },
+    ],
+    jpeg: [
+      { id: 'small', label: 'Small', value: 70, description: 'Smaller files' },
+      { id: 'balanced', label: 'Balanced', value: 85, description: 'Default balance' },
+      { id: 'quality', label: 'High', value: 92, description: 'Best quality' },
+    ],
+    png: [],
+    png8: [
+      { id: 'small', label: 'Small', value: 50, description: 'Fewer colors' },
+      { id: 'balanced', label: 'Balanced', value: 75, description: 'Default balance' },
+      { id: 'quality', label: 'High', value: 90, description: 'More colors' },
+    ],
+    avif: [
+      { id: 'small', label: 'Small', value: 60, description: 'Smaller files' },
+      { id: 'balanced', label: 'Balanced', value: 75, description: 'Default balance' },
+      { id: 'quality', label: 'High', value: 85, description: 'Best quality' },
+    ],
+    tiff: [],
+    jxl: [
+      { id: 'small', label: 'Small', value: 60, description: 'Smaller files' },
+      { id: 'balanced', label: 'Balanced', value: 75, description: 'Default balance' },
+      { id: 'quality', label: 'High', value: 85, description: 'Best quality' },
+    ],
+  };
+  return presets[format] || [];
+};

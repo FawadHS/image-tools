@@ -1,7 +1,7 @@
 # Image Tools - Development Roadmap
 
 > **Last Updated**: February 6, 2026  
-> **Current Version**: 3.2.6 (Phase 11 in progress)  
+> **Current Version**: 3.2.7 (Phase 11 complete)  
 > **Project Status**: Production Ready | Active Development
 
 ---
@@ -19,7 +19,7 @@ Phase 7: Testing Infrastructure       ██████████████
 Phase 8: UX Enhancements & Quality    [####################] 100% DONE
 Phase 9: Editing Tools Upgrade        [####################] 100% DONE
 Phase 10: Edit Tools UI Layout        [####################] 100% DONE
-Phase 11: Conversion Options Expansion [################----] 80% IN PROGRESS
+Phase 11: Conversion Options Expansion [####################] 100% DONE
 ```
 
 **Recent Achievements (Phase 11)**:
@@ -28,6 +28,8 @@ Phase 11: Conversion Options Expansion [################----] 80% IN PROGRESS
 - Expanded input validation and clearer upload guidance
 - Mobile drag improvements + text overlay controls
 - Filter pipeline fallback for browsers without canvas filter support
+- Format-specific quality presets + perf tuning for large batches
+- Format helper tests for encode/decode metadata
 
 ---
 
@@ -275,7 +277,7 @@ Goal: keep the image preview visible while editing and reduce scrolling through 
 
 ---
 
-## Phase 11: Conversion Options Expansion - IN PROGRESS
+## Phase 11: Conversion Options Expansion - COMPLETE
 
 Goal: expand supported conversion formats and input file types while keeping performance and browser compatibility stable.
 
@@ -286,7 +288,7 @@ Goal: expand supported conversion formats and input file types while keeping per
 | Sprint 2 | Format Capability UI | Surface encode/decode support per browser, add format-specific tips | Done |
 | Sprint 3 | Input Types | Expand/verify inputs (TIFF, BMP, GIF, HEIF/HEIC, AVIF) with clearer validation + Shopify panel compact layout | Done |
 | Sprint 4 | Output Types | Research/implement additional outputs (PNG-8, TIFF, JPEG XL experimental) | Done |
-| Sprint 5 | Quality + Tests | Quality presets per format, perf tuning, format-specific tests | In Progress |
+| Sprint 5 | Quality + Tests | Quality presets per format, perf tuning, format-specific tests | Done |
 
 ---
 
@@ -559,10 +561,8 @@ Core Features:
 
 ## Current Sprint Focus
 
-### Phase 11 Sprint 5: Quality + Tests (Remaining)
-1. **Quality presets per format** (PNG-8, AVIF, TIFF, JXL)
-2. **Performance tuning** for large batches and mobile
-3. **Format-specific tests** (encode/decode checks + export validation)
+### Phase 11 Complete
+Phase 11 is complete. Next phase can be scoped based on new priorities.
 
 ---
 

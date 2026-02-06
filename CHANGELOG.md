@@ -108,6 +108,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Nudge control styling aligned with standard light/dark app panels
 
+## [3.2.7] - 2026-02-06
+
+### Added
+- Format-specific quality preset buttons for WebP/JPEG/PNG-8/AVIF/JXL
+- Format helper tests (extensions, MIME types, recommended quality)
+
+### Changed
+- Recommended quality now updates when output format changes
+- Throttled progress updates and reduced worker concurrency for large batches/mobile
+
 ## [3.2.6] - 2026-02-06
 
 ### Fixed

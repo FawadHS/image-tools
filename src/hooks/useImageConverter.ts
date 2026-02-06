@@ -18,6 +18,8 @@ export const useImageConverter = () => {
   const conversionIdRef = useRef(0);
   const pendingRejectsRef = useRef<Set<(error: Error) => void>>(new Set());
   const workerPoolRef = useRef<Worker[]>([]);
+  const lastProgressRef = useRef<Map<string, number>>(new Map());
+  const isCoarsePointerRef = useRef(false);
   // Web Worker now uses unified pipeline (renderEditsToOffscreenCanvas)
   // matching the exact transformation order of main thread
   const useWorker = useRef(isWorkerSupported());
@@ -54,8 +56,11 @@ export const useImageConverter = () => {
 
   const getWorkerConcurrency = useCallback(() => {
     const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
+    if (isCoarsePointerRef.current || files.length >= 20) {
+      return 1;
+    }
     return Math.min(Math.max(cores - 1, 1), 3);
-  }, []);
+  }, [files.length]);
 
   const ensureWorkerPool = useCallback(() => {
     if (!useWorker.current) return [];
@@ -82,6 +87,21 @@ export const useImageConverter = () => {
       workerPoolRef.current = [];
     };
   }, [ensureWorkerPool]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(pointer: coarse)');
+    const update = () => {
+      isCoarsePointerRef.current = media.matches;
+    };
+    update();
+    if (media.addEventListener) {
+      media.addEventListener('change', update);
+      return () => media.removeEventListener('change', update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
 
   /**
    * Convert using Web Worker (if supported)
@@ -124,10 +144,17 @@ export const useImageConverter = () => {
           const { type, payload, error, progress } = e.data;
 
           if (type === 'progress' && progress !== undefined) {
-            dispatch({
-              type: 'UPDATE_FILE',
-              payload: { id: fileId, updates: { progress } },
-            });
+            const batchSize = files.length;
+            const isLargeBatch = batchSize >= 20;
+            const minStep = isLargeBatch || isCoarsePointerRef.current ? 10 : 3;
+            const last = lastProgressRef.current.get(fileId) ?? -1;
+            if (progress - last >= minStep || progress === 100) {
+              lastProgressRef.current.set(fileId, progress);
+              dispatch({
+                type: 'UPDATE_FILE',
+                payload: { id: fileId, updates: { progress } },
+              });
+            }
           } else if (type === 'success' && payload) {
             worker.removeEventListener('message', handleMessage);
             pendingRejectsRef.current.delete(reject);
@@ -157,7 +184,7 @@ export const useImageConverter = () => {
         });
       });
     },
-    [options, dispatch]
+    [options, dispatch, files.length]
   );
 
   /**

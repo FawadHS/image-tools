@@ -17,7 +17,7 @@ export const config = {
   
   // App Info
   appName: 'Image Preflight',
-  appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '3.2.6',
+  appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '3.2.7',
   
   // File Limits (from constants)
   maxFiles: 50,
