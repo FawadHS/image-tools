@@ -49,6 +49,10 @@ const ImageToolsContent = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const closeReviewModal = () => {
+    setShowReviewForm(false);
+    setShowReviews(false);
+  };
   
   // Auto-convert HEIC files when added
   useHeicConversion();
@@ -85,36 +89,49 @@ const ImageToolsContent = () => {
 
             {/* History is now a right-side drawer */}
             
-            {/* Review Section - Only shown when opened */}
+            {/* Review Modal */}
             {(showReviewForm || showReviews) && (
-              <div className="mt-6 space-y-6">
-                {showReviewForm && (
-                  <Suspense fallback={null}>
-                    <ReviewForm onClose={() => {
-                      setShowReviewForm(false);
-                      setShowReviews(true); // Show reviews list after submitting
-                    }} />
-                  </Suspense>
-                )}
-                  
-                  {showReviews && (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Reviews</h2>
-                        <button
-                          onClick={() => setShowReviews(false)}
-                          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        >
-                          Hide
-                        </button>
-                      </div>
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                onClick={closeReviewModal}
+              >
+                <div className="absolute inset-0 bg-black/40" />
+                <div
+                  className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {showReviewForm ? 'Leave a Review' : 'Reviews'}
+                    </h2>
+                    <button
+                      onClick={closeReviewModal}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      aria-label="Close reviews"
+                    >
+                      <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    </button>
+                  </div>
+                  <div className="p-5 overflow-y-auto">
+                    {showReviewForm && (
+                      <Suspense fallback={null}>
+                        <ReviewForm
+                          onClose={() => {
+                            setShowReviewForm(false);
+                            setShowReviews(true);
+                          }}
+                        />
+                      </Suspense>
+                    )}
+                    {showReviews && (
                       <Suspense fallback={null}>
                         <ReviewsList />
                       </Suspense>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
 
             {/* Secondary Column - Settings Stack */}
@@ -146,7 +163,7 @@ const ImageToolsContent = () => {
 
         <Footer />
         
-        {/* Floating Review Button */}
+      {/* Floating Review Button */}
       {!showReviewForm && !showReviews && (
         <button
           onClick={() => setShowReviewForm(true)}
@@ -163,10 +180,13 @@ const ImageToolsContent = () => {
       {/* History Drawer Toggle */}
       <button
         onClick={() => setShowHistoryDrawer(true)}
-        className="fixed right-4 top-1/2 -translate-y-1/2 p-3 bg-gray-900 text-white rounded-full shadow-lg hover:bg-gray-800 transition-colors z-40"
+        className="fixed bottom-20 right-6 p-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all z-40 group"
         aria-label="Open history"
       >
-        <HistoryIcon className="w-5 h-5" />
+        <HistoryIcon className="w-6 h-6" />
+        <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          History
+        </span>
       </button>
 
       {showHistoryDrawer && (

@@ -222,8 +222,8 @@ export const SettingsPanel: React.FC = () => {
       className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
       open={defaultOpen}
     >
-      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
-        <span className="flex items-center gap-2">
+      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between gap-3 flex-wrap">
+        <span className="flex items-center gap-2 min-w-0 flex-1 break-words">
           {icon}
           {title}
         </span>
@@ -271,7 +271,7 @@ export const SettingsPanel: React.FC = () => {
             );
             })}
           </div>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 break-words" aria-live="polite">
             {OUTPUT_FORMATS.find(f => f.id === options.outputFormat)?.description}
           </p>
         </fieldset>
@@ -378,7 +378,7 @@ export const SettingsPanel: React.FC = () => {
               </div>
             </div>
           )}
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 break-words">
             {resizePreset === 'original' ? 'Images will keep their original dimensions' : 
              resizePreset === 'custom' ? 'Enter custom max dimensions' : 
              'Images larger than this will be scaled down'}
@@ -435,7 +435,7 @@ export const SettingsPanel: React.FC = () => {
               Use WASM encoders (WebP/AVIF)
             </span>
           </label>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
             Privacy-first by default. Metadata preservation works only when input and output are JPEG.
           </p>
         </div>
@@ -471,7 +471,7 @@ export const SettingsPanel: React.FC = () => {
             onChange={(e) => handleRenameFieldChange('renamePattern', e.target.value)}
             className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 break-words">
             Tokens: {'{name} {prefix} {suffix} {timestamp} {dimensions} {width} {height} {seq} {ext} {extDot}'}
           </p>
         </div>
@@ -622,7 +622,7 @@ export const SettingsPanel: React.FC = () => {
           </label>
         )}
 
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
           AI processing uses the configured API endpoint (VITE_AI_IMAGE_API_URL).
           Images above {aiMaxMegapixels}MP use standard compression automatically.
           AI may fall back if results are larger or too slow.
