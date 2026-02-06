@@ -427,7 +427,7 @@ export const ImageEditor = () => {
                 ) : (
                   <canvas
                     ref={canvasRef}
-                    className="max-w-full h-auto rounded-lg shadow-sm max-h-[260px] sm:max-h-[360px]"
+                    className="max-w-full h-auto rounded-lg shadow-sm max-h-[280px] sm:max-h-[420px]"
                   />
                 )}
               </div>

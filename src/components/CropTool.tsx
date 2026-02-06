@@ -607,7 +607,7 @@ export const CropTool = () => {
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
                   onTouchCancel={handleTouchEnd}
-                  className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
+                  className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[320px] sm:max-h-[420px] object-contain touch-none"
                 />
               )}
             </div>

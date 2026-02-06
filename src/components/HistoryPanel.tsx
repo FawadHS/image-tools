@@ -3,10 +3,13 @@ import { History, Trash2, TrendingDown, FileImage } from 'lucide-react';
 import { getHistory, clearHistory, deleteHistoryRecord, getHistoryStats, HistoryRecord } from '../utils/history';
 import { formatFileSize } from '../utils/fileUtils';
 
-export const HistoryPanel: React.FC = () => {
+export const HistoryPanel: React.FC<{
+  variant?: 'inline' | 'drawer';
+  defaultExpanded?: boolean;
+}> = ({ variant = 'inline', defaultExpanded = false }) => {
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [stats, setStats] = useState({ totalConversions: 0, totalSaved: 0, averageReduction: 0 });
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const loadHistory = () => {
     setHistory(getHistory());
@@ -71,23 +74,25 @@ export const HistoryPanel: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <History className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Conversion History
-          </h2>
-          <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 text-xs font-medium rounded-full">
-            {history.length}
-          </span>
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          {isExpanded ? 'Hide' : 'Show'}
-        </div>
-      </button>
+      {variant === 'inline' && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <History className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Conversion History
+            </h2>
+            <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 text-xs font-medium rounded-full">
+              {history.length}
+            </span>
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {isExpanded ? 'Hide' : 'Show'}
+          </div>
+        </button>
+      )}
 
       {isExpanded && (
         <>

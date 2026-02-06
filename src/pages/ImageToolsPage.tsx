@@ -11,7 +11,7 @@ import { Footer } from '../components/Footer';
 import { SEO } from '../components/SEO';
 import { TierLimitsBanner } from '../components/TierLimitsBanner';
 import { lazy, Suspense, useState } from 'react';
-import { MessageSquare, ChevronDown, Image as ImageIcon } from 'lucide-react';
+import { MessageSquare, ChevronDown, Image as ImageIcon, History as HistoryIcon, X } from 'lucide-react';
 import { useHeicConversion } from '../hooks/useHeicConversion';
 
 const HistoryPanel = lazy(() =>
@@ -48,6 +48,7 @@ const ShopifyLogo = () => (
 const ImageToolsContent = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   
   // Auto-convert HEIC files when added
   useHeicConversion();
@@ -60,9 +61,9 @@ const ImageToolsContent = () => {
         {/* Tier Limits Banner */}
         <TierLimitsBanner />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,3.2fr)_minmax(0,1fr)] gap-6">
           {/* Primary Column - Upload, Queue, Actions, Editor */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             <DropZone />
             <FileList />
             <ActionBar />
@@ -82,9 +83,7 @@ const ImageToolsContent = () => {
               </div>
             </div>
 
-            <Suspense fallback={null}>
-              <HistoryPanel />
-            </Suspense>
+            {/* History is now a right-side drawer */}
             
             {/* Review Section - Only shown when opened */}
             {(showReviewForm || showReviews) && (
@@ -119,7 +118,7 @@ const ImageToolsContent = () => {
             </div>
 
             {/* Secondary Column - Settings Stack */}
-            <div className="lg:col-span-1">
+            <div>
               <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 custom-scrollbar">
                 <SettingsPanel />
                 <Suspense fallback={null}>
@@ -159,6 +158,44 @@ const ImageToolsContent = () => {
             Leave a Review
           </span>
         </button>
+      )}
+
+      {/* History Drawer Toggle */}
+      <button
+        onClick={() => setShowHistoryDrawer(true)}
+        className="fixed right-4 top-1/2 -translate-y-1/2 p-3 bg-gray-900 text-white rounded-full shadow-lg hover:bg-gray-800 transition-colors z-40"
+        aria-label="Open history"
+      >
+        <HistoryIcon className="w-5 h-5" />
+      </button>
+
+      {showHistoryDrawer && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40"
+          onClick={() => setShowHistoryDrawer(false)}
+        >
+          <div
+            className="absolute right-0 top-0 h-full w-full sm:w-96 bg-white dark:bg-gray-800 shadow-2xl border-l border-gray-200 dark:border-gray-700 p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <HistoryIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">History</h2>
+              </div>
+              <button
+                onClick={() => setShowHistoryDrawer(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close history"
+              >
+                <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+            <Suspense fallback={null}>
+              <HistoryPanel variant="drawer" defaultExpanded />
+            </Suspense>
+          </div>
+        </div>
       )}
     </div>
   );
