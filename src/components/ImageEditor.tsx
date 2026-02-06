@@ -437,8 +437,8 @@ export const ImageEditor = () => {
 
         {/* Rotate & Flip Section */}
         <div className="space-y-4 sm:space-y-5">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">
             Transform
           </h3>
           <div className="grid grid-cols-3 gap-2">
@@ -508,9 +508,9 @@ export const ImageEditor = () => {
         </div>
 
         {/* Filters Section */}
-        <div>
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
               <Wand2 className="w-4 h-4" />
               Filters
             </h3>
@@ -755,10 +755,15 @@ export const ImageEditor = () => {
         </div>
 
         {/* Edit Presets */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Edit Presets
-          </h3>
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Edit Presets
+            </h3>
+            <span className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Optional
+            </span>
+          </div>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <input

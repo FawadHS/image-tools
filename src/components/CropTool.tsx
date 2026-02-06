@@ -635,7 +635,7 @@ export const CropTool = () => {
         </div>
 
         <div className="space-y-4">
-          <div>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Crop Shape
             </label>
@@ -666,7 +666,7 @@ export const CropTool = () => {
             </div>
           </div>
 
-          <div>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4">
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Aspect Ratio</label>
               <button
@@ -693,7 +693,7 @@ export const CropTool = () => {
           </div>
 
           {cropArea && (
-            <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <span className="text-gray-600 dark:text-gray-400">Position:</span>{' '}
