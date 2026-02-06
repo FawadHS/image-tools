@@ -100,6 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Improved mobile drag hit targets for crop handles and text overlay
 
+## [3.2.2] - 2026-02-06
+
+### Added
+- Convert again action for completed files
+
+### Changed
+- Nudge control styling aligned with standard light/dark app panels
+
 ## [3.2.1] - 2026-02-06
 
 ### Fixed

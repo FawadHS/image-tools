@@ -539,13 +539,13 @@ export const TextOverlayTool = () => {
 
                   <div className="space-y-3">
                     {selectedOverlay === index && (
-                      <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/70 dark:bg-gray-800/50 p-3">
+                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Nudge</span>
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-200">Nudge</span>
                           <select
                             value={nudgeStep}
                             onChange={(e) => setNudgeStep(Number(e.target.value))}
-                            className="text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+                            className="text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
                           >
                             <option value={1}>1px</option>
                             <option value={5}>5px</option>
@@ -556,26 +556,26 @@ export const TextOverlayTool = () => {
                           <div />
                           <button
                             onClick={() => nudgeOverlay(index, 0, -nudgeStep)}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             Up
                           </button>
                           <div />
                           <button
                             onClick={() => nudgeOverlay(index, -nudgeStep, 0)}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             Left
                           </button>
                           <button
                             onClick={() => nudgeOverlay(index, 0, nudgeStep)}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             Down
                           </button>
                           <button
                             onClick={() => nudgeOverlay(index, nudgeStep, 0)}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             Right
                           </button>

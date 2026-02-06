@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy, GripVertical, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
+import { X, AlertCircle, Check, Loader2, ImageIcon, Eye, Copy, GripVertical, ArrowUp, ArrowDown, Sparkles, RefreshCw } from 'lucide-react';
 import { SelectedFile } from '../types';
 import { formatFileSize } from '../utils/fileUtils';
 import { ComparisonSlider } from './ComparisonSlider';
 import { useConverter } from '../context/ConverterContext';
+import { useImageConverter } from '../hooks/useImageConverter';
 
 interface FileItemProps {
   file: SelectedFile;
@@ -29,6 +30,7 @@ export const FileItem: React.FC<FileItemProps> = ({
   isDuplicate = false,
 }) => {
   const { state, dispatch } = useConverter();
+  const { convertSingle } = useImageConverter();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
@@ -70,6 +72,26 @@ export const FileItem: React.FC<FileItemProps> = ({
       event.preventDefault();
       onMoveDown?.(file.id);
     }
+  };
+
+  const handleConvertAgain = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    dispatch({
+      type: 'UPDATE_FILE',
+      payload: {
+        id: file.id,
+        updates: {
+          status: 'pending',
+          progress: 0,
+          result: undefined,
+          error: undefined,
+          aiStatus: undefined,
+          aiMessage: undefined,
+          aiJobId: undefined,
+        },
+      },
+    });
+    convertSingle(file.id);
   };
 
   // Use centralized displayPreview (already converted for HEIC files)
@@ -300,6 +322,16 @@ export const FileItem: React.FC<FileItemProps> = ({
             aria-label="Compare before and after"
           >
             <Eye className="w-4 h-4" />
+          </button>
+        )}
+        {file.status === 'completed' && (
+          <button
+            onClick={handleConvertAgain}
+            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            aria-label={`Convert ${file.file.name} again`}
+          >
+            <RefreshCw className="w-3 h-3" />
+            Convert again
           </button>
         )}
         </div>
