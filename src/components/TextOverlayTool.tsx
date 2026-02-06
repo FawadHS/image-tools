@@ -53,6 +53,12 @@ export const TextOverlayTool = () => {
     setHoveredOverlay(null);
     setSelectedOverlay(null);
   }, [JSON.stringify(committedOverlays), activeFile?.id]);
+
+  useEffect(() => {
+    if (overlays.length > 0 && selectedOverlay === null) {
+      setSelectedOverlay(0);
+    }
+  }, [overlays.length, selectedOverlay]);
   
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(overlays) !== JSON.stringify(committedOverlays);
@@ -538,7 +544,7 @@ export const TextOverlayTool = () => {
                   </div>
 
                   <div className="space-y-3">
-                    {selectedOverlay === index && (
+                    {(selectedOverlay === index || (selectedOverlay === null && index === 0)) && (
                       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-gray-700 dark:text-gray-200">Nudge</span>
