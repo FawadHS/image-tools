@@ -20,8 +20,8 @@ Optional AI enhancements are provided via a server-side proxy, but normal conver
 
 ## Current status (high level)
 
-- Version: 3.0.0 (see package.json)
-- Quality + UI uplift work is complete per docs/ROADMAP.md. Phase 9 editing upgrades are complete.
+- Version: 3.1.0 (see package.json)
+- Quality + UI uplift work is complete per docs/ROADMAP.md. Phase 9 editing upgrades are complete. Phase 10 UI layout is planned.
 - AI Smart Compression is enabled.
 - AI Upscale is temporarily disabled (UI + backend).
 

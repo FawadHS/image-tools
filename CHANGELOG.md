@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-02-06
+
+### Added
+- Fine rotate slider for precise angle adjustments
+- Filters v2 controls (clarity, vibrance, highlights, shadows, temperature)
+- Sharpen and blur adjustments
+- Undo/redo history for per-file edits with keyboard shortcuts
+- Edit presets (save/apply) stored locally
+- Editing tips modal via info icon
+
+### Changed
+- Editor layout: preview stays visible on the left with tools on the right (large screens)
+- Render pipeline supports arbitrary rotation angles
+- Advanced filter adjustments run only when values are meaningfully non-zero
+
+### Fixed
+- Crop tool now supports move + resize handles
+- Text overlay and crop updates are tracked in undo/redo history
+- Added tests for fine rotation bounds and advanced filter pipeline
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

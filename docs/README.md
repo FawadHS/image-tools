@@ -86,8 +86,8 @@ Start here -> `DEVELOPER-START.md`
 
 ## Project Status
 
-Current Version: 3.0.0
-Latest Phase: Phase 9 (Editing Tools Upgrade) - Complete
+Current Version: 3.1.0
+Latest Phase: Phase 10 (Edit Tools UI Layout) - Planned
 
 Test Coverage:
 - Unit Tests: mathHelpers + renderEditsToCanvas coverage

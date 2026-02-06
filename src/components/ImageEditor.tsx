@@ -391,59 +391,62 @@ export const ImageEditor = () => {
         </div>
       )}
 
-      {/* Preview Canvas */}
-      {state.files.length > 0 && (
-        <div className="mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-3">
-            <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Preview
-            </h3>
-            {hasUnappliedChanges && (
-              <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
-                Unsaved
-              </span>
-            )}
-          </div>
-          <div className="flex justify-center items-center min-h-[200px]">
-            {!activeFile?.displayPreview ? (
-              // Loading state - HEIC conversion in progress
-              <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-                <span className="text-sm">Converting image...</span>
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-6">
+        <div className="space-y-4 lg:sticky lg:top-24 self-start">
+          {/* Preview Canvas */}
+          {state.files.length > 0 && (
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Preview
+                </h3>
+                {hasUnappliedChanges && (
+                  <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
+                    Unsaved
+                  </span>
+                )}
               </div>
-            ) : (
-              <canvas
-                ref={canvasRef}
-                className="max-w-full h-auto rounded-lg shadow-sm max-h-[300px]"
-              />
-            )}
-          </div>
-        </div>
-      )}
+              <div className="flex justify-center items-center min-h-[240px]">
+                {!activeFile?.displayPreview ? (
+                  // Loading state - HEIC conversion in progress
+                  <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                    <span className="text-sm">Converting image...</span>
+                  </div>
+                ) : (
+                  <canvas
+                    ref={canvasRef}
+                    className="max-w-full h-auto rounded-lg shadow-sm max-h-[360px]"
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
-      {/* Apply/Discard Buttons */}
-      {hasUnappliedChanges && (
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={applyChanges}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Check className="w-4 h-4" />
-            Apply Changes
-          </button>
-          <button
-            onClick={discardChanges}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-          >
-            <X className="w-4 h-4" />
-            Discard
-          </button>
+          {/* Apply/Discard Buttons */}
+          {hasUnappliedChanges && (
+            <div className="flex gap-2">
+              <button
+                onClick={applyChanges}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                Apply Changes
+              </button>
+              <button
+                onClick={discardChanges}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Discard
+              </button>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Rotate & Flip Section */}
-      <div className="space-y-4">
+        {/* Rotate & Flip Section */}
+        <div className="space-y-4">
         <div>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Transform
@@ -823,6 +826,7 @@ export const ImageEditor = () => {
               Delete Preset
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
