@@ -86,6 +86,13 @@ export const SettingsPanel: React.FC = () => {
   const isFormatAvailable = (format: OutputFormat) =>
     formatSupport[format] || isWasmFormatEnabled(format);
 
+  const getFormatSupportLabel = (format: OutputFormat) => {
+    if (format === 'jpeg' || format === 'png') return 'Native';
+    if (formatSupport[format]) return 'Native';
+    if (isWasmFormatEnabled(format)) return 'WASM';
+    return 'Unavailable';
+  };
+
   const firstSupportedFormat = useMemo(() => {
     const ordered: OutputFormat[] = ['webp', 'jpeg', 'png', 'avif'];
     return ordered.find((format) => isFormatAvailable(format)) || 'jpeg';
@@ -278,7 +285,10 @@ export const SettingsPanel: React.FC = () => {
               >
                 {format.name}
                 {isWasmOnly && (
-                  <span className="ml-2 text-[10px] uppercase tracking-wide text-primary-500">
+                  <span
+                    className="ml-2 text-[10px] uppercase tracking-wide text-primary-500"
+                    title="WASM encoder will be used because native AVIF/WebP isn't available in this browser."
+                  >
                     WASM
                   </span>
                 )}
@@ -288,6 +298,9 @@ export const SettingsPanel: React.FC = () => {
           </div>
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 break-words" aria-live="polite">
             {OUTPUT_FORMATS.find(f => f.id === options.outputFormat)?.description}
+          </p>
+          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            Availability: WebP ({getFormatSupportLabel('webp')}), JPEG ({getFormatSupportLabel('jpeg')}), PNG ({getFormatSupportLabel('png')}), AVIF ({getFormatSupportLabel('avif')}).
           </p>
         </fieldset>
 

@@ -284,8 +284,8 @@ Goal: expand supported conversion formats and input file types while keeping per
 ### Sprint Plan
 | Sprint | Topic | Scope | Status |
 |--------|-------|-------|--------|
-| Sprint 1 | AVIF Enablement | WASM encoder gating, UI availability, conversion fallback messaging | In Progress |
-| Sprint 2 | Format Capability UI | Surface encode/decode support per browser, add format-specific tips | Planned |
+| Sprint 1 | AVIF Enablement | WASM encoder gating, UI availability, conversion fallback messaging | Done |
+| Sprint 2 | Format Capability UI | Surface encode/decode support per browser, add format-specific tips | Done |
 | Sprint 3 | Input Types | Expand/verify inputs (TIFF, BMP, GIF, HEIF/HEIC) with clearer validation | Planned |
 | Sprint 4 | Output Types | Research/implement additional outputs (PNG-8, TIFF, JPEG XL experimental) | Planned |
 | Sprint 5 | Quality + Tests | Quality presets per format, perf tuning, format-specific tests | Planned |

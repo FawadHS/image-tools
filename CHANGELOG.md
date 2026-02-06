@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Prevent AVIF selection from being blocked when WASM encoders are enabled
 
+## [3.1.2] - 2026-02-06
+
+### Added
+- WASM badge tooltip for AVIF/WebP when native support is unavailable
+- Format availability note in output format section
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed
