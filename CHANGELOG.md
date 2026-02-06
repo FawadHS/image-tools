@@ -108,6 +108,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Nudge control styling aligned with standard light/dark app panels
 
+## [3.2.4] - 2026-02-06
+
+### Fixed
+- Normalize filter defaults so brightness/contrast/saturation always apply
+
 ## [3.2.3] - 2026-02-06
 
 ### Fixed

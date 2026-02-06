@@ -206,9 +206,21 @@ export const applyRotationAndFlip = (
 export const applyFilters = (
   transform: ImageTransform | undefined
 ): string => {
-  if (!transform?.filters) return 'none';
-
-  const filters = transform.filters;
+  const filters = {
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    clarity: 0,
+    vibrance: 0,
+    highlights: 0,
+    shadows: 0,
+    temperature: 0,
+    sharpen: 0,
+    blur: 0,
+    grayscale: false,
+    sepia: false,
+    ...(transform?.filters || {}),
+  };
   const filterArray: string[] = [];
 
   if (filters.brightness !== 100) {
@@ -245,8 +257,21 @@ const applyAdvancedAdjustments = (
   height: number,
   transform: ImageTransform | undefined
 ) => {
-  const filters = transform?.filters;
-  if (!filters) return;
+  const filters = {
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    clarity: 0,
+    vibrance: 0,
+    highlights: 0,
+    shadows: 0,
+    temperature: 0,
+    sharpen: 0,
+    blur: 0,
+    grayscale: false,
+    sepia: false,
+    ...(transform?.filters || {}),
+  };
 
   const clarity = filters.clarity ?? 0;
   const vibrance = filters.vibrance ?? 0;
