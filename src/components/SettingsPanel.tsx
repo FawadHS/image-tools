@@ -264,7 +264,7 @@ export const SettingsPanel: React.FC = () => {
                 {format.name}
                 {!isSupported && (
                   <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
-                    Unsupported
+                    Coming soon
                   </span>
                 )}
               </button>
