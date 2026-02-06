@@ -251,11 +251,42 @@ export const applyFilters = (
 
 const clampChannel = (value: number) => Math.max(0, Math.min(255, value));
 
+let cachedFilterSupport: boolean | null = null;
+
+const detectCanvasFilterSupport = (): boolean => {
+  if (cachedFilterSupport !== null) return cachedFilterSupport;
+  try {
+    const src = document.createElement('canvas');
+    const dst = document.createElement('canvas');
+    src.width = 1;
+    src.height = 1;
+    dst.width = 1;
+    dst.height = 1;
+    const srcCtx = src.getContext('2d');
+    const dstCtx = dst.getContext('2d');
+    if (!srcCtx || !dstCtx || typeof dstCtx.filter !== 'string') {
+      cachedFilterSupport = false;
+      return cachedFilterSupport;
+    }
+    srcCtx.fillStyle = 'rgb(255,0,0)';
+    srcCtx.fillRect(0, 0, 1, 1);
+    dstCtx.filter = 'brightness(0%)';
+    dstCtx.drawImage(src, 0, 0);
+    const data = dstCtx.getImageData(0, 0, 1, 1).data;
+    cachedFilterSupport = data[0] === 0 && data[1] === 0 && data[2] === 0;
+    return cachedFilterSupport;
+  } catch {
+    cachedFilterSupport = false;
+    return cachedFilterSupport;
+  }
+};
+
 const applyAdvancedAdjustments = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  transform: ImageTransform | undefined
+  transform: ImageTransform | undefined,
+  useCanvasFilters: boolean
 ) => {
   const filters = {
     brightness: 100,
@@ -288,6 +319,14 @@ const applyAdvancedAdjustments = (
   const tunedTemperature = Math.abs(temperature) < minAdjust ? 0 : temperature;
   const tunedSharpen = Math.abs(sharpen) < minAdjust ? 0 : sharpen;
 
+  const basicNeedsFallback =
+    !useCanvasFilters &&
+    (filters.brightness !== 100 ||
+      filters.contrast !== 100 ||
+      filters.saturation !== 100 ||
+      filters.grayscale ||
+      filters.sepia);
+
   const needsAdvanced =
     tunedClarity !== 0 ||
     tunedVibrance !== 0 ||
@@ -295,10 +334,56 @@ const applyAdvancedAdjustments = (
     tunedShadows !== 0 ||
     tunedTemperature !== 0;
 
-  if (!needsAdvanced && tunedSharpen <= 0) return;
+  if (!needsAdvanced && tunedSharpen <= 0 && !basicNeedsFallback) return;
 
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
+
+  if (basicNeedsFallback) {
+    const brightnessFactor = filters.brightness / 100;
+    const contrastFactor = filters.contrast / 100;
+    const saturationFactor = filters.saturation / 100;
+    const applySepia = filters.sepia;
+    const applyGrayscale = filters.grayscale;
+
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i + 1];
+      let b = data[i + 2];
+
+      r = r * brightnessFactor;
+      g = g * brightnessFactor;
+      b = b * brightnessFactor;
+
+      r = (r - 128) * contrastFactor + 128;
+      g = (g - 128) * contrastFactor + 128;
+      b = (b - 128) * contrastFactor + 128;
+
+      const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      r = gray + (r - gray) * saturationFactor;
+      g = gray + (g - gray) * saturationFactor;
+      b = gray + (b - gray) * saturationFactor;
+
+      if (applyGrayscale) {
+        r = gray;
+        g = gray;
+        b = gray;
+      }
+
+      if (applySepia) {
+        const tr = 0.393 * r + 0.769 * g + 0.189 * b;
+        const tg = 0.349 * r + 0.686 * g + 0.168 * b;
+        const tb = 0.272 * r + 0.534 * g + 0.131 * b;
+        r = tr;
+        g = tg;
+        b = tb;
+      }
+
+      data[i] = clampChannel(r);
+      data[i + 1] = clampChannel(g);
+      data[i + 2] = clampChannel(b);
+    }
+  }
 
   if (needsAdvanced) {
     const clarityFactor = tunedClarity / 100;
@@ -497,8 +582,10 @@ export const renderEditsToCanvas = (
   const scaleY = flipV ? -1 : 1;
   transformCtx.scale(scaleX, scaleY);
 
+  const useCanvasFilters = detectCanvasFilterSupport();
+
   // Apply filters
-  transformCtx.filter = applyFilters(transform);
+  transformCtx.filter = useCanvasFilters ? applyFilters(transform) : 'none';
 
   // Draw original image with transforms
   transformCtx.drawImage(
@@ -510,7 +597,7 @@ export const renderEditsToCanvas = (
   transformCtx.filter = 'none';
   transformCtx.restore();
 
-  applyAdvancedAdjustments(transformCtx, transformCanvas.width, transformCanvas.height, transform);
+  applyAdvancedAdjustments(transformCtx, transformCanvas.width, transformCanvas.height, transform, useCanvasFilters);
 
   // Step 3: Apply crop (if exists)
   // Crop coordinates are in natural pixel space of the TRANSFORMED image

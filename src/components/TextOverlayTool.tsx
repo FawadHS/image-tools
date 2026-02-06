@@ -40,7 +40,10 @@ export const TextOverlayTool = () => {
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [nudgeStep, setNudgeStep] = useState(5);
   const [moveMode, setMoveMode] = useState(false);
+  const [previewScale, setPreviewScale] = useState(1);
+  const [usePreviewSizing, setUsePreviewSizing] = useState(false);
   const moveModeInitializedRef = useRef(false);
+  const previewSizingInitializedRef = useRef(false);
 
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
@@ -132,6 +135,13 @@ export const TextOverlayTool = () => {
     }
   }, [isCoarsePointer]);
 
+  useEffect(() => {
+    if (!previewSizingInitializedRef.current) {
+      setUsePreviewSizing(isCoarsePointer);
+      previewSizingInitializedRef.current = true;
+    }
+  }, [isCoarsePointer]);
+
   const getOverlayBounds = (
     overlay: TextOverlayConfig,
     ctx: CanvasRenderingContext2D,
@@ -194,6 +204,7 @@ export const TextOverlayTool = () => {
     const imgWidth = processedImage.naturalWidth || processedImage.width;
     const imgHeight = processedImage.naturalHeight || processedImage.height;
     const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight, 1);
+    setPreviewScale((prev) => (Math.abs(prev - scale) > 0.001 ? scale : prev));
 
     canvas.width = Math.floor(imgWidth * scale);
     canvas.height = Math.floor(imgHeight * scale);
@@ -660,17 +671,46 @@ export const TextOverlayTool = () => {
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Font Size</label>
-                        <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{overlay.fontSize}px</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setUsePreviewSizing((prev) => !prev)}
+                            className={`px-2 py-1 text-[11px] font-medium rounded border transition-colors ${
+                              usePreviewSizing
+                                ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
+                                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                            }`}
+                            aria-pressed={usePreviewSizing}
+                          >
+                            Preview size
+                          </button>
+                          <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                            {Math.round((usePreviewSizing ? overlay.fontSize * previewScale : overlay.fontSize) || 0)}px
+                          </span>
+                        </div>
                       </div>
                       <input
                         type="range"
                         min="10"
-                        max="200"
-                        value={overlay.fontSize}
-                        onChange={(e) => updateOverlay(index, { fontSize: Number(e.target.value) })}
+                        max={usePreviewSizing ? 240 : 400}
+                        value={usePreviewSizing ? Math.round(overlay.fontSize * previewScale) : overlay.fontSize}
+                        onChange={(e) => {
+                          const rawValue = Number(e.target.value);
+                          if (usePreviewSizing) {
+                            const scaled = previewScale > 0 ? rawValue / previewScale : rawValue;
+                            updateOverlay(index, { fontSize: Math.max(1, Math.round(scaled)) });
+                          } else {
+                            updateOverlay(index, { fontSize: Number(e.target.value) });
+                          }
+                        }}
                         aria-label="Font size"
                         className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
                       />
+                      {usePreviewSizing && (
+                        <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                          Preview sizing on · Export uses actual pixels.
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
