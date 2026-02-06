@@ -1,7 +1,7 @@
 export type OutputFormat = 'webp' | 'jpeg' | 'png' | 'avif';
 
 export interface ImageTransform {
-  rotation: 0 | 90 | 180 | 270;
+  rotation: number;
   flipHorizontal: boolean;
   flipVertical: boolean;
   crop?: {
@@ -15,6 +15,13 @@ export interface ImageTransform {
     brightness: number; // 0-200, default 100
     contrast: number; // 0-200, default 100
     saturation: number; // 0-200, default 100
+    clarity?: number; // -100 to 100, default 0
+    vibrance?: number; // -100 to 100, default 0
+    highlights?: number; // -100 to 100, default 0
+    shadows?: number; // -100 to 100, default 0
+    temperature?: number; // -100 to 100, default 0
+    sharpen?: number; // 0-100, default 0
+    blur?: number; // 0-10, default 0
     grayscale: boolean;
     sepia: boolean;
   };

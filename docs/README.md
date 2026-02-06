@@ -64,6 +64,8 @@ See `ROADMAP.md` for the project roadmap and future plans.
 
 ### For New Contributors
 
+Start here -> `DEVELOPER-START.md`
+
 1. Read specifications -> `01-specifications/SPEC-V2.md`
 2. Understand architecture -> `02-architecture/TRANSFORM-PIPELINE.md`
 3. Check latest implementation -> `03-implementation/`
@@ -85,7 +87,7 @@ See `ROADMAP.md` for the project roadmap and future plans.
 ## Project Status
 
 Current Version: 3.0.0
-Latest Phase: Phase 8 (UX Enhancements and Quality) - In Progress
+Latest Phase: Phase 9 (Editing Tools Upgrade) - Complete
 
 Test Coverage:
 - Unit Tests: mathHelpers + renderEditsToCanvas coverage
@@ -117,5 +119,5 @@ When adding new documentation:
 
 ---
 
-Last Updated: February 3, 2026
+Last Updated: February 6, 2026
 Maintained By: FawadHS

@@ -58,9 +58,158 @@ const applyFilters = (transform: ImageTransform | undefined): string => {
     filterArray.push('sepia(100%)');
   }
 
+  const blurValue = filters.blur ?? 0;
+  if (blurValue > 0) {
+    const blurPx = Math.min(8, blurValue * 0.6);
+    filterArray.push(`blur(${blurPx}px)`);
+  }
+
   return filterArray.length > 0 ? filterArray.join(' ') : 'none';
 };
 
+
+const clampChannel = (value: number) => Math.max(0, Math.min(255, value));
+
+const applyAdvancedAdjustments = (
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  transform: ImageTransform | undefined
+) => {
+  const filters = transform?.filters;
+  if (!filters) return;
+
+  const clarity = filters.clarity ?? 0;
+  const vibrance = filters.vibrance ?? 0;
+  const highlights = filters.highlights ?? 0;
+  const shadows = filters.shadows ?? 0;
+  const temperature = filters.temperature ?? 0;
+  const sharpen = filters.sharpen ?? 0;
+
+  const needsAdvanced =
+    clarity !== 0 ||
+    vibrance !== 0 ||
+    highlights !== 0 ||
+    shadows !== 0 ||
+    temperature !== 0;
+
+  if (!needsAdvanced && sharpen <= 0) return;
+
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+
+  if (needsAdvanced) {
+    const clarityFactor = clarity / 100;
+    const vibranceFactor = vibrance / 100;
+    const highlightFactor = highlights / 100;
+    const shadowFactor = shadows / 100;
+    const tempFactor = temperature / 100;
+
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i + 1];
+      let b = data[i + 2];
+
+      if (tempFactor !== 0) {
+        r = clampChannel(r + tempFactor * 20);
+        b = clampChannel(b - tempFactor * 20);
+      }
+
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const lumNorm = lum / 255;
+
+      if (shadowFactor !== 0) {
+        const shadowScale = (1 - lumNorm) * shadowFactor;
+        r = clampChannel(r + (255 - r) * shadowScale);
+        g = clampChannel(g + (255 - g) * shadowScale);
+        b = clampChannel(b + (255 - b) * shadowScale);
+      }
+
+      if (highlightFactor !== 0) {
+        const highlightScale = lumNorm * highlightFactor;
+        r = clampChannel(r + (255 - r) * highlightScale);
+        g = clampChannel(g + (255 - g) * highlightScale);
+        b = clampChannel(b + (255 - b) * highlightScale);
+      }
+
+      if (vibranceFactor !== 0) {
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const sat = max === 0 ? 0 : (max - min) / max;
+        const boost = (1 - sat) * vibranceFactor;
+        const avg = (r + g + b) / 3;
+        r = clampChannel(r + (r - avg) * boost);
+        g = clampChannel(g + (g - avg) * boost);
+        b = clampChannel(b + (b - avg) * boost);
+      }
+
+      if (clarityFactor !== 0) {
+        const contrastScale = 1 + clarityFactor;
+        r = clampChannel(((r / 255 - 0.5) * contrastScale + 0.5) * 255);
+        g = clampChannel(((g / 255 - 0.5) * contrastScale + 0.5) * 255);
+        b = clampChannel(((b / 255 - 0.5) * contrastScale + 0.5) * 255);
+      }
+
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+    }
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  if (sharpen > 0) {
+    applySharpen(ctx, width, height, sharpen);
+  }
+};
+
+const applySharpen = (
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  amount: number
+) => {
+  if (amount <= 0) return;
+
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  const original = new Uint8ClampedArray(data);
+  const strength = Math.min(1, amount / 100);
+
+  const getIndex = (x: number, y: number) => (y * width + x) * 4;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let r = 0, g = 0, b = 0;
+      let count = 0;
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const px = Math.min(width - 1, Math.max(0, x + kx));
+          const py = Math.min(height - 1, Math.max(0, y + ky));
+          const idx = getIndex(px, py);
+          r += original[idx];
+          g += original[idx + 1];
+          b += original[idx + 2];
+          count += 1;
+        }
+      }
+      const blurR = r / count;
+      const blurG = g / count;
+      const blurB = b / count;
+
+      const idx = getIndex(x, y);
+      const origR = original[idx];
+      const origG = original[idx + 1];
+      const origB = original[idx + 2];
+
+      data[idx] = clampChannel(origR + (origR - blurR) * strength);
+      data[idx + 1] = clampChannel(origG + (origG - blurG) * strength);
+      data[idx + 2] = clampChannel(origB + (origB - blurB) * strength);
+    }
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+};
 /**
  * UNIFIED RENDER PIPELINE - Worker Implementation
  * 
@@ -80,13 +229,21 @@ const renderEditsToOffscreenCanvas = (
 ): OffscreenCanvas => {
   // Step 1: Calculate dimensions after rotation
   const rotation = transform?.rotation || 0;
-  const needsDimensionSwap = rotation === 90 || rotation === 270;
-  
+  const normalized = ((rotation % 360) + 360) % 360;
+
   let workingWidth = img.width;
   let workingHeight = img.height;
-  
-  if (needsDimensionSwap) {
+
+  if (normalized === 90 || normalized === 270) {
     [workingWidth, workingHeight] = [workingHeight, workingWidth];
+  } else if (normalized !== 0 && normalized !== 180) {
+    const radians = (normalized * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(radians));
+    const sin = Math.abs(Math.sin(radians));
+    const rotatedWidth = workingWidth * cos + workingHeight * sin;
+    const rotatedHeight = workingWidth * sin + workingHeight * cos;
+    workingWidth = Math.ceil(rotatedWidth);
+    workingHeight = Math.ceil(rotatedHeight);
   }
 
   // Step 2: Create canvas for rotation + flip + filters
@@ -119,6 +276,8 @@ const renderEditsToOffscreenCanvas = (
 
   transformCtx.filter = 'none';
   transformCtx.restore();
+
+  applyAdvancedAdjustments(transformCtx, transformCanvas.width, transformCanvas.height, transform);
 
   // Step 3: Apply crop (if exists)
   const canvas = new OffscreenCanvas(workingWidth, workingHeight);

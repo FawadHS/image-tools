@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye, Loader2 } from 'lucide-react';
+import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye, Loader2, Undo2, Redo2, Save } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
 import { CANVAS_PREVIEW_MAX_WIDTH } from '../constants';
@@ -13,26 +13,65 @@ import { renderEditsToCanvas } from '../utils/imageTransform';
 export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const PRESET_STORAGE_KEY = 'image-tools-edit-presets';
+  type EditPreset = { id: string; name: string; transform: ImageTransform };
   
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
   
-  // Get the actual committed state from the active file
-  const committedTransform = activeFile?.transform || {
-    rotation: 0,
-    flipHorizontal: false,
-    flipVertical: false,
-    filters: {
-      brightness: 100,
-      contrast: 100,
-      saturation: 100,
-      grayscale: false,
-      sepia: false,
-    },
+  const defaultFilters = {
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    clarity: 0,
+    vibrance: 0,
+    highlights: 0,
+    shadows: 0,
+    temperature: 0,
+    sharpen: 0,
+    blur: 0,
+    grayscale: false,
+    sepia: false,
   };
+
+  // Get the actual committed state from the active file
+  const committedTransform: ImageTransform = activeFile?.transform
+    ? {
+        rotation: activeFile.transform.rotation ?? 0,
+        flipHorizontal: activeFile.transform.flipHorizontal ?? false,
+        flipVertical: activeFile.transform.flipVertical ?? false,
+        crop: activeFile.transform.crop,
+        textOverlay: activeFile.transform.textOverlay,
+        textOverlays: activeFile.transform.textOverlays,
+        filters: {
+          ...defaultFilters,
+          ...activeFile.transform.filters,
+        },
+      }
+    : {
+        rotation: 0,
+        flipHorizontal: false,
+        flipVertical: false,
+        filters: defaultFilters,
+      };
 
   // Preview state (local, uncommitted changes)
   const [previewTransform, setPreviewTransform] = useState<ImageTransform>(committedTransform);
+  const [editPresets, setEditPresets] = useState<EditPreset[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+  const [presetName, setPresetName] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PRESET_STORAGE_KEY);
+      if (stored) {
+        setEditPresets(JSON.parse(stored));
+      }
+    } catch {
+      setEditPresets([]);
+    }
+  }, []);
 
   // Sync preview with committed state when it changes externally
   // Using JSON.stringify to track deep changes in the transform object
@@ -40,12 +79,9 @@ export const ImageEditor = () => {
     setPreviewTransform(committedTransform);
   }, [JSON.stringify(activeFile?.transform), activeFile?.id]);
 
-  const filters = previewTransform.filters || {
-    brightness: 100,
-    contrast: 100,
-    saturation: 100,
-    grayscale: false,
-    sepia: false,
+  const filters = {
+    ...defaultFilters,
+    ...previewTransform.filters,
   };
 
   // Check if preview differs from committed state
@@ -61,8 +97,111 @@ export const ImageEditor = () => {
     });
   };
 
+  const history = activeFile ? state.editHistoryByFileId[activeFile.id] : undefined;
+  const canUndo = !!history && history.past.length > 0;
+  const canRedo = !!history && history.future.length > 0;
+
+  const handleUndo = () => {
+    if (!activeFile || !canUndo) return;
+    dispatch({ type: 'UNDO_TRANSFORM', payload: { id: activeFile.id } });
+  };
+
+  const handleRedo = () => {
+    if (!activeFile || !canRedo) return;
+    dispatch({ type: 'REDO_TRANSFORM', payload: { id: activeFile.id } });
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toLowerCase().includes('mac');
+      const modKey = isMac ? event.metaKey : event.ctrlKey;
+      if (!modKey) return;
+      if (event.key.toLowerCase() === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        handleUndo();
+      } else if (
+        (event.key.toLowerCase() === 'z' && event.shiftKey) ||
+        event.key.toLowerCase() === 'y'
+      ) {
+        event.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [activeFile?.id, canUndo, canRedo]);
+
+  const buildPresetTransform = (transform: ImageTransform): ImageTransform => ({
+    rotation: transform.rotation,
+    flipHorizontal: transform.flipHorizontal,
+    flipVertical: transform.flipVertical,
+    filters: { ...filters },
+  });
+
+  const savePreset = () => {
+    const trimmedName = presetName.trim();
+    if (!trimmedName) return;
+    const newPreset: EditPreset = {
+      id: `${Date.now()}`,
+      name: trimmedName,
+      transform: buildPresetTransform(previewTransform),
+    };
+    const nextPresets = [...editPresets, newPreset];
+    setEditPresets(nextPresets);
+    setPresetName('');
+    setSelectedPresetId(newPreset.id);
+    try {
+      localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(nextPresets));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const deletePreset = () => {
+    if (!selectedPresetId) return;
+    const nextPresets = editPresets.filter((preset) => preset.id !== selectedPresetId);
+    setEditPresets(nextPresets);
+    setSelectedPresetId('');
+    try {
+      localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(nextPresets));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const applyPresetToFiles = (target: 'active' | 'all') => {
+    const preset = editPresets.find((p) => p.id === selectedPresetId);
+    if (!preset) return;
+    const filesToApply = target === 'all' ? state.files : activeFile ? [activeFile] : [];
+    filesToApply.forEach((file) => {
+      const currentTransform = file.transform || {
+        rotation: 0,
+        flipHorizontal: false,
+        flipVertical: false,
+        filters: { ...defaultFilters },
+      };
+
+      dispatch({
+        type: 'UPDATE_FILE_TRANSFORM',
+        payload: {
+          id: file.id,
+          transform: {
+            ...currentTransform,
+            rotation: preset.transform.rotation,
+            flipHorizontal: preset.transform.flipHorizontal,
+            flipVertical: preset.transform.flipVertical,
+            filters: {
+              ...currentTransform.filters,
+              ...preset.transform.filters,
+            },
+          },
+        },
+      });
+    });
+  };
+
   const rotate = () => {
-    const newRotation = ((previewTransform.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+    const newRotation = ((previewTransform.rotation + 90) % 360 + 360) % 360;
     updatePreviewTransform({ rotation: newRotation });
   };
 
@@ -79,13 +218,7 @@ export const ImageEditor = () => {
       rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
-      filters: {
-        brightness: 100,
-        contrast: 100,
-        saturation: 100,
-        grayscale: false,
-        sepia: false,
-      },
+      filters: { ...defaultFilters },
     });
   };
 
@@ -93,12 +226,10 @@ export const ImageEditor = () => {
     if (!activeFile) return;
     
     dispatch({
-      type: 'UPDATE_FILE',
+      type: 'UPDATE_FILE_TRANSFORM',
       payload: {
         id: activeFile.id,
-        updates: {
-          transform: previewTransform,
-        },
+        transform: previewTransform,
       },
     });
   };
@@ -114,6 +245,13 @@ export const ImageEditor = () => {
     filters.brightness !== 100 ||
     filters.contrast !== 100 ||
     filters.saturation !== 100 ||
+    (filters.clarity ?? 0) !== 0 ||
+    (filters.vibrance ?? 0) !== 0 ||
+    (filters.highlights ?? 0) !== 0 ||
+    (filters.shadows ?? 0) !== 0 ||
+    (filters.temperature ?? 0) !== 0 ||
+    (filters.sharpen ?? 0) !== 0 ||
+    (filters.blur ?? 0) !== 0 ||
     filters.grayscale ||
     filters.sepia;
 
@@ -176,15 +314,35 @@ export const ImageEditor = () => {
           <Wand2 className="h-4 w-4 text-primary-400" />
           Image Editing
         </h2>
-        {hasAnyEdits && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={resetPreview}
-            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-            title="Reset all edits"
+            onClick={handleUndo}
+            disabled={!canUndo}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Undo"
+            aria-label="Undo"
           >
-            Reset All
+            <Undo2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
-        )}
+          <button
+            onClick={handleRedo}
+            disabled={!canRedo}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Redo"
+            aria-label="Redo"
+          >
+            <Redo2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+          {hasAnyEdits && (
+            <button
+              onClick={resetPreview}
+              className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              title="Reset all edits"
+            >
+              Reset All
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Preview Canvas */}
@@ -288,6 +446,26 @@ export const ImageEditor = () => {
               <span className="text-xs text-gray-600 dark:text-gray-400">Flip V</span>
             </button>
           </div>
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                Fine Rotate
+              </label>
+              <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                {previewTransform.rotation.toFixed(1)} deg
+              </span>
+            </div>
+            <input
+              type="range"
+              min="-180"
+              max="180"
+              step="0.5"
+              value={previewTransform.rotation}
+              onChange={(e) => updatePreviewTransform({ rotation: Number(e.target.value) })}
+              aria-label="Fine rotation slider"
+              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+            />
+          </div>
         </div>
 
         {/* Filters Section */}
@@ -386,6 +564,218 @@ export const ImageEditor = () => {
                 Sepia
               </button>
             </div>
+
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                Advanced
+              </h4>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Clarity
+                    </label>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                      {filters.clarity ?? 0}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={filters.clarity ?? 0}
+                    onChange={(e) => updatePreviewFilters({ clarity: Number(e.target.value) })}
+                    aria-label="Clarity slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Vibrance
+                    </label>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                      {filters.vibrance ?? 0}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={filters.vibrance ?? 0}
+                    onChange={(e) => updatePreviewFilters({ vibrance: Number(e.target.value) })}
+                    aria-label="Vibrance slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Highlights
+                    </label>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                      {filters.highlights ?? 0}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={filters.highlights ?? 0}
+                    onChange={(e) => updatePreviewFilters({ highlights: Number(e.target.value) })}
+                    aria-label="Highlights slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Shadows
+                    </label>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                      {filters.shadows ?? 0}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={filters.shadows ?? 0}
+                    onChange={(e) => updatePreviewFilters({ shadows: Number(e.target.value) })}
+                    aria-label="Shadows slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Temperature
+                    </label>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                      {filters.temperature ?? 0}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={filters.temperature ?? 0}
+                    onChange={(e) => updatePreviewFilters({ temperature: Number(e.target.value) })}
+                    aria-label="Temperature slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Sharpen
+                      </label>
+                      <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                        {filters.sharpen ?? 0}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={filters.sharpen ?? 0}
+                      onChange={(e) => updatePreviewFilters({ sharpen: Number(e.target.value) })}
+                      aria-label="Sharpen slider"
+                      className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Blur
+                      </label>
+                      <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                        {filters.blur ?? 0}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={filters.blur ?? 0}
+                      onChange={(e) => updatePreviewFilters({ blur: Number(e.target.value) })}
+                      aria-label="Blur slider"
+                      className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Edit Presets */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Edit Presets
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder="Preset name"
+                className="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <button
+                onClick={savePreset}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <Save className="w-4 h-4" />
+                Save
+              </button>
+            </div>
+
+            <select
+              value={selectedPresetId}
+              onChange={(e) => setSelectedPresetId(e.target.value)}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">Select a preset</option>
+              {editPresets.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => applyPresetToFiles('active')}
+                disabled={!selectedPresetId}
+                className="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply to Active
+              </button>
+              <button
+                onClick={() => applyPresetToFiles('all')}
+                disabled={!selectedPresetId}
+                className="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply to All
+              </button>
+            </div>
+
+            <button
+              onClick={deletePreset}
+              disabled={!selectedPresetId}
+              className="px-3 py-2 text-xs font-medium rounded-lg border border-red-200 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Delete Preset
+            </button>
           </div>
         </div>
       </div>

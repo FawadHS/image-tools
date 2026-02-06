@@ -1,6 +1,6 @@
 # Image Tools - Development Roadmap
 
-> **Last Updated**: February 5, 2026  
+> **Last Updated**: February 6, 2026  
 > **Current Version**: 3.0.0 (V4.2 UI uplift planning)  
 > **Project Status**: Production Ready | Active Development
 
@@ -17,6 +17,7 @@ Phase 5: Polish & Optimization        ██████████████
 Phase 6: Stabilization & Quality      ████████████████████  100% ✅
 Phase 7: Testing Infrastructure       ████████████████████  100% ✅
 Phase 8: UX Enhancements & Quality    [####################] 100% DONE
+Phase 9: Editing Tools Upgrade        [####################] 100% DONE
 ```
 
 **Recent Achievements (v4.1)**:
@@ -248,6 +249,33 @@ Roadmap Reference
 | **Smart Compression** | High | High | AI-optimized quality vs size |
 | **Parallel Workers** | Medium | Medium | Multiple Web Workers for speed |
 | **WASM Encoding** | Medium | High | Faster encoding with WebAssembly |
+
+---
+
+## Phase 9: Editing Tools Upgrade - COMPLETE
+
+Goal: make the editing suite feel modern, precise, and fast without breaking the unified render pipeline.
+
+### Editing Suite Upgrade (v4.3)
+| Feature | Priority | Complexity | Status | Description |
+|---------|----------|------------|--------|-------------|
+| **Crop UX Overhaul** | High | Medium | ✅ Done | Drag/resize handles, move existing crop, better bounds + ratio handling |
+| **Straighten / Fine Rotate** | High | Medium | ✅ Done | Slider for -45° to +45° rotation with live preview |
+| **Filters v2** | Medium | Medium | ✅ Done | Clarity, vibrance, highlights/shadows, temperature |
+| **Sharpen + Blur** | Medium | Medium | ✅ Done | Non-destructive sliders (preview + export) |
+| **Undo / Redo** | High | Medium | ✅ Done | Global edit stack across all tools |
+| **Edit Presets** | Medium | Low | ✅ Done | Save and apply edit settings to multiple files |
+| **Selective Reset** | Low | Low | ✅ Done | Reset crop/filters/text individually |
+
+### Phase 9 Sprint Plan (Topic-Based)
+| Sprint | Topic | Scope | Status |
+|--------|-------|-------|--------|
+| Sprint 1 | Crop UX | Move + resize crop, handle hit-testing, enforce bounds | Done |
+| Sprint 2 | Fine Rotate | Add straighten slider + live preview + export sync | Done |
+| Sprint 3 | Filters v2 | New filter controls + pipeline support | Done |
+| Sprint 4 | Sharpen/Blur | Pipeline + UI controls + preview tuning | Done |
+| Sprint 5 | Undo/Redo | Edit history stack + keyboard shortcuts | Done |
+| Sprint 6 | Edit Presets | Save/apply edit stacks across files | Done |
 
 ---
 

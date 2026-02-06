@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { SelectedFile, ConvertOptions, PresetType, OutputFormat } from '../types';
+import { SelectedFile, ConvertOptions, PresetType, OutputFormat, ImageTransform } from '../types';
 import { DEFAULT_QUALITY } from '../constants';
 
 interface ConverterState {
@@ -8,6 +8,7 @@ interface ConverterState {
   options: ConvertOptions;
   isConverting: boolean;
   totalConversions: number;
+  editHistoryByFileId: Record<string, { past: ImageTransform[]; future: ImageTransform[] }>;
 }
 
 type ConverterAction =
@@ -15,6 +16,9 @@ type ConverterAction =
   | { type: 'REMOVE_FILE'; payload: string }
   | { type: 'CLEAR_FILES' }
   | { type: 'UPDATE_FILE'; payload: { id: string; updates: Partial<SelectedFile> } }
+  | { type: 'UPDATE_FILE_TRANSFORM'; payload: { id: string; transform: ImageTransform } }
+  | { type: 'UNDO_TRANSFORM'; payload: { id: string } }
+  | { type: 'REDO_TRANSFORM'; payload: { id: string } }
   | { type: 'MOVE_FILE'; payload: { sourceId: string; targetId: string } }
   | { type: 'SET_OPTIONS'; payload: Partial<ConvertOptions> }
   | { type: 'SET_PRESET'; payload: PresetType }
@@ -72,21 +76,63 @@ const initialState: ConverterState = {
   options: initialOptions,
   isConverting: false,
   totalConversions: loadTotalConversions(),
+  editHistoryByFileId: {},
+};
+
+const defaultTransform: ImageTransform = {
+  rotation: 0,
+  flipHorizontal: false,
+  flipVertical: false,
+  filters: {
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    clarity: 0,
+    vibrance: 0,
+    highlights: 0,
+    shadows: 0,
+    temperature: 0,
+    sharpen: 0,
+    blur: 0,
+    grayscale: false,
+    sepia: false,
+  },
+};
+
+const ensureTransform = (transform: ImageTransform | undefined): ImageTransform => {
+  if (!transform) return { ...defaultTransform };
+  return {
+    ...defaultTransform,
+    ...transform,
+    filters: {
+      ...defaultTransform.filters,
+      ...transform.filters,
+    },
+  };
 };
 
 const converterReducer = (state: ConverterState, action: ConverterAction): ConverterState => {
   switch (action.type) {
     case 'ADD_FILES':
       const newFiles = [...state.files, ...action.payload];
+      const newHistory = { ...state.editHistoryByFileId };
+      action.payload.forEach((file) => {
+        if (!newHistory[file.id]) {
+          newHistory[file.id] = { past: [], future: [] };
+        }
+      });
       return {
         ...state,
         files: newFiles,
         // Set first file as active if no active file exists
         activeFileId: state.activeFileId || (newFiles.length > 0 ? newFiles[0].id : null),
+        editHistoryByFileId: newHistory,
       };
 
     case 'REMOVE_FILE':
       const remainingFiles = state.files.filter((f) => f.id !== action.payload);
+      const historyAfterRemove = { ...state.editHistoryByFileId };
+      delete historyAfterRemove[action.payload];
       return {
         ...state,
         files: remainingFiles,
@@ -94,6 +140,7 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
         activeFileId: state.activeFileId === action.payload
           ? (remainingFiles.length > 0 ? remainingFiles[0].id : null)
           : state.activeFileId,
+        editHistoryByFileId: historyAfterRemove,
       };
 
     case 'CLEAR_FILES':
@@ -101,6 +148,7 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
         ...state,
         files: [],
         activeFileId: null,
+        editHistoryByFileId: {},
       };
 
     case 'UPDATE_FILE':
@@ -110,6 +158,69 @@ const converterReducer = (state: ConverterState, action: ConverterAction): Conve
           f.id === action.payload.id ? { ...f, ...action.payload.updates } : f
         ),
       };
+    case 'UPDATE_FILE_TRANSFORM': {
+      const { id, transform } = action.payload;
+      const history = state.editHistoryByFileId[id] || { past: [], future: [] };
+      const currentFile = state.files.find((f) => f.id === id);
+      const currentTransform = ensureTransform(currentFile?.transform);
+      return {
+        ...state,
+        files: state.files.map((f) =>
+          f.id === id ? { ...f, transform } : f
+        ),
+        editHistoryByFileId: {
+          ...state.editHistoryByFileId,
+          [id]: {
+            past: [...history.past, currentTransform],
+            future: [],
+          },
+        },
+      };
+    }
+    case 'UNDO_TRANSFORM': {
+      const { id } = action.payload;
+      const history = state.editHistoryByFileId[id];
+      if (!history || history.past.length === 0) return state;
+      const currentFile = state.files.find((f) => f.id === id);
+      const currentTransform = ensureTransform(currentFile?.transform);
+      const previous = history.past[history.past.length - 1];
+      const newPast = history.past.slice(0, -1);
+      return {
+        ...state,
+        files: state.files.map((f) =>
+          f.id === id ? { ...f, transform: previous } : f
+        ),
+        editHistoryByFileId: {
+          ...state.editHistoryByFileId,
+          [id]: {
+            past: newPast,
+            future: [currentTransform, ...history.future],
+          },
+        },
+      };
+    }
+    case 'REDO_TRANSFORM': {
+      const { id } = action.payload;
+      const history = state.editHistoryByFileId[id];
+      if (!history || history.future.length === 0) return state;
+      const currentFile = state.files.find((f) => f.id === id);
+      const currentTransform = ensureTransform(currentFile?.transform);
+      const next = history.future[0];
+      const newFuture = history.future.slice(1);
+      return {
+        ...state,
+        files: state.files.map((f) =>
+          f.id === id ? { ...f, transform: next } : f
+        ),
+        editHistoryByFileId: {
+          ...state.editHistoryByFileId,
+          [id]: {
+            past: [...history.past, currentTransform],
+            future: newFuture,
+          },
+        },
+      };
+    }
 
     case 'MOVE_FILE': {
       const { sourceId, targetId } = action.payload;

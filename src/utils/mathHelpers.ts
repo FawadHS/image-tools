@@ -77,11 +77,11 @@ export function clampCropRect(
 
 /**
  * Compute dimensions after rotation
- * 90Â deg and 270Â deg rotations swap width/height
+ * 90ï¿½ deg and 270ï¿½ deg rotations swap width/height
  * 
  * @param width - Original width
  * @param height - Original height
- * @param rotation - Rotation angle in degrees (0, 90, 180, 270)
+ * @param rotation - Rotation angle in degrees
  * @returns Dimensions after rotation
  */
 export function computeWorkingDimensionsAfterRotation(
@@ -89,10 +89,24 @@ export function computeWorkingDimensionsAfterRotation(
   height: number,
   rotation: number
 ): Dimensions {
-  if (rotation === 90 || rotation === 270) {
+  const normalized = ((rotation % 360) + 360) % 360;
+  if (normalized === 0 || normalized === 180) {
+    return { width, height };
+  }
+  if (normalized === 90 || normalized === 270) {
     return { width: height, height: width };
   }
-  return { width, height };
+
+  const radians = (normalized * Math.PI) / 180;
+  const cos = Math.abs(Math.cos(radians));
+  const sin = Math.abs(Math.sin(radians));
+  const rotatedWidth = width * cos + height * sin;
+  const rotatedHeight = width * sin + height * cos;
+
+  return {
+    width: Math.ceil(rotatedWidth),
+    height: Math.ceil(rotatedHeight),
+  };
 }
 
 /**

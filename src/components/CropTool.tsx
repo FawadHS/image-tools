@@ -6,6 +6,7 @@ import { loadImageWithExif, renderEditsToCanvas } from '../utils/imageTransform'
 
 type CropShape = 'rectangle' | 'circle';
 type AspectRatioPreset = 'free' | '1:1' | '16:9' | '4:3' | '3:2';
+type DragMode = 'new' | 'move' | 'resize-nw' | 'resize-ne' | 'resize-sw' | 'resize-se';
 
 interface CropArea {
   x: number;
@@ -23,6 +24,9 @@ export const CropTool = () => {
   const [cropArea, setCropArea] = useState<CropArea | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragMode, setDragMode] = useState<DragMode | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+  const [initialCrop, setInitialCrop] = useState<CropArea | null>(null);
   
   // Current transformed image (EXIF-normalized + rotation/flip/filters applied, NO crop)
   const [transformedImage, setTransformedImage] = useState<HTMLImageElement | null>(null);
@@ -191,8 +195,8 @@ export const CropTool = () => {
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !transformedImage) return;
+  const getPointerPosition = (clientX: number, clientY: number) => {
+    if (!canvasRef.current || !transformedImage) return null;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -204,134 +208,253 @@ export const CropTool = () => {
     const scaleY = canvas.height / imgHeight;
     
     // Convert click coordinates to natural pixel space
-    const x = (e.clientX - rect.left) / scaleX;
-    const y = (e.clientY - rect.top) / scaleY;
+    const x = (clientX - rect.left) / scaleX;
+    const y = (clientY - rect.top) / scaleY;
+
+    return { x, y, imgWidth, imgHeight, scaleX, scaleY };
+  };
+
+  const getHandleHit = (
+    pointX: number,
+    pointY: number,
+    crop: CropArea,
+    scaleX: number,
+    scaleY: number
+  ): DragMode | null => {
+    const handleSize = 12;
+    const handleRadiusX = handleSize / scaleX;
+    const handleRadiusY = handleSize / scaleY;
+
+    const handles = [
+      { mode: 'resize-nw' as DragMode, x: crop.x, y: crop.y },
+      { mode: 'resize-ne' as DragMode, x: crop.x + crop.width, y: crop.y },
+      { mode: 'resize-sw' as DragMode, x: crop.x, y: crop.y + crop.height },
+      { mode: 'resize-se' as DragMode, x: crop.x + crop.width, y: crop.y + crop.height },
+    ];
+
+    for (const handle of handles) {
+      if (
+        Math.abs(pointX - handle.x) <= handleRadiusX &&
+        Math.abs(pointY - handle.y) <= handleRadiusY
+      ) {
+        return handle.mode;
+      }
+    }
+    return null;
+  };
+
+  const isPointInCrop = (pointX: number, pointY: number, crop: CropArea) => {
+    return (
+      pointX >= crop.x &&
+      pointX <= crop.x + crop.width &&
+      pointY >= crop.y &&
+      pointY <= crop.y + crop.height
+    );
+  };
+
+  const clamp = (value: number, min: number, max: number) => {
+    return Math.max(min, Math.min(max, value));
+  };
+
+  const handlePointerDown = (clientX: number, clientY: number) => {
+    const info = getPointerPosition(clientX, clientY);
+    if (!info) return;
+
+    const { x, y, imgWidth, imgHeight, scaleX, scaleY } = info;
+    const currentCrop = cropArea;
 
     setIsDragging(true);
     setDragStart({ x, y });
-  };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !dragStart || !transformedImage) return;
+    if (currentCrop) {
+      const handleHit = getHandleHit(x, y, currentCrop, scaleX, scaleY);
+      if (handleHit) {
+        setDragMode(handleHit);
+        setInitialCrop(currentCrop);
+        return;
+      }
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
-    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
-    
-    // Use separate scales for X and Y to handle non-uniform scaling
-    const scaleX = canvas.width / imgWidth;
-    const scaleY = canvas.height / imgHeight;
-    
-    // Convert mouse coordinates to natural pixel space
-    const x = (e.clientX - rect.left) / scaleX;
-    const y = (e.clientY - rect.top) / scaleY;
-
-    let width = Math.abs(x - dragStart.x);
-    let height = Math.abs(y - dragStart.y);
-
-    // Apply aspect ratio if locked
-    const ratio = getAspectRatioValue();
-    if (isLocked && ratio) {
-      if (width / height > ratio) {
-        width = height * ratio;
-      } else {
-        height = width / ratio;
+      if (isPointInCrop(x, y, currentCrop)) {
+        setDragMode('move');
+        setDragOffset({ x: x - currentCrop.x, y: y - currentCrop.y });
+        setInitialCrop(currentCrop);
+        return;
       }
     }
 
-    // Calculate crop area in natural pixel coordinates
-    const cropX = Math.max(0, Math.min(dragStart.x, x));
-    const cropY = Math.max(0, Math.min(dragStart.y, y));
-    const cropWidth = Math.min(width, imgWidth - cropX);
-    const cropHeight = Math.min(height, imgHeight - cropY);
-
+    setDragMode('new');
     const newCrop = {
-      x: Math.round(cropX),
-      y: Math.round(cropY),
-      width: Math.round(cropWidth),
-      height: Math.round(cropHeight),
+      x: clamp(Math.round(x), 0, imgWidth),
+      y: clamp(Math.round(y), 0, imgHeight),
+      width: 1,
+      height: 1,
     };
     setCropArea(newCrop);
     setPreviewCrop(newCrop);
   };
 
-  const handleMouseUp = () => {
+  const handlePointerMove = (clientX: number, clientY: number) => {
+    if (!isDragging || !dragStart || !transformedImage || !dragMode) return;
+
+    const info = getPointerPosition(clientX, clientY);
+    if (!info) return;
+
+    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
+    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
+    const { x, y } = info;
+    const ratio = getAspectRatioValue();
+
+    if (dragMode === 'new') {
+      let width = Math.abs(x - dragStart.x);
+      let height = Math.abs(y - dragStart.y);
+
+      if (isLocked && ratio) {
+        if (width / height > ratio) {
+          width = height * ratio;
+        } else {
+          height = width / ratio;
+        }
+      }
+
+      const cropX = clamp(Math.min(dragStart.x, x), 0, imgWidth);
+      const cropY = clamp(Math.min(dragStart.y, y), 0, imgHeight);
+      const cropWidth = Math.min(width, imgWidth - cropX);
+      const cropHeight = Math.min(height, imgHeight - cropY);
+
+      const newCrop = {
+        x: Math.round(cropX),
+        y: Math.round(cropY),
+        width: Math.max(1, Math.round(cropWidth)),
+        height: Math.max(1, Math.round(cropHeight)),
+      };
+      setCropArea(newCrop);
+      setPreviewCrop(newCrop);
+      return;
+    }
+
+    if (dragMode === 'move' && cropArea && dragOffset) {
+      const newX = clamp(x - dragOffset.x, 0, imgWidth - cropArea.width);
+      const newY = clamp(y - dragOffset.y, 0, imgHeight - cropArea.height);
+      const newCrop = {
+        ...cropArea,
+        x: Math.round(newX),
+        y: Math.round(newY),
+      };
+      setCropArea(newCrop);
+      setPreviewCrop(newCrop);
+      return;
+    }
+
+    if (
+      (dragMode === 'resize-nw' ||
+        dragMode === 'resize-ne' ||
+        dragMode === 'resize-sw' ||
+        dragMode === 'resize-se') &&
+      initialCrop
+    ) {
+      const anchorRight = initialCrop.x + initialCrop.width;
+      const anchorBottom = initialCrop.y + initialCrop.height;
+
+      let newX = initialCrop.x;
+      let newY = initialCrop.y;
+      let newWidth = initialCrop.width;
+      let newHeight = initialCrop.height;
+
+      if (dragMode === 'resize-nw') {
+        newX = clamp(x, 0, anchorRight - 1);
+        newY = clamp(y, 0, anchorBottom - 1);
+        newWidth = anchorRight - newX;
+        newHeight = anchorBottom - newY;
+      } else if (dragMode === 'resize-ne') {
+        newX = initialCrop.x;
+        newY = clamp(y, 0, anchorBottom - 1);
+        newWidth = clamp(x, initialCrop.x + 1, imgWidth) - initialCrop.x;
+        newHeight = anchorBottom - newY;
+      } else if (dragMode === 'resize-sw') {
+        newX = clamp(x, 0, anchorRight - 1);
+        newY = initialCrop.y;
+        newWidth = anchorRight - newX;
+        newHeight = clamp(y, initialCrop.y + 1, imgHeight) - initialCrop.y;
+      } else if (dragMode === 'resize-se') {
+        newX = initialCrop.x;
+        newY = initialCrop.y;
+        newWidth = clamp(x, initialCrop.x + 1, imgWidth) - initialCrop.x;
+        newHeight = clamp(y, initialCrop.y + 1, imgHeight) - initialCrop.y;
+      }
+
+      if (isLocked && ratio) {
+        if (newWidth / newHeight > ratio) {
+          newWidth = newHeight * ratio;
+        } else {
+          newHeight = newWidth / ratio;
+        }
+
+        if (dragMode === 'resize-nw') {
+          newX = anchorRight - newWidth;
+          newY = anchorBottom - newHeight;
+        } else if (dragMode === 'resize-ne') {
+          newX = initialCrop.x;
+          newY = anchorBottom - newHeight;
+        } else if (dragMode === 'resize-sw') {
+          newX = anchorRight - newWidth;
+          newY = initialCrop.y;
+        }
+      }
+
+      newX = clamp(newX, 0, imgWidth - 1);
+      newY = clamp(newY, 0, imgHeight - 1);
+      newWidth = clamp(newWidth, 1, imgWidth - newX);
+      newHeight = clamp(newHeight, 1, imgHeight - newY);
+
+      const newCrop = {
+        x: Math.round(newX),
+        y: Math.round(newY),
+        width: Math.round(newWidth),
+        height: Math.round(newHeight),
+      };
+      setCropArea(newCrop);
+      setPreviewCrop(newCrop);
+    }
+  };
+
+  const handlePointerUp = () => {
     setIsDragging(false);
     setDragStart(null);
+    setDragMode(null);
+    setDragOffset(null);
+    setInitialCrop(null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    handlePointerDown(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    handlePointerMove(e.clientX, e.clientY);
+  };
+
+  const handleMouseUp = () => {
+    handlePointerUp();
   };
 
   // Touch event handlers for mobile support
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !transformedImage || e.touches.length !== 1) return;
-    
-    const touch = e.touches[0];
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
-    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
-    
-    const scaleX = canvas.width / imgWidth;
-    const scaleY = canvas.height / imgHeight;
-    
-    const x = (touch.clientX - rect.left) / scaleX;
-    const y = (touch.clientY - rect.top) / scaleY;
+    if (e.touches.length !== 1) return;
 
-    setIsDragging(true);
-    setDragStart({ x, y });
+    const touch = e.touches[0];
+    handlePointerDown(touch.clientX, touch.clientY);
     e.preventDefault();
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !dragStart || !transformedImage || e.touches.length !== 1) return;
-
+    if (e.touches.length !== 1) return;
     const touch = e.touches[0];
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const imgWidth = transformedImage.naturalWidth || transformedImage.width;
-    const imgHeight = transformedImage.naturalHeight || transformedImage.height;
-    
-    const scaleX = canvas.width / imgWidth;
-    const scaleY = canvas.height / imgHeight;
-    
-    const x = (touch.clientX - rect.left) / scaleX;
-    const y = (touch.clientY - rect.top) / scaleY;
-
-    let width = Math.abs(x - dragStart.x);
-    let height = Math.abs(y - dragStart.y);
-
-    const ratio = getAspectRatioValue();
-    if (isLocked && ratio) {
-      if (width / height > ratio) {
-        width = height * ratio;
-      } else {
-        height = width / ratio;
-      }
-    }
-
-    const cropX = Math.max(0, Math.min(dragStart.x, x));
-    const cropY = Math.max(0, Math.min(dragStart.y, y));
-    const cropWidth = Math.min(width, imgWidth - cropX);
-    const cropHeight = Math.min(height, imgHeight - cropY);
-
-    const newCrop = {
-      x: Math.round(cropX),
-      y: Math.round(cropY),
-      width: Math.round(cropWidth),
-      height: Math.round(cropHeight),
-    };
-    setCropArea(newCrop);
-    setPreviewCrop(newCrop);
+    handlePointerMove(touch.clientX, touch.clientY);
     e.preventDefault();
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
-    setDragStart(null);
+    handlePointerUp();
   };
   
   const discardCrop = () => {
@@ -359,22 +482,20 @@ export const CropTool = () => {
     // Save crop to active file - coordinates are in natural pixel space
     // of the transformed image (after rotation/flip/filters, before crop)
     const currentTransform = activeFile.transform || {
-      rotation: 0 as const,
+      rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'UPDATE_FILE',
+      type: 'UPDATE_FILE_TRANSFORM',
       payload: {
         id: activeFile.id,
-        updates: {
-          transform: {
-            ...currentTransform,
-            crop: {
-              ...previewCrop,
-              shape: cropShape, // Store the crop shape (rectangle or circle)
-            },
+        transform: {
+          ...currentTransform,
+          crop: {
+            ...previewCrop,
+            shape: cropShape, // Store the crop shape (rectangle or circle)
           },
         },
       },
@@ -387,20 +508,18 @@ export const CropTool = () => {
     if (!activeFile) return;
     
     const currentTransform = activeFile.transform || {
-      rotation: 0 as const,
+      rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'UPDATE_FILE',
+      type: 'UPDATE_FILE_TRANSFORM',
       payload: {
         id: activeFile.id,
-        updates: {
-          transform: {
-            ...currentTransform,
-            crop: undefined,
-          },
+        transform: {
+          ...currentTransform,
+          crop: undefined,
         },
       },
     });

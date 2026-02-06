@@ -335,21 +335,19 @@ export const TextOverlayTool = () => {
     if (!activeFile) return;
 
     const currentTransform = activeFile.transform || {
-      rotation: 0 as const,
+      rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'UPDATE_FILE',
+      type: 'UPDATE_FILE_TRANSFORM',
       payload: {
         id: activeFile.id,
-        updates: {
-          transform: {
-            ...currentTransform,
-            textOverlay: undefined,
-            textOverlays: overlays.map((overlay) => ({ ...overlay })),
-          },
+        transform: {
+          ...currentTransform,
+          textOverlay: undefined,
+          textOverlays: overlays.map((overlay) => ({ ...overlay })),
         },
       },
     });
@@ -364,21 +362,19 @@ export const TextOverlayTool = () => {
     setSelectedOverlay(null);
 
     const currentTransform = activeFile.transform || {
-      rotation: 0 as const,
+      rotation: 0,
       flipHorizontal: false,
       flipVertical: false,
     };
 
     dispatch({
-      type: 'UPDATE_FILE',
+      type: 'UPDATE_FILE_TRANSFORM',
       payload: {
         id: activeFile.id,
-        updates: {
-          transform: {
-            ...currentTransform,
-            textOverlay: undefined,
-            textOverlays: undefined,
-          },
+        transform: {
+          ...currentTransform,
+          textOverlay: undefined,
+          textOverlays: undefined,
         },
       },
     });
