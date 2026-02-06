@@ -84,6 +84,20 @@ export const ImageEditor = () => {
     setPreviewTransform(committedTransform);
   }, [JSON.stringify(activeFile?.transform), activeFile?.id]);
 
+  if (state.files.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <Wand2 className="w-5 h-5 text-primary-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Image Editing</h2>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Upload an image to start editing
+        </p>
+      </div>
+    );
+  }
+
   const filters = normalizeFilters(previewTransform.filters);
 
   // Check if preview differs from committed state

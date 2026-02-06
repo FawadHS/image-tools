@@ -418,177 +418,183 @@ export const TextOverlayTool = () => {
         )}
       </div>
 
-      <div className="mb-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-3">
-          <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-6">
+        <div className="space-y-4 lg:sticky lg:top-24 self-start">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
+            </div>
+            <div className="flex justify-center items-center max-h-[300px] min-h-[200px] overflow-hidden">
+              {!activeFile?.displayPreview ? (
+                // Loading state - HEIC conversion in progress
+                <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                  <span className="text-sm">Converting image...</span>
+                </div>
+              ) : !processedImage ? (
+                // Loading state - applying transforms
+                <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                  <span className="text-sm">Processing...</span>
+                </div>
+              ) : (
+                <canvas
+                  ref={canvasRef}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerLeave}
+                  onPointerCancel={handlePointerUp}
+                  className="cursor-pointer border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
+                />
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={addTextOverlay}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Text Overlay
+          </button>
+
+          {hasUnappliedChanges && overlays.length > 0 && (
+            <div className="flex gap-2">
+              <button
+                onClick={applyTextOverlay}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                Apply Overlay
+              </button>
+              <button
+                onClick={discardTextOverlay}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Discard
+              </button>
+            </div>
+          )}
         </div>
-        <div className="flex justify-center items-center max-h-[300px] min-h-[200px] overflow-hidden">
-          {!activeFile?.displayPreview ? (
-            // Loading state - HEIC conversion in progress
-            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-              <span className="text-sm">Converting image...</span>
+
+        <div className="space-y-4">
+          {overlays.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <Move className="w-4 h-4" />
+                <span>Click and drag text on canvas to reposition</span>
+              </div>
+
+              {overlays.map((overlay, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedOverlay(index)}
+                  className={`p-4 border rounded-lg transition-all ${
+                    selectedOverlay === index
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                      : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Overlay {index + 1}
+                    </span>
+                    <button
+                      onClick={() => removeOverlay(index)}
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                      title="Remove overlay"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Text</label>
+                      <input
+                        type="text"
+                        value={overlay.text}
+                        onChange={(e) => updateOverlay(index, { text: e.target.value })}
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Enter text"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Font</label>
+                      <select
+                        value={overlay.fontFamily}
+                        onChange={(e) => updateOverlay(index, { fontFamily: e.target.value })}
+                        aria-label="Font family"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option value="Arial">Arial</option>
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Comic Sans MS">Comic Sans MS</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Font Size</label>
+                        <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{overlay.fontSize}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="200"
+                        value={overlay.fontSize}
+                        onChange={(e) => updateOverlay(index, { fontSize: Number(e.target.value) })}
+                        aria-label="Font size"
+                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Color</label>
+                        <input
+                          type="color"
+                          value={overlay.color}
+                          onChange={(e) => updateOverlay(index, { color: e.target.value })}
+                          aria-label="Text color"
+                          className="w-full h-10 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Opacity</label>
+                          <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                            {Math.round(overlay.opacity * 100)}%
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={overlay.opacity}
+                          onChange={(e) => updateOverlay(index, { opacity: Number(e.target.value) })}
+                          aria-label="Text opacity"
+                          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : !processedImage ? (
-            // Loading state - applying transforms
-            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-              <span className="text-sm">Processing...</span>
-            </div>
-          ) : (
-            <canvas
-              ref={canvasRef}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerLeave}
-              onPointerCancel={handlePointerUp}
-              className="cursor-pointer border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
-            />
           )}
         </div>
       </div>
-
-      <button
-        onClick={addTextOverlay}
-        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
-      >
-        <Plus className="w-4 h-4" />
-        Add Text Overlay
-      </button>
-
-      {hasUnappliedChanges && overlays.length > 0 && (
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={applyTextOverlay}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Check className="w-4 h-4" />
-            Apply Overlay
-          </button>
-          <button
-            onClick={discardTextOverlay}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-          >
-            <X className="w-4 h-4" />
-            Discard
-          </button>
-        </div>
-      )}
-
-      {overlays.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-            <Move className="w-4 h-4" />
-            <span>Click and drag text on canvas to reposition</span>
-          </div>
-
-          {overlays.map((overlay, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedOverlay(index)}
-              className={`p-4 border rounded-lg transition-all ${
-                selectedOverlay === index
-                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                  : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Overlay {index + 1}
-                </span>
-                <button
-                  onClick={() => removeOverlay(index)}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                  title="Remove overlay"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Text</label>
-                  <input
-                    type="text"
-                    value={overlay.text}
-                    onChange={(e) => updateOverlay(index, { text: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Enter text"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Font</label>
-                  <select
-                    value={overlay.fontFamily}
-                    onChange={(e) => updateOverlay(index, { fontFamily: e.target.value })}
-                    aria-label="Font family"
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="Arial">Arial</option>
-                    <option value="Helvetica">Helvetica</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Courier New">Courier New</option>
-                    <option value="Verdana">Verdana</option>
-                    <option value="Impact">Impact</option>
-                    <option value="Comic Sans MS">Comic Sans MS</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Font Size</label>
-                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{overlay.fontSize}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="200"
-                    value={overlay.fontSize}
-                    onChange={(e) => updateOverlay(index, { fontSize: Number(e.target.value) })}
-                    aria-label="Font size"
-                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Color</label>
-                    <input
-                      type="color"
-                      value={overlay.color}
-                      onChange={(e) => updateOverlay(index, { color: e.target.value })}
-                      aria-label="Text color"
-                      className="w-full h-10 rounded-lg cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Opacity</label>
-                      <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
-                        {Math.round(overlay.opacity * 100)}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={overlay.opacity}
-                      onChange={(e) => updateOverlay(index, { opacity: Number(e.target.value) })}
-                      aria-label="Text opacity"
-                      className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

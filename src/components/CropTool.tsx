@@ -575,137 +575,143 @@ export const CropTool = () => {
         )}
       </div>
 
-      <div className="mb-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-3">
-          <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-6">
+        <div className="space-y-4 lg:sticky lg:top-24 self-start">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h3>
+            </div>
+            <div className="flex justify-center items-center max-h-[300px] min-h-[200px] overflow-hidden">
+              {!activeFile?.displayPreview ? (
+                // Loading state - HEIC conversion in progress
+                <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                  <span className="text-sm">Converting image...</span>
+                </div>
+              ) : !transformedImage ? (
+                // Loading state - applying transforms
+                <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                  <span className="text-sm">Processing...</span>
+                </div>
+              ) : (
+                <canvas
+                  ref={canvasRef}
+                  data-testid="crop-canvas"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchEnd}
+                  className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
+                />
+              )}
+            </div>
+          </div>
+
+          {hasUnappliedChanges && (
+            <div className="flex gap-2">
+              <button
+                onClick={applyCrop}
+                data-testid="apply-crop-button"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                Apply Crop
+              </button>
+              <button
+                onClick={discardCrop}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Discard
+              </button>
+            </div>
+          )}
         </div>
-        <div className="flex justify-center items-center max-h-[300px] min-h-[200px] overflow-hidden">
-          {!activeFile?.displayPreview ? (
-            // Loading state - HEIC conversion in progress
-            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-              <span className="text-sm">Converting image...</span>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              Crop Shape
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setCropShape('rectangle')}
+                className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
+                  cropShape === 'rectangle'
+                    ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
+                    : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-primary-50 dark:hover:bg-primary-900/30'
+                }`}
+              >
+                <Square className="w-4 h-4" />
+                <span className="text-xs font-medium">Rectangle</span>
+              </button>
+              <button
+                onClick={() => setCropShape('circle')}
+                data-testid="circle-crop-button"
+                className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
+                  cropShape === 'circle'
+                    ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
+                    : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-primary-50 dark:hover:bg-primary-900/30'
+                }`}
+              >
+                <Circle className="w-4 h-4" />
+                <span className="text-xs font-medium">Circle</span>
+              </button>
             </div>
-          ) : !transformedImage ? (
-            // Loading state - applying transforms
-            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-              <span className="text-sm">Processing...</span>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Aspect Ratio</label>
+              <button
+                onClick={() => setIsLocked(!isLocked)}
+                className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                title={isLocked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
+              >
+                {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              </button>
             </div>
-          ) : (
-            <canvas
-              ref={canvasRef}
-              data-testid="crop-canvas"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onTouchCancel={handleTouchEnd}
-              className="cursor-crosshair border border-gray-300 dark:border-gray-600 rounded max-w-full max-h-[300px] object-contain touch-none"
-            />
+            <select
+              value={aspectRatio}
+              onChange={(e) => setAspectRatio(e.target.value as AspectRatioPreset)}
+              disabled={!isLocked}
+              aria-label="Aspect ratio preset"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="free">Free</option>
+              <option value="1:1">1:1 (Square)</option>
+              <option value="16:9">16:9 (Widescreen)</option>
+              <option value="4:3">4:3 (Standard)</option>
+              <option value="3:2">3:2 (Photo)</option>
+            </select>
+          </div>
+
+          {cropArea && (
+            <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Position:</span>{' '}
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {Math.round(cropArea.x)}, {Math.round(cropArea.y)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Size:</span>{' '}
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {Math.round(cropArea.width)} x {Math.round(cropArea.height)}
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
-
-      {hasUnappliedChanges && (
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={applyCrop}
-            data-testid="apply-crop-button"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Check className="w-4 h-4" />
-            Apply Crop
-          </button>
-          <button
-            onClick={discardCrop}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-          >
-            <X className="w-4 h-4" />
-            Discard
-          </button>
-        </div>
-      )}
-
-      <div className="mb-4">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-          Crop Shape
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => setCropShape('rectangle')}
-            className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
-              cropShape === 'rectangle'
-                ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
-                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-primary-50 dark:hover:bg-primary-900/30'
-            }`}
-          >
-            <Square className="w-4 h-4" />
-            <span className="text-xs font-medium">Rectangle</span>
-          </button>
-          <button
-            onClick={() => setCropShape('circle')}
-            data-testid="circle-crop-button"
-            className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
-              cropShape === 'circle'
-                ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
-                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-primary-50 dark:hover:bg-primary-900/30'
-            }`}
-          >
-            <Circle className="w-4 h-4" />
-            <span className="text-xs font-medium">Circle</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Aspect Ratio</label>
-          <button
-            onClick={() => setIsLocked(!isLocked)}
-            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-            title={isLocked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
-          >
-            {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-          </button>
-        </div>
-        <select
-          value={aspectRatio}
-          onChange={(e) => setAspectRatio(e.target.value as AspectRatioPreset)}
-          disabled={!isLocked}
-          aria-label="Aspect ratio preset"
-          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value="free">Free</option>
-          <option value="1:1">1:1 (Square)</option>
-          <option value="16:9">16:9 (Widescreen)</option>
-          <option value="4:3">4:3 (Standard)</option>
-          <option value="3:2">3:2 (Photo)</option>
-        </select>
-      </div>
-
-      {cropArea && (
-        <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Position:</span>{' '}
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {Math.round(cropArea.x)}, {Math.round(cropArea.y)}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Size:</span>{' '}
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {Math.round(cropArea.width)} x {Math.round(cropArea.height)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
