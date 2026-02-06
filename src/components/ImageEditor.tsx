@@ -407,7 +407,7 @@ export const ImageEditor = () => {
                   </span>
                 )}
               </div>
-              <div className="flex justify-center items-center min-h-[240px]">
+              <div className="flex justify-center items-center min-h-[220px]">
                 {!activeFile?.displayPreview ? (
                   // Loading state - HEIC conversion in progress
                   <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
@@ -417,7 +417,7 @@ export const ImageEditor = () => {
                 ) : (
                   <canvas
                     ref={canvasRef}
-                    className="max-w-full h-auto rounded-lg shadow-sm max-h-[360px]"
+                    className="max-w-full h-auto rounded-lg shadow-sm max-h-[260px] sm:max-h-[360px]"
                   />
                 )}
               </div>
@@ -426,7 +426,7 @@ export const ImageEditor = () => {
         </div>
 
         {/* Rotate & Flip Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-5">
         <div>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Transform
@@ -475,8 +475,8 @@ export const ImageEditor = () => {
               <span className="text-xs text-gray-600 dark:text-gray-400">Flip V</span>
             </button>
           </div>
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-2">
+          <div className="mt-3">
+            <div className="flex justify-between items-center mb-1">
               <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                 Fine Rotate
               </label>
@@ -506,7 +506,7 @@ export const ImageEditor = () => {
             </h3>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 sm:space-y-4">
             {/* Brightness */}
             <div>
               <div className="flex justify-between items-center mb-1">
@@ -598,7 +598,7 @@ export const ImageEditor = () => {
               <summary className="cursor-pointer select-none text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                 Advanced
               </summary>
-              <div className="space-y-3">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -807,7 +807,7 @@ export const ImageEditor = () => {
           </div>
         </div>
         {hasUnappliedChanges && (
-          <div className="sticky bottom-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-lg p-2">
+          <div className="sticky bottom-0 sm:bottom-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-lg p-2">
             <div className="flex gap-2">
               <button
                 onClick={applyChanges}
