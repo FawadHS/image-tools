@@ -39,6 +39,8 @@ export const TextOverlayTool = () => {
   const [lastTransformState, setLastTransformState] = useState<string>('');
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [nudgeStep, setNudgeStep] = useState(5);
+  const [moveMode, setMoveMode] = useState(false);
+  const moveModeInitializedRef = useRef(false);
 
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
@@ -123,12 +125,19 @@ export const TextOverlayTool = () => {
     return () => media.removeListener(update);
   }, []);
 
+  useEffect(() => {
+    if (!moveModeInitializedRef.current) {
+      setMoveMode(isCoarsePointer);
+      moveModeInitializedRef.current = true;
+    }
+  }, [isCoarsePointer]);
+
   const getOverlayBounds = (
     overlay: TextOverlayConfig,
     ctx: CanvasRenderingContext2D,
     padding: number = 6
   ) => {
-    const effectivePadding = isCoarsePointer ? Math.max(padding, 18) : padding;
+    const effectivePadding = isCoarsePointer ? Math.max(padding, 32) : padding;
     ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
     const metrics = ctx.measureText(overlay.text);
     const textHeight = overlay.fontSize * 1.2;
@@ -290,6 +299,17 @@ export const TextOverlayTool = () => {
       activePointerIdRef.current = e.pointerId;
       canvas.setPointerCapture(e.pointerId);
       return;
+    }
+
+    if (moveMode && selectedOverlay !== null) {
+      const overlay = overlays[selectedOverlay];
+      if (overlay) {
+        setIsDragging(true);
+        setDragOffset({ x: point.x - overlay.x, y: point.y - overlay.y });
+        activePointerIdRef.current = e.pointerId;
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
     }
 
     setSelectedOverlay(null);
@@ -546,18 +566,37 @@ export const TextOverlayTool = () => {
                   <div className="space-y-3">
                     {(selectedOverlay === index || (selectedOverlay === null && index === 0)) && (
                       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between gap-2 mb-2">
                           <span className="text-xs font-medium text-gray-700 dark:text-gray-200">Nudge</span>
-                          <select
-                            value={nudgeStep}
-                            onChange={(e) => setNudgeStep(Number(e.target.value))}
-                            className="text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
-                          >
-                            <option value={1}>1px</option>
-                            <option value={5}>5px</option>
-                            <option value={10}>10px</option>
-                          </select>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setMoveMode((prev) => !prev)}
+                              className={`px-2 py-1 text-[11px] font-medium rounded border transition-colors ${
+                                moveMode
+                                  ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
+                                  : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                              }`}
+                              aria-pressed={moveMode}
+                            >
+                              Move mode
+                            </button>
+                            <select
+                              value={nudgeStep}
+                              onChange={(e) => setNudgeStep(Number(e.target.value))}
+                              className="text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+                            >
+                              <option value={1}>1px</option>
+                              <option value={5}>5px</option>
+                              <option value={10}>10px</option>
+                            </select>
+                          </div>
                         </div>
+                        {moveMode && (
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
+                            Drag anywhere on the preview to move the selected text.
+                          </p>
+                        )}
                         <div className="grid grid-cols-3 gap-2 max-w-[160px]">
                           <div />
                           <button

@@ -1,6 +1,6 @@
 {
   "name": "@fawadhs/image-preflight",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "description": "Image Preflight - Privacy-first image conversion and editing React component. Part of Preflight Utility Suite.",
   "author": "Fawad Hussain <fawad@fawadhs.dev>",
   "license": "MIT",
