@@ -146,6 +146,12 @@ describe('rotation dimension swap', () => {
     
     expect(result).toEqual({ width: 1000, height: 800 });
   });
+  test('non-right angle rotation expands bounds', () => {
+    const result = computeWorkingDimensionsAfterRotation(1000, 800, 30);
+    expect(result.width).toBeGreaterThan(1000);
+    expect(result.height).toBeGreaterThan(800);
+  });
+
 });
 
 describe('aspect ratio calculations', () => {

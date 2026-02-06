@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye, Loader2, Undo2, Redo2, Save } from 'lucide-react';
+import { RotateCw, FlipHorizontal, FlipVertical, Wand2, Check, X, Eye, Loader2, Undo2, Redo2, Save, Info } from 'lucide-react';
 import { useConverter } from '../context/ConverterContext';
 import { ImageTransform } from '../types';
 import { CANVAS_PREVIEW_MAX_WIDTH } from '../constants';
@@ -13,6 +13,7 @@ import { renderEditsToCanvas } from '../utils/imageTransform';
 export const ImageEditor = () => {
   const { state, dispatch } = useConverter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showTips, setShowTips] = useState(false);
 
   const PRESET_STORAGE_KEY = 'image-tools-edit-presets';
   type EditPreset = { id: string; name: string; transform: ImageTransform };
@@ -319,6 +320,14 @@ export const ImageEditor = () => {
         </h2>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowTips(true)}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            title="Editing tips"
+            aria-label="Editing tips"
+          >
+            <Info className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+          <button
             onClick={handleUndo}
             disabled={!canUndo}
             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -347,6 +356,40 @@ export const ImageEditor = () => {
           )}
         </div>
       </div>
+
+      {showTips && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowTips(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Editing Tips</h3>
+              <button
+                onClick={() => setShowTips(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close tips"
+              >
+                <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-4 text-sm text-gray-700 dark:text-gray-300">
+              <p>Fine Rotate: use the slider for small angle corrections. Combine with crop to re-frame.</p>
+              <p>Clarity boosts local contrast. Keep it low on portraits to avoid harsh edges.</p>
+              <p>Vibrance boosts muted colors more than saturated ones. Safer than saturation.</p>
+              <p>Highlights/Shadows: recover bright areas or lift dark regions with small moves first.</p>
+              <p>Temperature: warm for indoor light, cool for daylight.</p>
+              <p>Sharpen adds detail but can amplify noise. Use lightly on large images.</p>
+              <p>Blur softens edges for backgrounds. Small values go a long way.</p>
+              <p>Undo/Redo: use Ctrl+Z / Ctrl+Shift+Z (or Cmd on Mac).</p>
+              <p>Edit Presets: save your favorite edit stack and apply it to multiple files.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Canvas */}
       {state.files.length > 0 && (

@@ -1,4 +1,4 @@
-import { renderEditsToCanvas } from '../../src/utils/imageTransform';
+import { renderEditsToCanvas, applyFilters } from '../../src/utils/imageTransform';
 import { ImageTransform } from '../../src/types';
 
 const makeImage = (width: number, height: number): HTMLImageElement => {
@@ -34,6 +34,12 @@ describe('renderEditsToCanvas', () => {
     clip: jest.fn(),
     measureText: jest.fn(() => ({ width: 100 })),
     fillText: jest.fn(),
+    getImageData: jest.fn(() => ({
+      data: new Uint8ClampedArray(16),
+      width: 2,
+      height: 2,
+    })),
+    putImageData: jest.fn(),
   });
 
   beforeEach(() => {
@@ -66,6 +72,47 @@ describe('renderEditsToCanvas', () => {
     const canvas = renderEditsToCanvas(img, transform, false);
     expect(canvas.width).toBe(200);
     expect(canvas.height).toBe(100);
+  });
+
+  it('includes blur filter when enabled', () => {
+    const transform: ImageTransform = {
+      rotation: 0,
+      flipHorizontal: false,
+      flipVertical: false,
+      filters: {
+        brightness: 100,
+        contrast: 100,
+        saturation: 100,
+        blur: 5,
+        grayscale: false,
+        sepia: false,
+      },
+    };
+
+    const filterString = applyFilters(transform);
+    expect(filterString).toContain('blur(');
+  });
+
+  it('runs advanced adjustments when clarity is set', () => {
+    const img = makeImage(200, 120);
+    const transform: ImageTransform = {
+      rotation: 0,
+      flipHorizontal: false,
+      flipVertical: false,
+      filters: {
+        brightness: 100,
+        contrast: 100,
+        saturation: 100,
+        clarity: 10,
+        grayscale: false,
+        sepia: false,
+      },
+    };
+
+    const canvas = renderEditsToCanvas(img, transform, false);
+    const ctx = canvas.getContext('2d') as any;
+    expect(ctx.getImageData).toHaveBeenCalled();
+    expect(ctx.putImageData).toHaveBeenCalled();
   });
 
   it('renders all text overlays when enabled', () => {

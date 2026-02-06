@@ -86,24 +86,32 @@ const applyAdvancedAdjustments = (
   const temperature = filters.temperature ?? 0;
   const sharpen = filters.sharpen ?? 0;
 
-  const needsAdvanced =
-    clarity !== 0 ||
-    vibrance !== 0 ||
-    highlights !== 0 ||
-    shadows !== 0 ||
-    temperature !== 0;
+  const minAdjust = 1;
+  const tunedClarity = Math.abs(clarity) < minAdjust ? 0 : clarity;
+  const tunedVibrance = Math.abs(vibrance) < minAdjust ? 0 : vibrance;
+  const tunedHighlights = Math.abs(highlights) < minAdjust ? 0 : highlights;
+  const tunedShadows = Math.abs(shadows) < minAdjust ? 0 : shadows;
+  const tunedTemperature = Math.abs(temperature) < minAdjust ? 0 : temperature;
+  const tunedSharpen = Math.abs(sharpen) < minAdjust ? 0 : sharpen;
 
-  if (!needsAdvanced && sharpen <= 0) return;
+  const needsAdvanced =
+    tunedClarity !== 0 ||
+    tunedVibrance !== 0 ||
+    tunedHighlights !== 0 ||
+    tunedShadows !== 0 ||
+    tunedTemperature !== 0;
+
+  if (!needsAdvanced && tunedSharpen <= 0) return;
 
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
 
   if (needsAdvanced) {
-    const clarityFactor = clarity / 100;
-    const vibranceFactor = vibrance / 100;
-    const highlightFactor = highlights / 100;
-    const shadowFactor = shadows / 100;
-    const tempFactor = temperature / 100;
+    const clarityFactor = tunedClarity / 100;
+    const vibranceFactor = tunedVibrance / 100;
+    const highlightFactor = tunedHighlights / 100;
+    const shadowFactor = tunedShadows / 100;
+    const tempFactor = tunedTemperature / 100;
 
     for (let i = 0; i < data.length; i += 4) {
       let r = data[i];
@@ -158,8 +166,8 @@ const applyAdvancedAdjustments = (
 
   ctx.putImageData(imageData, 0, 0);
 
-  if (sharpen > 0) {
-    applySharpen(ctx, width, height, sharpen);
+  if (tunedSharpen > 0) {
+    applySharpen(ctx, width, height, tunedSharpen);
   }
 };
 
