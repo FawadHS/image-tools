@@ -100,6 +100,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Improved mobile drag hit targets for crop handles and text overlay
 
+## [3.2.1] - 2026-02-06
+
+### Fixed
+- Prevent horizontal panel drift on mobile slider drag
+- Crop and edit previews now include applied text overlays
+- Added mobile-friendly nudge controls for text overlay
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

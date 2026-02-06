@@ -39,6 +39,11 @@ export const CropTool = () => {
   // Track committed crop state from active file
   const committedCrop = activeFile?.transform?.crop;
   const [previewCrop, setPreviewCrop] = useState<CropArea | null>(committedCrop || null);
+  const overlays = activeFile?.transform?.textOverlays?.length
+    ? activeFile.transform.textOverlays
+    : activeFile?.transform?.textOverlay
+    ? [activeFile.transform.textOverlay]
+    : [];
   
   // Sync preview crop with committed state when it changes externally
   useEffect(() => {
@@ -197,7 +202,22 @@ export const CropTool = () => {
     handles.forEach((handle) => {
       ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
     });
-  }, [transformedImage, cropArea, cropShape]);
+
+    // Draw text overlays (aligned to current crop region if present)
+    if (overlays.length > 0) {
+      const offsetX = (previewCrop?.x ?? committedCrop?.x ?? 0) * scale;
+      const offsetY = (previewCrop?.y ?? committedCrop?.y ?? 0) * scale;
+      overlays.forEach((overlay) => {
+        ctx.save();
+        ctx.font = `${overlay.fontSize * scale}px ${overlay.fontFamily}`;
+        ctx.fillStyle = overlay.color;
+        ctx.globalAlpha = overlay.opacity;
+        ctx.textBaseline = 'top';
+        ctx.fillText(overlay.text, overlay.x * scale + offsetX, overlay.y * scale + offsetY);
+        ctx.restore();
+      });
+    }
+  }, [transformedImage, cropArea, cropShape, overlays, previewCrop, committedCrop]);
 
   const getAspectRatioValue = (): number | null => {
     switch (aspectRatio) {

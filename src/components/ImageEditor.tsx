@@ -286,8 +286,8 @@ export const ImageEditor = () => {
           textOverlays: activeFile.transform?.textOverlays,
         };
         
-        // Render using the unified pipeline (without text overlay for editing preview)
-        const renderedCanvas = renderEditsToCanvas(img, fullTransform, false);
+        // Render using the unified pipeline (include text overlay for preview parity)
+        const renderedCanvas = renderEditsToCanvas(img, fullTransform, true);
         
         // Scale for display if needed
         const scale = Math.min(1, CANVAS_PREVIEW_MAX_WIDTH / renderedCanvas.width);

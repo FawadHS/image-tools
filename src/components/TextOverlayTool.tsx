@@ -38,6 +38,7 @@ export const TextOverlayTool = () => {
   const activePointerIdRef = useRef<number | null>(null);
   const [lastTransformState, setLastTransformState] = useState<string>('');
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+  const [nudgeStep, setNudgeStep] = useState(5);
 
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
@@ -253,6 +254,16 @@ export const TextOverlayTool = () => {
 
   const updateOverlay = (index: number, updates: Partial<TextOverlayConfig>) => {
     setOverlays(overlays.map((overlay, i) => (i === index ? { ...overlay, ...updates } : overlay)));
+  };
+
+  const nudgeOverlay = (index: number, dx: number, dy: number) => {
+    const overlay = overlays[index];
+    if (!overlay || !processedImage) return;
+    const imgWidth = processedImage.naturalWidth || processedImage.width;
+    const imgHeight = processedImage.naturalHeight || processedImage.height;
+    const nextX = Math.max(0, Math.min(overlay.x + dx, imgWidth));
+    const nextY = Math.max(0, Math.min(overlay.y + dy, imgHeight));
+    updateOverlay(index, { x: nextX, y: nextY });
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -500,7 +511,7 @@ export const TextOverlayTool = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                 <Move className="w-4 h-4" />
-                <span>Click and drag text on canvas to reposition</span>
+                <span>Tap to select, then drag on canvas to move</span>
               </div>
 
               {overlays.map((overlay, index) => (
@@ -527,6 +538,50 @@ export const TextOverlayTool = () => {
                   </div>
 
                   <div className="space-y-3">
+                    {selectedOverlay === index && (
+                      <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/70 dark:bg-gray-800/50 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Nudge</span>
+                          <select
+                            value={nudgeStep}
+                            onChange={(e) => setNudgeStep(Number(e.target.value))}
+                            className="text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+                          >
+                            <option value={1}>1px</option>
+                            <option value={5}>5px</option>
+                            <option value={10}>10px</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 max-w-[160px]">
+                          <div />
+                          <button
+                            onClick={() => nudgeOverlay(index, 0, -nudgeStep)}
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Up
+                          </button>
+                          <div />
+                          <button
+                            onClick={() => nudgeOverlay(index, -nudgeStep, 0)}
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Left
+                          </button>
+                          <button
+                            onClick={() => nudgeOverlay(index, 0, nudgeStep)}
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Down
+                          </button>
+                          <button
+                            onClick={() => nudgeOverlay(index, nudgeStep, 0)}
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Right
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Text</label>
                       <input
