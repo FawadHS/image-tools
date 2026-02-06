@@ -27,6 +27,7 @@ export const CropTool = () => {
   const [dragMode, setDragMode] = useState<DragMode | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [initialCrop, setInitialCrop] = useState<CropArea | null>(null);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   
   // Current transformed image (EXIF-normalized + rotation/flip/filters applied, NO crop)
   const [transformedImage, setTransformedImage] = useState<HTMLImageElement | null>(null);
@@ -105,6 +106,19 @@ export const CropTool = () => {
     loadTransformedImage();
   }, [activeFile, committedCrop, lastTransformState, state.files.length]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(pointer: coarse)');
+    const update = () => setIsCoarsePointer(media.matches);
+    update();
+    if (media.addEventListener) {
+      media.addEventListener('change', update);
+      return () => media.removeEventListener('change', update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
+
   // Draw canvas preview with crop overlay
   useEffect(() => {
     if (!canvasRef.current || !transformedImage || !cropArea) return;
@@ -172,7 +186,7 @@ export const CropTool = () => {
     }
 
     // Draw resize handles
-    const handleSize = 8;
+    const handleSize = isCoarsePointer ? 14 : 8;
     ctx.fillStyle = '#3b82f6';
     const handles = [
       { x: scaledCrop.x, y: scaledCrop.y },
@@ -221,7 +235,7 @@ export const CropTool = () => {
     scaleX: number,
     scaleY: number
   ): DragMode | null => {
-    const handleSize = 12;
+    const handleSize = isCoarsePointer ? 24 : 12;
     const handleRadiusX = handleSize / scaleX;
     const handleRadiusY = handleSize / scaleY;
 

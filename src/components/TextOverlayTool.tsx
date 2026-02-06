@@ -37,6 +37,7 @@ export const TextOverlayTool = () => {
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const [lastTransformState, setLastTransformState] = useState<string>('');
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
   // Get the active file
   const activeFile = state.files.find(f => f.id === state.activeFileId) || state.files[0];
@@ -102,19 +103,33 @@ export const TextOverlayTool = () => {
     loadProcessedImage();
   }, [activeFile, lastTransformState, state.files.length]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(pointer: coarse)');
+    const update = () => setIsCoarsePointer(media.matches);
+    update();
+    if (media.addEventListener) {
+      media.addEventListener('change', update);
+      return () => media.removeEventListener('change', update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
+
   const getOverlayBounds = (
     overlay: TextOverlayConfig,
     ctx: CanvasRenderingContext2D,
     padding: number = 6
   ) => {
+    const effectivePadding = isCoarsePointer ? Math.max(padding, 18) : padding;
     ctx.font = `${overlay.fontSize}px ${overlay.fontFamily}`;
     const metrics = ctx.measureText(overlay.text);
     const textHeight = overlay.fontSize * 1.2;
     return {
-      x: overlay.x - padding,
-      y: overlay.y - padding,
-      width: metrics.width + padding * 2,
-      height: textHeight + padding * 2,
+      x: overlay.x - effectivePadding,
+      y: overlay.y - effectivePadding,
+      width: metrics.width + effectivePadding * 2,
+      height: textHeight + effectivePadding * 2,
     };
   };
 

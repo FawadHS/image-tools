@@ -288,7 +288,7 @@ Goal: expand supported conversion formats and input file types while keeping per
 | Sprint 2 | Format Capability UI | Surface encode/decode support per browser, add format-specific tips | Done |
 | Sprint 3 | Input Types | Expand/verify inputs (TIFF, BMP, GIF, HEIF/HEIC, AVIF) with clearer validation + Shopify panel compact layout | Done |
 | Sprint 4 | Output Types | Research/implement additional outputs (PNG-8, TIFF, JPEG XL experimental) | Done |
-| Sprint 5 | Quality + Tests | Quality presets per format, perf tuning, format-specific tests | Planned |
+| Sprint 5 | Quality + Tests | Quality presets per format, perf tuning, format-specific tests | In Progress |
 
 ---
 
