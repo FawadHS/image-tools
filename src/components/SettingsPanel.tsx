@@ -457,7 +457,7 @@ export const SettingsPanel: React.FC = () => {
         </div>
       </Section>
 
-      <Section title="File Naming (Batch Rename)" icon={<Type className="h-4 w-4 text-primary-400" />}>
+      <Section title="File Naming (Batch Rename)" defaultOpen icon={<Type className="h-4 w-4 text-primary-400" />}>
         <div className="mb-4">
           <label htmlFor="rename-template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Template

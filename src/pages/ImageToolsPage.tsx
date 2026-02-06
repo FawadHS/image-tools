@@ -142,7 +142,7 @@ const ImageToolsContent = () => {
                   <ExifPanel />
                 </Suspense>
                 {/* Shopify Panel - Show for all users with upgrade prompts */}
-                <details className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <details className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" open>
                   <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <ShopifyLogo />

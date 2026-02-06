@@ -80,6 +80,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shopify tabs now text-only (icons removed)
 - Shopify panel header de-duplicated so only the section title shows
 
+## [3.1.8] - 2026-02-06
+
+### Changed
+- Right sidebar sections now expand by default on load
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed
