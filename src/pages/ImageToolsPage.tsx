@@ -146,7 +146,7 @@ const ImageToolsContent = () => {
                   <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <ShopifyLogo />
-                      Shopify Integration
+                      Shopify
                     </span>
                     <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />
                   </summary>

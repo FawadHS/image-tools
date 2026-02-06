@@ -10,7 +10,7 @@ import { SkuMapper } from './SkuMapper';
 import { useShopify } from '../../context/ShopifyContext';
 import { shopifyApi } from '../../services/shopifyApi';
 import { useConverter } from '../../context/ConverterContext';
-import { Store, Upload, Crown, ExternalLink, FileStack } from 'lucide-react';
+import { Store, Crown, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import type { SkuMatchResult } from '../../services/shopifyApi';
 import type { SelectedFile } from '../../types';
@@ -114,7 +114,6 @@ function ShopifyPanelContent() {
                 : 'text-gray-600 dark:text-gray-300 border-transparent hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <Store className="w-4 h-4" />
             <span className="hidden sm:inline">Stores</span>
           </button>
           <button
@@ -126,7 +125,6 @@ function ShopifyPanelContent() {
                 : 'text-gray-600 dark:text-gray-300 border-transparent hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Upload</span>
           </button>
           <button
@@ -138,7 +136,6 @@ function ShopifyPanelContent() {
                 : 'text-gray-600 dark:text-gray-300 border-transparent hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <FileStack className="w-4 h-4" />
             <span className="hidden sm:inline">Bulk SKU</span>
           </button>
         </div>
@@ -290,14 +287,6 @@ export function ShopifyPanel() {
   return (
     <ShopifyProvider>
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-white">
-            Shopify
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Upload optimized images directly to your store
-          </p>
-        </div>
         <div className="p-4">
           <ShopifyPanelContent />
         </div>

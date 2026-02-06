@@ -74,6 +74,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shopify tabs restyled as bookmark tabs without inner border
 - Removed "Connected" label to give more space to store name
 
+## [3.1.7] - 2026-02-06
+
+### Changed
+- Shopify tabs now text-only (icons removed)
+- Shopify panel header de-duplicated so only the section title shows
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed
