@@ -34,6 +34,7 @@ export const SUPPORTED_FORMATS = [
   'image/bmp',
   'image/tiff',
   'image/webp',
+  'image/avif',
 ] as const;
 
 /** Mapping of MIME types to file extensions */
@@ -46,6 +47,7 @@ export const ACCEPTED_FILE_TYPES = {
   'image/bmp': ['.bmp'],
   'image/tiff': ['.tiff', '.tif'],
   'image/webp': ['.webp'],
+  'image/avif': ['.avif'],
 } as const;
 
 /** Default compression quality (1-100) */

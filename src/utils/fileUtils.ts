@@ -57,7 +57,7 @@ export const getFileExtension = (filename: string): string => {
  */
 export const isSupportedFormat = (file: File): boolean => {
   const supportedExtensions = [
-    'heic', 'heif', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp'
+    'heic', 'heif', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'avif'
   ];
   const extension = getFileExtension(file.name);
   return supportedExtensions.includes(extension);

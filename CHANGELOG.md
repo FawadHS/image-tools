@@ -54,6 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Stronger input validation for MIME/extension and empty files
 
+## [3.1.4] - 2026-02-06
+
+### Added
+- AVIF input support in upload validation and accept list
+- Shopify panel tabs compacted to fit narrow sidebar
+- Store names now show full text on hover
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

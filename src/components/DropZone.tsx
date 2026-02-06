@@ -139,7 +139,7 @@ export const DropZone: React.FC = () => {
                   <span className="text-primary-600 dark:text-primary-400">browse</span>
                 </p>
                 <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                  Supports: HEIC/HEIF, JPEG/JPG, PNG, GIF, BMP, TIFF, WebP
+                  Supports: HEIC/HEIF, JPEG/JPG, PNG, GIF, BMP, TIFF, WebP, AVIF
                 </p>
                 <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
                   Max {MAX_FILES} files • 50MB per file • {Math.round(MAX_TOTAL_SIZE / (1024 * 1024))}MB total

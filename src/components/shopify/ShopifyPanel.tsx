@@ -104,39 +104,42 @@ function ShopifyPanelContent() {
     <div className="space-y-4">
       {/* Tab Navigation */}
       {hasActiveConnection && (
-        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+        <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <button
             onClick={() => setActiveTab('connect')}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            title="Stores"
+            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors ${
               activeTab === 'connect'
                 ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <Store className="w-4 h-4" />
-            Stores
+            <span className="hidden sm:inline">Stores</span>
           </button>
           <button
             onClick={() => setActiveTab('upload')}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            title="Upload"
+            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors ${
               activeTab === 'upload'
                 ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <Upload className="w-4 h-4" />
-            Upload
+            <span className="hidden sm:inline">Upload</span>
           </button>
           <button
             onClick={() => setActiveTab('bulk')}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            title="Bulk SKU"
+            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors ${
               activeTab === 'bulk'
                 ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <FileStack className="w-4 h-4" />
-            Bulk SKU
+            <span className="hidden sm:inline">Bulk SKU</span>
           </button>
         </div>
       )}

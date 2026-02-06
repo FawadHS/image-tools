@@ -60,10 +60,16 @@ export function ShopifyConnect() {
                   <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                  <p
+                    className="font-medium text-gray-900 dark:text-white text-sm truncate"
+                    title={connection.shopName || connection.shopDomain}
+                  >
                     {connection.shopName || connection.shopDomain}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p
+                    className="text-xs text-gray-500 dark:text-gray-400 truncate"
+                    title={connection.shopDomain}
+                  >
                     {connection.shopDomain}
                   </p>
                 </div>
