@@ -61,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shopify panel tabs compacted to fit narrow sidebar
 - Store names now show full text on hover
 
+## [3.1.5] - 2026-02-06
+
+### Changed
+- Shopify panel header simplified and compacted
+- Tabs aligned to match other panels with reduced padding
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

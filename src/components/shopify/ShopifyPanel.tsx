@@ -104,14 +104,14 @@ function ShopifyPanelContent() {
     <div className="space-y-4">
       {/* Tab Navigation */}
       {hasActiveConnection && (
-        <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+        <div className="grid grid-cols-3 gap-1">
           <button
             onClick={() => setActiveTab('connect')}
             title="Stores"
-            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors ${
+            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors border border-gray-200 dark:border-gray-600 ${
               activeTab === 'connect'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
             }`}
           >
             <Store className="w-4 h-4" />
@@ -120,10 +120,10 @@ function ShopifyPanelContent() {
           <button
             onClick={() => setActiveTab('upload')}
             title="Upload"
-            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors ${
+            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors border border-gray-200 dark:border-gray-600 ${
               activeTab === 'upload'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -132,10 +132,10 @@ function ShopifyPanelContent() {
           <button
             onClick={() => setActiveTab('bulk')}
             title="Bulk SKU"
-            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors ${
+            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors border border-gray-200 dark:border-gray-600 ${
               activeTab === 'bulk'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
             }`}
           >
             <FileStack className="w-4 h-4" />
@@ -290,20 +290,13 @@ export function ShopifyPanel() {
   return (
     <ShopifyProvider>
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
-              <Store className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">
-                Shopify Integration
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Upload optimized images directly to your store
-              </p>
-            </div>
-          </div>
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            Shopify
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Upload optimized images directly to your store
+          </p>
         </div>
         <div className="p-4">
           <ShopifyPanelContent />
