@@ -104,14 +104,14 @@ function ShopifyPanelContent() {
     <div className="space-y-4">
       {/* Tab Navigation */}
       {hasActiveConnection && (
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-3 gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
           <button
             onClick={() => setActiveTab('connect')}
             title="Stores"
-            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors border border-gray-200 dark:border-gray-600 ${
+            className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-t-md text-[11px] font-medium transition-colors border-b-2 ${
               activeTab === 'connect'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                ? 'text-gray-900 dark:text-white border-primary-500'
+                : 'text-gray-600 dark:text-gray-300 border-transparent hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <Store className="w-4 h-4" />
@@ -120,10 +120,10 @@ function ShopifyPanelContent() {
           <button
             onClick={() => setActiveTab('upload')}
             title="Upload"
-            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors border border-gray-200 dark:border-gray-600 ${
+            className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-t-md text-[11px] font-medium transition-colors border-b-2 ${
               activeTab === 'upload'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                ? 'text-gray-900 dark:text-white border-primary-500'
+                : 'text-gray-600 dark:text-gray-300 border-transparent hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -132,10 +132,10 @@ function ShopifyPanelContent() {
           <button
             onClick={() => setActiveTab('bulk')}
             title="Bulk SKU"
-            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-[11px] font-medium transition-colors border border-gray-200 dark:border-gray-600 ${
+            className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-t-md text-[11px] font-medium transition-colors border-b-2 ${
               activeTab === 'bulk'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                ? 'text-gray-900 dark:text-white border-primary-500'
+                : 'text-gray-600 dark:text-gray-300 border-transparent hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <FileStack className="w-4 h-4" />

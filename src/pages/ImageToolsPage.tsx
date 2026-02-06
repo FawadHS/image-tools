@@ -136,7 +136,7 @@ const ImageToolsContent = () => {
 
             {/* Secondary Column - Settings Stack */}
             <div>
-              <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 custom-scrollbar text-sm [&_button]:text-xs">
                 <SettingsPanel />
                 <Suspense fallback={null}>
                   <ExifPanel />

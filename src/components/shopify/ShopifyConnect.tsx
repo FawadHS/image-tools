@@ -73,9 +73,6 @@ export function ShopifyConnect() {
                     {connection.shopDomain}
                   </p>
                 </div>
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                  Connected
-                </span>
               </div>
             ))}
           </div>
