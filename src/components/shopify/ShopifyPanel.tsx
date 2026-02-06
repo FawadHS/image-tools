@@ -10,7 +10,7 @@ import { SkuMapper } from './SkuMapper';
 import { useShopify } from '../../context/ShopifyContext';
 import { shopifyApi } from '../../services/shopifyApi';
 import { useConverter } from '../../context/ConverterContext';
-import { Store, Crown, ExternalLink } from 'lucide-react';
+import { Store, Upload, Crown, ExternalLink, FileStack } from 'lucide-react';
 import { useState } from 'react';
 import type { SkuMatchResult } from '../../services/shopifyApi';
 import type { SelectedFile } from '../../types';
