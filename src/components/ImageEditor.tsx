@@ -423,26 +423,6 @@ export const ImageEditor = () => {
               </div>
             </div>
           )}
-
-          {/* Apply/Discard Buttons */}
-          {hasUnappliedChanges && (
-            <div className="flex gap-2">
-              <button
-                onClick={applyChanges}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-              >
-                <Check className="w-4 h-4" />
-                Apply Changes
-              </button>
-              <button
-                onClick={discardChanges}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Discard
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Rotate & Flip Section */}
@@ -526,10 +506,10 @@ export const ImageEditor = () => {
             </h3>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Brightness */}
             <div>
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-1">
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                   Brightness
                 </label>
@@ -550,7 +530,7 @@ export const ImageEditor = () => {
 
             {/* Contrast */}
             <div>
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-1">
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                   Contrast
                 </label>
@@ -571,7 +551,7 @@ export const ImageEditor = () => {
 
             {/* Saturation */}
             <div>
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-1">
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                   Saturation
                 </label>
@@ -614,14 +594,13 @@ export const ImageEditor = () => {
               </button>
             </div>
 
-            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-              <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
+            <details className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <summary className="cursor-pointer select-none text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                 Advanced
-              </h4>
-
-              <div className="space-y-4">
+              </summary>
+              <div className="space-y-3">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       Clarity
                     </label>
@@ -641,7 +620,7 @@ export const ImageEditor = () => {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       Vibrance
                     </label>
@@ -661,7 +640,7 @@ export const ImageEditor = () => {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       Highlights
                     </label>
@@ -681,7 +660,7 @@ export const ImageEditor = () => {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       Shadows
                     </label>
@@ -701,7 +680,7 @@ export const ImageEditor = () => {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       Temperature
                     </label>
@@ -722,7 +701,7 @@ export const ImageEditor = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-center mb-1">
                       <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                         Sharpen
                       </label>
@@ -741,7 +720,7 @@ export const ImageEditor = () => {
                     />
                   </div>
                   <div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-center mb-1">
                       <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                         Blur
                       </label>
@@ -761,7 +740,7 @@ export const ImageEditor = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </details>
           </div>
         </div>
 
@@ -827,6 +806,26 @@ export const ImageEditor = () => {
             </button>
           </div>
         </div>
+        {hasUnappliedChanges && (
+          <div className="sticky bottom-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-lg p-2">
+            <div className="flex gap-2">
+              <button
+                onClick={applyChanges}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                Apply Changes
+              </button>
+              <button
+                onClick={discardChanges}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
         </div>
       </div>
     </div>
