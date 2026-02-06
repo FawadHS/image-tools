@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import { useConverter } from '../context/ConverterContext';
 import { SelectedFile } from '../types';
 import { generateId } from '../utils/converter';
-import { createPreviewUrl, revokePreviewUrl, isSupportedFormat } from '../utils/fileUtils';
-import { MAX_FILES, MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '../constants';
+import { createPreviewUrl, revokePreviewUrl, getFileExtension } from '../utils/fileUtils';
+import { ACCEPTED_FILE_TYPES, MAX_FILES, MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '../constants';
 import toast from 'react-hot-toast';
 
 const revokeDisplayPreview = (file: SelectedFile) => {
@@ -31,24 +31,49 @@ export const useFileSelection = () => {
       const skipped = newFiles.length - filesToAdd.length;
 
       const validFiles: SelectedFile[] = [];
-      const errors: string[] = [];
+      const errorCounts = {
+        unsupported: 0,
+        tooLarge: 0,
+        totalSize: 0,
+        empty: 0,
+      };
+
+      const supportedMimeTypes = new Set(Object.keys(ACCEPTED_FILE_TYPES).map((t) => t.toLowerCase()));
+      const supportedExtensions = new Set(
+        Object.values(ACCEPTED_FILE_TYPES)
+          .flat()
+          .map((ext) => ext.replace('.', '').toLowerCase())
+      );
+
+      const isFileSupported = (file: File) => {
+        if (file.type && supportedMimeTypes.has(file.type.toLowerCase())) {
+          return true;
+        }
+        const extension = getFileExtension(file.name);
+        return supportedExtensions.has(extension);
+      };
 
       filesToAdd.forEach((file) => {
         // Check format
-        if (!isSupportedFormat(file)) {
-          errors.push(`${file.name}: Unsupported format`);
+        if (!isFileSupported(file)) {
+          errorCounts.unsupported += 1;
           return;
         }
 
         // Check size
+        if (file.size === 0) {
+          errorCounts.empty += 1;
+          return;
+        }
+
         if (file.size > MAX_FILE_SIZE) {
-          errors.push(`${file.name}: Exceeds 50MB limit`);
+          errorCounts.tooLarge += 1;
           return;
         }
 
         // Check total size limit
         if (runningTotalSize + file.size > MAX_TOTAL_SIZE) {
-          errors.push(`${file.name}: Exceeds total ${Math.round(MAX_TOTAL_SIZE / (1024 * 1024))} MB limit`);
+          errorCounts.totalSize += 1;
           return;
         }
 
@@ -68,8 +93,19 @@ export const useFileSelection = () => {
         toast.success(`Added ${validFiles.length} file(s)`);
       }
 
-      if (errors.length > 0) {
-        errors.forEach((err) => toast.error(err));
+      if (errorCounts.unsupported > 0) {
+        toast.error(`${errorCounts.unsupported} file(s) skipped: unsupported format`);
+      }
+      if (errorCounts.empty > 0) {
+        toast.error(`${errorCounts.empty} file(s) skipped: empty or unreadable`);
+      }
+      if (errorCounts.tooLarge > 0) {
+        toast.error(`${errorCounts.tooLarge} file(s) skipped: exceeds 50MB limit`);
+      }
+      if (errorCounts.totalSize > 0) {
+        toast.error(
+          `${errorCounts.totalSize} file(s) skipped: exceeds total ${Math.round(MAX_TOTAL_SIZE / (1024 * 1024))} MB limit`
+        );
       }
 
       if (skipped > 0) {

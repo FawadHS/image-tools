@@ -45,6 +45,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WASM badge tooltip for AVIF/WebP when native support is unavailable
 - Format availability note in output format section
 
+## [3.1.3] - 2026-02-06
+
+### Added
+- Dropzone rejection toasts for invalid type, size, and file count
+- Clearer upload guidance for supported inputs and limits
+
+### Changed
+- Stronger input validation for MIME/extension and empty files
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

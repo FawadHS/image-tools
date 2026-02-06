@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, ImagePlus } from 'lucide-react';
 import { useFileSelection } from '../hooks/useFileSelection';
-import { ACCEPTED_FILE_TYPES, MAX_FILES } from '../constants';
+import { ACCEPTED_FILE_TYPES, MAX_FILES, MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '../constants';
 import { fetchImageFromUrl } from '../utils/urlImport';
 import toast from 'react-hot-toast';
 
@@ -22,7 +22,34 @@ export const DropZone: React.FC = () => {
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
+    onDropRejected: (rejections) => {
+      const reasonCounts = {
+        invalidType: 0,
+        tooLarge: 0,
+        tooMany: 0,
+      };
+
+      rejections.forEach((rejection) => {
+        rejection.errors.forEach((err) => {
+          if (err.code === 'file-invalid-type') reasonCounts.invalidType += 1;
+          if (err.code === 'file-too-large') reasonCounts.tooLarge += 1;
+          if (err.code === 'too-many-files') reasonCounts.tooMany += 1;
+        });
+      });
+
+      if (reasonCounts.invalidType > 0) {
+        toast.error(`${reasonCounts.invalidType} file(s) rejected: unsupported type`);
+      }
+      if (reasonCounts.tooLarge > 0) {
+        toast.error(`${reasonCounts.tooLarge} file(s) rejected: exceeds 50MB limit`);
+      }
+      if (reasonCounts.tooMany > 0) {
+        toast.error(`${reasonCounts.tooMany} file(s) rejected: too many files`);
+      }
+    },
     accept: ACCEPTED_FILE_TYPES,
+    maxSize: MAX_FILE_SIZE,
+    maxFiles: MAX_FILES,
     disabled: isAtLimit,
     multiple: true,
   });
@@ -112,10 +139,13 @@ export const DropZone: React.FC = () => {
                   <span className="text-primary-600 dark:text-primary-400">browse</span>
                 </p>
                 <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                  Supports: HEIC, JPEG, PNG, GIF, BMP, TIFF, WebP
+                  Supports: HEIC/HEIF, JPEG/JPG, PNG, GIF, BMP, TIFF, WebP
                 </p>
                 <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
-                  Maximum {MAX_FILES} files - 50MB per file
+                  Max {MAX_FILES} files • 50MB per file • {Math.round(MAX_TOTAL_SIZE / (1024 * 1024))}MB total
+                </p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                  Tip: RAW, PDF, and SVG aren&apos;t supported yet.
                 </p>
               </>
             )}
