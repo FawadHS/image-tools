@@ -1,7 +1,7 @@
 # Image Tools - Development Roadmap
 
 > **Last Updated**: February 6, 2026  
-> **Current Version**: 3.0.0 (V4.2 UI uplift planning)  
+> **Current Version**: 3.2.6 (Phase 11 in progress)  
 > **Project Status**: Production Ready | Active Development
 
 ---
@@ -19,17 +19,15 @@ Phase 7: Testing Infrastructure       ██████████████
 Phase 8: UX Enhancements & Quality    [####################] 100% DONE
 Phase 9: Editing Tools Upgrade        [####################] 100% DONE
 Phase 10: Edit Tools UI Layout        [####################] 100% DONE
-Phase 11: Conversion Options Expansion [--------------------] 0% NOT STARTED
+Phase 11: Conversion Options Expansion [################----] 80% IN PROGRESS
 ```
 
-**Recent Achievements (v4.1)**:
-- AI smart compression guardrails (only-if-smaller toggle, fallback toasts, pixel limit)
-- AI timeout handling polish (clean error message + one-click retry)
-- AI processing status label in file list for in-flight requests
-- Shopify auth refresh flow to eliminate recurring 401s
-- Multi-worker throttling and WASM encoders enabled
-- URL import + EXIF viewer + batch rename completed
-- V4.1 changes deployed to production
+**Recent Achievements (Phase 11)**:
+- AVIF enablement with WASM gating and availability hints
+- Added PNG-8, TIFF, and JPEG XL outputs (experimental JXL)
+- Expanded input validation and clearer upload guidance
+- Mobile drag improvements + text overlay controls
+- Filter pipeline fallback for browsers without canvas filter support
 
 ---
 
@@ -277,7 +275,7 @@ Goal: keep the image preview visible while editing and reduce scrolling through 
 
 ---
 
-## Phase 11: Conversion Options Expansion - PLANNED
+## Phase 11: Conversion Options Expansion - IN PROGRESS
 
 Goal: expand supported conversion formats and input file types while keeping performance and browser compatibility stable.
 
@@ -559,18 +557,12 @@ Core Features:
 
 ---
 
-## 🎯 Current Sprint Focus
+## Current Sprint Focus
 
-### Immediate Next Steps:
-1. **Web Workers** - Move conversion to background thread for better performance
-2. **PWA Support** - Add offline capability with service worker
-3. **Cross-browser testing** - Ensure Safari, Firefox, Edge compatibility
-4. **Before/after comparison slider** - Visual quality comparison
-
-### Nice-to-Have:
-- EXIF auto-rotation
-- Advanced file naming options
-- Conversion history
+### Phase 11 Sprint 5: Quality + Tests (Remaining)
+1. **Quality presets per format** (PNG-8, AVIF, TIFF, JXL)
+2. **Performance tuning** for large batches and mobile
+3. **Format-specific tests** (encode/decode checks + export validation)
 
 ---
 
