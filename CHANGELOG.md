@@ -85,6 +85,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Right sidebar sections now expand by default on load
 
+## [3.1.9] - 2026-02-06
+
+### Added
+- PNG-8, TIFF, and JPEG XL output options
+- PNG-8 and TIFF encoders for export
+- JPEG XL encoding via WASM
+
+### Changed
+- Worker conversion is disabled for PNG-8, TIFF, and JPEG XL formats
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

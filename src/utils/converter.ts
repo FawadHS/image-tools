@@ -3,6 +3,8 @@ import { getMimeType as getImageMimeType, getExtension as getImageExtension, cal
 import { buildOutputFilename } from './filename';
 import { maybePreserveMetadata } from './metadata';
 import { encodeWithWasm } from './wasmEncoders';
+import UPNG from 'upng-js';
+import * as UTIF from 'utif';
 import { runAiEnhancement } from './aiEnhance';
 import { loadImageWithExif, renderEditsToCanvas } from './imageTransform';
 
@@ -28,7 +30,8 @@ export const getExtension = getImageExtension;
  * Check if browser supports the output format
  */
 export const isFormatSupported = async (format: OutputFormat): Promise<boolean> => {
-  if (format === 'jpeg' || format === 'png') return true;
+  if (format === 'jpeg' || format === 'png' || format === 'png8' || format === 'tiff') return true;
+  if (format === 'jxl') return false;
   
   const canvas = document.createElement('canvas');
   canvas.width = 1;
@@ -114,7 +117,7 @@ export const convertImage = async (
   if (outputFormat !== 'jpeg' && outputFormat !== 'png') {
     nativeSupported = await isFormatSupported(outputFormat);
     const wasmEligible =
-      Boolean(options.useWasmEncoders) && (outputFormat === 'webp' || outputFormat === 'avif');
+      Boolean(options.useWasmEncoders) && (outputFormat === 'webp' || outputFormat === 'avif' || outputFormat === 'jxl');
     if (!nativeSupported && !wasmEligible) {
       throw new Error(`${outputFormat.toUpperCase()} is not supported in this browser`);
     }
@@ -123,7 +126,7 @@ export const convertImage = async (
   const wasmOnlyEncoding =
     !nativeSupported &&
     Boolean(options.useWasmEncoders) &&
-    (outputFormat === 'webp' || outputFormat === 'avif');
+    (outputFormat === 'webp' || outputFormat === 'avif' || outputFormat === 'jxl');
 
   const createStandardBlob = async (
     canvas: HTMLCanvasElement,
@@ -145,6 +148,25 @@ export const convertImage = async (
         );
       });
       return runAiEnhancement(aiInput, options, format, onAiStatus);
+    }
+
+    if (format === 'png8') {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to access canvas context');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const colors = options.lossless
+        ? 0
+        : Math.max(2, Math.min(256, Math.round(2 + (options.quality / 100) * 254)));
+      const encoded = UPNG.encode([imageData.data.buffer], canvas.width, canvas.height, colors);
+      return new Blob([encoded], { type: getMimeType('png8') });
+    }
+
+    if (format === 'tiff') {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to access canvas context');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const encoded = UTIF.encodeImage(imageData.data, canvas.width, canvas.height);
+      return new Blob([encoded], { type: getMimeType('tiff') });
     }
 
     const wasmBlob = await encodeWithWasm(canvas, format, options);

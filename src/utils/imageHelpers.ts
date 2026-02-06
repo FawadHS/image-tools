@@ -13,7 +13,10 @@ const MIME_TYPES: Readonly<Record<OutputFormat, string>> = {
   webp: 'image/webp',
   jpeg: 'image/jpeg',
   png: 'image/png',
+  png8: 'image/png',
   avif: 'image/avif',
+  tiff: 'image/tiff',
+  jxl: 'image/jxl',
 } as const;
 
 /**
@@ -23,7 +26,10 @@ const EXTENSIONS: Readonly<Record<OutputFormat, string>> = {
   webp: '.webp',
   jpeg: '.jpg',
   png: '.png',
+  png8: '.png',
   avif: '.avif',
+  tiff: '.tif',
+  jxl: '.jxl',
 } as const;
 
 /**
@@ -107,7 +113,7 @@ export const generateId = (): string => {
  * @returns True if format supports lossless
  */
 export const isLosslessFormat = (format: OutputFormat): boolean => {
-  return format === 'png';
+  return format === 'png' || format === 'tiff';
 };
 
 /**
@@ -120,7 +126,10 @@ export const getRecommendedQuality = (format: OutputFormat): number => {
     webp: 80,
     jpeg: 85,
     png: 100, // PNG is always lossless
+    png8: 80,
     avif: 75,
+    tiff: 100,
+    jxl: 75,
   };
   return recommendations[format];
 };

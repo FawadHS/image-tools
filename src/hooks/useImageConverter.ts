@@ -181,8 +181,10 @@ export const useImageConverter = () => {
     let errorCount = 0;
     let cancelled = false;
     const sequenceStart = options.renameSequenceStart ?? 1;
-    const shouldUseWasm = Boolean(options.useWasmEncoders) && (options.outputFormat === 'webp' || options.outputFormat === 'avif');
-    const canUseWorker = useWorker.current && !options.preserveMetadata && !shouldUseWasm && (!options.aiMode || options.aiMode === 'none');
+    const outputFormat = options.outputFormat || 'webp';
+    const shouldUseWasm = Boolean(options.useWasmEncoders) && (outputFormat === 'webp' || outputFormat === 'avif' || outputFormat === 'jxl');
+    const workerSupported = outputFormat === 'webp' || outputFormat === 'jpeg' || outputFormat === 'png' || outputFormat === 'avif';
+    const canUseWorker = useWorker.current && workerSupported && !options.preserveMetadata && !shouldUseWasm && (!options.aiMode || options.aiMode === 'none');
     const workers = canUseWorker ? ensureWorkerPool() : [];
     const concurrency = Math.min(workers.length || 1, pendingFiles.length);
     let index = 0;
@@ -329,8 +331,10 @@ export const useImageConverter = () => {
     let errorCount = 0;
     let cancelled = false;
     const sequenceStart = options.renameSequenceStart ?? 1;
-    const shouldUseWasm = Boolean(options.useWasmEncoders) && (options.outputFormat === 'webp' || options.outputFormat === 'avif');
-    const canUseWorker = useWorker.current && !options.preserveMetadata && !shouldUseWasm && (!options.aiMode || options.aiMode === 'none');
+    const outputFormat = options.outputFormat || 'webp';
+    const shouldUseWasm = Boolean(options.useWasmEncoders) && (outputFormat === 'webp' || outputFormat === 'avif' || outputFormat === 'jxl');
+    const workerSupported = outputFormat === 'webp' || outputFormat === 'jpeg' || outputFormat === 'png' || outputFormat === 'avif';
+    const canUseWorker = useWorker.current && workerSupported && !options.preserveMetadata && !shouldUseWasm && (!options.aiMode || options.aiMode === 'none');
     const workers = canUseWorker ? ensureWorkerPool() : [];
     const concurrency = Math.min(workers.length || 1, selectedFiles.length);
     let index = 0;
@@ -473,8 +477,10 @@ export const useImageConverter = () => {
         const runId = ++conversionIdRef.current;
         const renameSequence = options.renameSequenceStart ?? 1;
         let result: ConvertResult;
-        const shouldUseWasm = Boolean(options.useWasmEncoders) && (options.outputFormat === 'webp' || options.outputFormat === 'avif');
-        const canUseWorker = useWorker.current && !options.preserveMetadata && !shouldUseWasm && (!options.aiMode || options.aiMode === 'none');
+        const outputFormat = options.outputFormat || 'webp';
+        const shouldUseWasm = Boolean(options.useWasmEncoders) && (outputFormat === 'webp' || outputFormat === 'avif' || outputFormat === 'jxl');
+        const workerSupported = outputFormat === 'webp' || outputFormat === 'jpeg' || outputFormat === 'png' || outputFormat === 'avif';
+        const canUseWorker = useWorker.current && workerSupported && !options.preserveMetadata && !shouldUseWasm && (!options.aiMode || options.aiMode === 'none');
         
         // Use Web Worker if available and metadata preservation is off
         if (canUseWorker) {

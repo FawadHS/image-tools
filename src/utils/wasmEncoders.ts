@@ -13,7 +13,7 @@ export const encodeWithWasm = async (
   options: ConvertOptions
 ): Promise<Blob | null> => {
   if (!options.useWasmEncoders) return null;
-  if (format !== 'webp' && format !== 'avif') return null;
+  if (format !== 'webp' && format !== 'avif' && format !== 'jxl') return null;
 
   const imageData = getImageData(canvas);
   if (!imageData) return null;
@@ -24,6 +24,15 @@ export const encodeWithWasm = async (
     if (format === 'webp') {
       const { encode } = await import('@jsquash/webp');
       const encoded = await encode(imageData, { quality });
+      return new Blob([encoded], { type: getMimeType(format) });
+    }
+
+    if (format === 'jxl') {
+      const { encode } = await import('@jsquash/jxl');
+      const encoded = await encode(imageData, {
+        quality,
+        lossless: options.lossless,
+      });
       return new Blob([encoded], { type: getMimeType(format) });
     }
 

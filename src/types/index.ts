@@ -1,4 +1,4 @@
-export type OutputFormat = 'webp' | 'jpeg' | 'png' | 'avif';
+export type OutputFormat = 'webp' | 'jpeg' | 'png' | 'png8' | 'avif' | 'tiff' | 'jxl';
 
 export interface ImageTransform {
   rotation: number;

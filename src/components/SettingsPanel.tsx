@@ -11,7 +11,10 @@ const OUTPUT_FORMATS: { id: OutputFormat; name: string; description: string }[] 
   { id: 'webp', name: 'WebP', description: 'Best compression, modern browsers' },
   { id: 'jpeg', name: 'JPEG', description: 'Universal compatibility' },
   { id: 'png', name: 'PNG', description: 'Lossless, transparency support' },
-  { id: 'avif', name: 'AVIF', description: 'Next-gen, Chrome/Firefox only' },
+  { id: 'png8', name: 'PNG-8', description: 'Smaller PNGs via palette quantization' },
+  { id: 'avif', name: 'AVIF', description: 'Next-gen, smaller files, slower encode' },
+  { id: 'tiff', name: 'TIFF', description: 'Archival/export workflows (large files)' },
+  { id: 'jxl', name: 'JPEG XL', description: 'Experimental, limited browser support' },
 ];
 
 const RESIZE_PRESETS = [
@@ -56,7 +59,10 @@ export const SettingsPanel: React.FC = () => {
     webp: true,
     jpeg: true,
     png: true,
+    png8: true,
     avif: true,
+    tiff: true,
+    jxl: false,
   });
 
   useEffect(() => {
@@ -81,12 +87,16 @@ export const SettingsPanel: React.FC = () => {
   }, []);
 
   const isWasmFormatEnabled = (format: OutputFormat) =>
-    format === 'webp' || format === 'avif';
+    format === 'webp' || format === 'avif' || format === 'jxl';
+
+  const isEncoderFormat = (format: OutputFormat) =>
+    format === 'png8' || format === 'tiff';
 
   const isFormatAvailable = (format: OutputFormat) =>
-    formatSupport[format] || isWasmFormatEnabled(format);
+    formatSupport[format] || isWasmFormatEnabled(format) || isEncoderFormat(format);
 
   const getFormatSupportLabel = (format: OutputFormat) => {
+    if (format === 'png8' || format === 'tiff') return 'Encoder';
     if (format === 'jpeg' || format === 'png') return 'Native';
     if (formatSupport[format]) return 'Native';
     if (isWasmFormatEnabled(format)) return 'WASM';
@@ -94,7 +104,7 @@ export const SettingsPanel: React.FC = () => {
   };
 
   const firstSupportedFormat = useMemo(() => {
-    const ordered: OutputFormat[] = ['webp', 'jpeg', 'png', 'avif'];
+    const ordered: OutputFormat[] = ['webp', 'jpeg', 'png', 'png8', 'avif', 'tiff', 'jxl'];
     return ordered.find((format) => isFormatAvailable(format)) || 'jpeg';
   }, [formatSupport]);
 
@@ -112,7 +122,9 @@ export const SettingsPanel: React.FC = () => {
 
   useEffect(() => {
     const output = options.outputFormat || 'webp';
-    const shouldUseWasm = (output === 'webp' || output === 'avif') && !formatSupport[output];
+    const shouldUseWasm =
+      (output === 'webp' || output === 'avif') ? !formatSupport[output]
+        : output === 'jxl';
     if ((options.useWasmEncoders || false) !== shouldUseWasm) {
       dispatch({ type: 'SET_OPTIONS', payload: { useWasmEncoders: shouldUseWasm } });
     }
@@ -300,7 +312,7 @@ export const SettingsPanel: React.FC = () => {
             {OUTPUT_FORMATS.find(f => f.id === options.outputFormat)?.description}
           </p>
           <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-            Availability: WebP ({getFormatSupportLabel('webp')}), JPEG ({getFormatSupportLabel('jpeg')}), PNG ({getFormatSupportLabel('png')}), AVIF ({getFormatSupportLabel('avif')}).
+            Availability: WebP ({getFormatSupportLabel('webp')}), JPEG ({getFormatSupportLabel('jpeg')}), PNG ({getFormatSupportLabel('png')}), PNG-8 ({getFormatSupportLabel('png8')}), AVIF ({getFormatSupportLabel('avif')}), TIFF ({getFormatSupportLabel('tiff')}), JXL ({getFormatSupportLabel('jxl')}).
           </p>
         </fieldset>
 
