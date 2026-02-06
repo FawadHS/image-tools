@@ -34,6 +34,10 @@ export const ImageEditor = () => {
     grayscale: false,
     sepia: false,
   };
+  const normalizeFilters = (filters?: ImageTransform['filters']) => ({
+    ...defaultFilters,
+    ...(filters || {}),
+  });
 
   // Get the actual committed state from the active file
   const committedTransform: ImageTransform = activeFile?.transform
@@ -79,10 +83,7 @@ export const ImageEditor = () => {
     setPreviewTransform(committedTransform);
   }, [JSON.stringify(activeFile?.transform), activeFile?.id]);
 
-  const filters = {
-    ...defaultFilters,
-    ...previewTransform.filters,
-  };
+  const filters = normalizeFilters(previewTransform.filters);
 
   // Check if preview differs from committed state
   const hasUnappliedChanges = JSON.stringify(previewTransform) !== JSON.stringify(committedTransform);
@@ -135,7 +136,7 @@ export const ImageEditor = () => {
     rotation: transform.rotation,
     flipHorizontal: transform.flipHorizontal,
     flipVertical: transform.flipVertical,
-    filters: { ...filters },
+    filters: normalizeFilters(transform.filters),
   });
 
   const savePreset = () => {
@@ -180,6 +181,8 @@ export const ImageEditor = () => {
         flipVertical: false,
         filters: { ...defaultFilters },
       };
+      const mergedFilters = normalizeFilters(currentTransform.filters);
+      const presetFilters = normalizeFilters(preset.transform.filters);
 
       dispatch({
         type: 'UPDATE_FILE_TRANSFORM',
@@ -191,8 +194,8 @@ export const ImageEditor = () => {
             flipHorizontal: preset.transform.flipHorizontal,
             flipVertical: preset.transform.flipVertical,
             filters: {
-              ...currentTransform.filters,
-              ...preset.transform.filters,
+              ...mergedFilters,
+              ...presetFilters,
             },
           },
         },

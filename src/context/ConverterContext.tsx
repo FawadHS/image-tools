@@ -99,15 +99,19 @@ const defaultTransform: ImageTransform = {
   },
 };
 
+const normalizeFilters = (
+  filters?: ImageTransform['filters']
+): NonNullable<ImageTransform['filters']> => ({
+  ...(defaultTransform.filters as NonNullable<ImageTransform['filters']>),
+  ...(filters || {}),
+});
+
 const ensureTransform = (transform: ImageTransform | undefined): ImageTransform => {
   if (!transform) return { ...defaultTransform };
   return {
     ...defaultTransform,
     ...transform,
-    filters: {
-      ...defaultTransform.filters,
-      ...transform.filters,
-    },
+    filters: normalizeFilters(transform.filters),
   };
 };
 
