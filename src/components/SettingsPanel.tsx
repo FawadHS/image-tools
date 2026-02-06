@@ -80,16 +80,22 @@ export const SettingsPanel: React.FC = () => {
     });
   }, []);
 
+  const isWasmFormatEnabled = (format: OutputFormat) =>
+    Boolean(options.useWasmEncoders) && (format === 'webp' || format === 'avif');
+
+  const isFormatAvailable = (format: OutputFormat) =>
+    formatSupport[format] || isWasmFormatEnabled(format);
+
   const firstSupportedFormat = useMemo(() => {
     const ordered: OutputFormat[] = ['webp', 'jpeg', 'png', 'avif'];
-    return ordered.find((format) => formatSupport[format]) || 'jpeg';
-  }, [formatSupport]);
+    return ordered.find((format) => isFormatAvailable(format)) || 'jpeg';
+  }, [formatSupport, options.useWasmEncoders]);
 
   useEffect(() => {
-    if (!formatSupport[options.outputFormat]) {
+    if (!isFormatAvailable(options.outputFormat)) {
       dispatch({ type: 'SET_OUTPUT_FORMAT', payload: firstSupportedFormat });
     }
-  }, [formatSupport, options.outputFormat, dispatch, firstSupportedFormat]);
+  }, [formatSupport, options.outputFormat, dispatch, firstSupportedFormat, options.useWasmEncoders]);
 
   useEffect(() => {
     if (options.aiMode === 'upscale') {
@@ -243,7 +249,8 @@ export const SettingsPanel: React.FC = () => {
           </legend>
           <div className="grid grid-cols-2 gap-2" role="group" aria-label="Select output format">
             {OUTPUT_FORMATS.map((format) => {
-              const isSupported = formatSupport[format.id];
+              const isSupported = isFormatAvailable(format.id);
+              const isWasmOnly = !formatSupport[format.id] && isWasmFormatEnabled(format.id);
               return (
               <button
                 key={format.id}
@@ -262,7 +269,12 @@ export const SettingsPanel: React.FC = () => {
                 `}
               >
                 {format.name}
-                {!isSupported && (
+                {isWasmOnly && (
+                  <span className="ml-2 text-[10px] uppercase tracking-wide text-primary-500">
+                    WASM
+                  </span>
+                )}
+                {!isSupported && !isWasmOnly && (
                   <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
                     Coming soon
                   </span>

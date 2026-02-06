@@ -109,13 +109,21 @@ export const convertImage = async (
   const originalSize = file.size;
   let blob: Blob = file;
   const outputFormat = options.outputFormat || 'webp';
+  let nativeSupported = true;
 
   if (outputFormat !== 'jpeg' && outputFormat !== 'png') {
-    const supported = await isFormatSupported(outputFormat);
-    if (!supported) {
+    nativeSupported = await isFormatSupported(outputFormat);
+    const wasmEligible =
+      Boolean(options.useWasmEncoders) && (outputFormat === 'webp' || outputFormat === 'avif');
+    if (!nativeSupported && !wasmEligible) {
       throw new Error(`${outputFormat.toUpperCase()} is not supported in this browser`);
     }
   }
+
+  const wasmOnlyEncoding =
+    !nativeSupported &&
+    Boolean(options.useWasmEncoders) &&
+    (outputFormat === 'webp' || outputFormat === 'avif');
 
   const createStandardBlob = async (
     canvas: HTMLCanvasElement,
@@ -141,6 +149,9 @@ export const convertImage = async (
 
     const wasmBlob = await encodeWithWasm(canvas, format, options);
     if (wasmBlob) return wasmBlob;
+    if (wasmOnlyEncoding) {
+      throw new Error(`${format.toUpperCase()} encoding requires WASM encoders`);
+    }
 
     return new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(

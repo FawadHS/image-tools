@@ -25,6 +25,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text overlay and crop updates are tracked in undo/redo history
 - Added tests for fine rotation bounds and advanced filter pipeline
 
+## [3.1.1] - 2026-02-06
+
+### Added
+- History drawer button now matches floating review control
+- Reviews open in a dedicated modal
+- AVIF option can be enabled when WASM encoders are available
+
+### Changed
+- Sidebar helper text now wraps cleanly in narrow layouts
+- AVIF unsupported label updated to "Coming soon"
+
+### Fixed
+- Prevent AVIF selection from being blocked when WASM encoders are enabled
+
 ## [2.7.1] - 2026-01-21
 
 ### Fixed

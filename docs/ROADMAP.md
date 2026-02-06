@@ -19,6 +19,7 @@ Phase 7: Testing Infrastructure       ██████████████
 Phase 8: UX Enhancements & Quality    [####################] 100% DONE
 Phase 9: Editing Tools Upgrade        [####################] 100% DONE
 Phase 10: Edit Tools UI Layout        [####################] 100% DONE
+Phase 11: Conversion Options Expansion [--------------------] 0% NOT STARTED
 ```
 
 **Recent Achievements (v4.1)**:
@@ -273,6 +274,21 @@ Goal: keep the image preview visible while editing and reduce scrolling through 
 | Sprint 3 | Controls Density | Tighten spacing and group related controls | Done |
 | Sprint 4 | Mobile Layout | Maintain stacked layout with clear sections | Done |
 | Sprint 5 | Visual Polish | Consistent spacing, headers, dividers, empty states | Done |
+
+---
+
+## Phase 11: Conversion Options Expansion - PLANNED
+
+Goal: expand supported conversion formats and input file types while keeping performance and browser compatibility stable.
+
+### Sprint Plan
+| Sprint | Topic | Scope | Status |
+|--------|-------|-------|--------|
+| Sprint 1 | AVIF Enablement | WASM encoder gating, UI availability, conversion fallback messaging | Planned |
+| Sprint 2 | Format Capability UI | Surface encode/decode support per browser, add format-specific tips | Planned |
+| Sprint 3 | Input Types | Expand/verify inputs (TIFF, BMP, GIF, HEIF/HEIC) with clearer validation | Planned |
+| Sprint 4 | Output Types | Research/implement additional outputs (PNG-8, TIFF, JPEG XL experimental) | Planned |
+| Sprint 5 | Quality + Tests | Quality presets per format, perf tuning, format-specific tests | Planned |
 
 ---
 
