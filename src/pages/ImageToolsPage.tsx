@@ -65,9 +65,9 @@ const ImageToolsContent = () => {
         {/* Tier Limits Banner */}
         <TierLimitsBanner />
         
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,3.2fr)_minmax(0,1fr)] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,3.2fr)_minmax(0,1fr)] gap-6 items-start">
           {/* Primary Column - Upload, Queue, Actions, Editor */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <DropZone />
             <FileList />
             <ActionBar />
@@ -135,8 +135,8 @@ const ImageToolsContent = () => {
             </div>
 
             {/* Secondary Column - Settings Stack */}
-            <div>
-              <div className="sticky top-8 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 custom-scrollbar text-sm [&_button]:text-xs">
+            <div className="lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-7rem)]">
+              <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar text-sm [&_button]:text-xs">
                 <SettingsPanel />
                 <Suspense fallback={null}>
                   <ExifPanel />
