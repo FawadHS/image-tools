@@ -135,8 +135,8 @@ const ImageToolsContent = () => {
             </div>
 
             {/* Secondary Column - Settings Stack */}
-            <div className="lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-12rem)]">
-              <div className="space-y-6 h-full overflow-y-auto px-1 -mx-1 custom-scrollbar-visible text-sm [&_button]:text-xs">
+            <div className="lg:sticky lg:top-6 lg:self-start">
+              <div className="space-y-6 max-h-[calc(100vh-3.5rem)] overflow-y-auto px-1 -mx-1 custom-scrollbar-visible text-sm [&_button]:text-xs">
                 <SettingsPanel />
                 <Suspense fallback={null}>
                   <ExifPanel />
