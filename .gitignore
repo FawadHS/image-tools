@@ -41,3 +41,8 @@ coverage/
 # Misc
 .eslintcache
 *.pem
+
+# Project Memory
+.projectmemory/
+.github/copilot-space/
+.github/copilot-instructions.md
